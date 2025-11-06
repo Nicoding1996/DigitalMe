@@ -1,0 +1,19 @@
+{
+  "enabled": true,
+  "name": "Analyze Code on Save",
+  "description": "Triggers when JavaScript/TypeScript files are saved to analyze coding patterns and update the style model",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "**/*.js",
+      "**/*.ts",
+      "**/*.jsx",
+      "**/*.tsx"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A new code file was just saved at {{filepath}}. Briefly analyze its contents to identify coding patterns. For this MVP, simply confirm that you have received the file by logging its path and stating that the style model would be updated"
+  }
+}
