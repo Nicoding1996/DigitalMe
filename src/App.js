@@ -5,6 +5,7 @@ import SourceConnector from './components/SourceConnector';
 import AnalysisProgress from './components/AnalysisProgress';
 import MirrorInterface from './components/MirrorInterface';
 import SettingsPanel from './components/SettingsPanel';
+import ExportModal from './components/ExportModal';
 import { analyzeGitHub, analyzeBlog, analyzeTextSample, buildStyleProfile } from './services/StyleAnalyzer';
 import { generateMockSource, generateDefaultPreferences } from './models';
 import './App.css';
@@ -26,6 +27,9 @@ function App() {
   const [sources, setSources] = useState([]);
   const [preferences, setPreferences] = useState(generateDefaultPreferences());
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isExportOpen, setIsExportOpen] = useState(false);
+  const [exportContent, setExportContent] = useState('');
+  const [exportContentType, setExportContentType] = useState('text');
 
   // Load profile, sources, and preferences from LocalStorage on mount
   useEffect(() => {
@@ -216,9 +220,14 @@ function App() {
     localStorage.setItem(PREFERENCES_KEY, JSON.stringify(newPreferences));
   };
 
-  const handleExportClick = () => {
-    console.log('Export clicked');
-    // TODO: Open export modal (Task 7)
+  const handleExportClick = (content = '', contentType = 'text') => {
+    setExportContent(content);
+    setExportContentType(contentType);
+    setIsExportOpen(true);
+  };
+
+  const handleExportClose = () => {
+    setIsExportOpen(false);
   };
 
   return (
@@ -265,6 +274,13 @@ function App() {
         preferences={preferences}
         onUpdateSources={handleUpdateSources}
         onUpdatePreferences={handleUpdatePreferences}
+      />
+
+      <ExportModal
+        isOpen={isExportOpen}
+        onClose={handleExportClose}
+        content={exportContent}
+        contentType={exportContentType}
       />
     </div>
   );

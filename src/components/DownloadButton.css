@@ -1,0 +1,17 @@
+/* Download Button Styles */
+
+.download-button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.download-button:disabled {
+  opacity: var(--opacity-disabled);
+  cursor: not-allowed;
+}
+
+.download-button:disabled:hover {
+  transform: none;
+  background-color: var(--accent-purple);
+}
