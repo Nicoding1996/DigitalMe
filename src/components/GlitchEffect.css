@@ -1,0 +1,197 @@
+/* GlitchEffect Component Styles */
+
+.glitch-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.glitch-wrapper.glitch-active {
+  animation: glitch-shake 300ms ease-in-out;
+}
+
+/* Intensity Variations */
+.glitch-wrapper.glitch-intensity-low.glitch-active {
+  animation-duration: 200ms;
+}
+
+.glitch-wrapper.glitch-intensity-medium.glitch-active {
+  animation-duration: 300ms;
+}
+
+.glitch-wrapper.glitch-intensity-high.glitch-active {
+  animation-duration: 500ms;
+}
+
+/* Glitch Shake Animation */
+@keyframes glitch-shake {
+  0% {
+    transform: translate(0);
+    filter: hue-rotate(0deg);
+  }
+  10% {
+    transform: translate(-2px, 2px);
+    filter: hue-rotate(90deg);
+  }
+  20% {
+    transform: translate(2px, -2px);
+    filter: hue-rotate(0deg);
+  }
+  30% {
+    transform: translate(-2px, -2px);
+    filter: hue-rotate(90deg);
+  }
+  40% {
+    transform: translate(2px, 2px);
+    filter: hue-rotate(0deg);
+  }
+  50% {
+    transform: translate(-1px, 1px);
+    filter: hue-rotate(45deg);
+  }
+  60% {
+    transform: translate(1px, -1px);
+    filter: hue-rotate(0deg);
+  }
+  70% {
+    transform: translate(-1px, -1px);
+    filter: hue-rotate(45deg);
+  }
+  80% {
+    transform: translate(1px, 1px);
+    filter: hue-rotate(0deg);
+  }
+  90% {
+    transform: translate(-1px, 0);
+    filter: hue-rotate(20deg);
+  }
+  100% {
+    transform: translate(0);
+    filter: hue-rotate(0deg);
+  }
+}
+
+/* Low Intensity */
+.glitch-intensity-low.glitch-active {
+  animation-name: glitch-shake-low;
+}
+
+@keyframes glitch-shake-low {
+  0%, 100% {
+    transform: translate(0);
+  }
+  25% {
+    transform: translate(-1px, 1px);
+  }
+  50% {
+    transform: translate(1px, -1px);
+  }
+  75% {
+    transform: translate(-1px, -1px);
+  }
+}
+
+/* High Intensity */
+.glitch-intensity-high.glitch-active {
+  animation-name: glitch-shake-high;
+}
+
+@keyframes glitch-shake-high {
+  0% {
+    transform: translate(0) skew(0deg);
+    filter: hue-rotate(0deg) brightness(1);
+  }
+  10% {
+    transform: translate(-3px, 3px) skew(2deg);
+    filter: hue-rotate(90deg) brightness(1.2);
+  }
+  20% {
+    transform: translate(3px, -3px) skew(-2deg);
+    filter: hue-rotate(180deg) brightness(0.8);
+  }
+  30% {
+    transform: translate(-3px, -3px) skew(2deg);
+    filter: hue-rotate(270deg) brightness(1.2);
+  }
+  40% {
+    transform: translate(3px, 3px) skew(-2deg);
+    filter: hue-rotate(0deg) brightness(0.8);
+  }
+  50% {
+    transform: translate(-2px, 2px) skew(1deg);
+    filter: hue-rotate(45deg) brightness(1.1);
+  }
+  60% {
+    transform: translate(2px, -2px) skew(-1deg);
+    filter: hue-rotate(90deg) brightness(0.9);
+  }
+  70% {
+    transform: translate(-2px, -2px) skew(1deg);
+    filter: hue-rotate(135deg) brightness(1.1);
+  }
+  80% {
+    transform: translate(2px, 2px) skew(-1deg);
+    filter: hue-rotate(180deg) brightness(0.9);
+  }
+  90% {
+    transform: translate(-1px, 1px) skew(0.5deg);
+    filter: hue-rotate(45deg) brightness(1.05);
+  }
+  100% {
+    transform: translate(0) skew(0deg);
+    filter: hue-rotate(0deg) brightness(1);
+  }
+}
+
+/* Color Shift Effect for Active Glitch */
+.glitch-wrapper.glitch-active::before,
+.glitch-wrapper.glitch-active::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: 0.8;
+}
+
+.glitch-wrapper.glitch-active::before {
+  background: rgba(255, 0, 128, 0.1);
+  animation: glitch-color-shift-1 300ms ease-in-out;
+}
+
+.glitch-wrapper.glitch-active::after {
+  background: rgba(0, 255, 255, 0.1);
+  animation: glitch-color-shift-2 300ms ease-in-out;
+}
+
+@keyframes glitch-color-shift-1 {
+  0%, 100% {
+    transform: translate(0);
+    opacity: 0;
+  }
+  33% {
+    transform: translate(-2px, 0);
+    opacity: 0.8;
+  }
+  66% {
+    transform: translate(2px, 0);
+    opacity: 0.8;
+  }
+}
+
+@keyframes glitch-color-shift-2 {
+  0%, 100% {
+    transform: translate(0);
+    opacity: 0;
+  }
+  33% {
+    transform: translate(2px, 0);
+    opacity: 0.8;
+  }
+  66% {
+    transform: translate(-2px, 0);
+    opacity: 0.8;
+  }
+}
