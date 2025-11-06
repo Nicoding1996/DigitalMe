@@ -1,12 +1,17 @@
 import { useState, useEffect } from 'react';
+import Header from './components/Header';
 import WelcomeScreen from './components/WelcomeScreen';
 import SourceConnector from './components/SourceConnector';
 import AnalysisProgress from './components/AnalysisProgress';
 import MirrorInterface from './components/MirrorInterface';
+import SettingsPanel from './components/SettingsPanel';
 import { analyzeGitHub, analyzeBlog, analyzeTextSample, buildStyleProfile } from './services/StyleAnalyzer';
+import { generateMockSource, generateDefaultPreferences } from './models';
 import './App.css';
 
 const STORAGE_KEY = 'digitalme_profile';
+const SOURCES_KEY = 'digitalme_sources';
+const PREFERENCES_KEY = 'digitalme_preferences';
 
 function App() {
   const [onboardingStep, setOnboardingStep] = useState('welcome'); // welcome, connect, analyzing, complete
@@ -18,8 +23,11 @@ function App() {
     isComplete: false
   });
   const [analysisSummary, setAnalysisSummary] = useState(null);
+  const [sources, setSources] = useState([]);
+  const [preferences, setPreferences] = useState(generateDefaultPreferences());
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  // Load profile from LocalStorage on mount
+  // Load profile, sources, and preferences from LocalStorage on mount
   useEffect(() => {
     const savedProfile = localStorage.getItem(STORAGE_KEY);
     if (savedProfile) {
@@ -32,26 +40,48 @@ function App() {
         localStorage.removeItem(STORAGE_KEY);
       }
     }
+
+    const savedSources = localStorage.getItem(SOURCES_KEY);
+    if (savedSources) {
+      try {
+        const sourcesData = JSON.parse(savedSources);
+        setSources(sourcesData);
+      } catch (error) {
+        console.error('Failed to load saved sources:', error);
+        localStorage.removeItem(SOURCES_KEY);
+      }
+    }
+
+    const savedPreferences = localStorage.getItem(PREFERENCES_KEY);
+    if (savedPreferences) {
+      try {
+        const prefsData = JSON.parse(savedPreferences);
+        setPreferences(prefsData);
+      } catch (error) {
+        console.error('Failed to load saved preferences:', error);
+      }
+    }
   }, []);
 
   const handleGetStarted = () => {
     setOnboardingStep('connect');
   };
 
-  const handleSourcesSubmit = async (sources) => {
+  const handleSourcesSubmit = async (submittedSources) => {
     setOnboardingStep('analyzing');
     setAnalysisProgress({
       currentStep: 0,
-      totalSteps: sources.length + 1, // +1 for building profile
+      totalSteps: submittedSources.length + 1, // +1 for building profile
       message: 'Initializing analysis...',
       isComplete: false
     });
 
     const analysisResults = [];
+    const sourcesData = [];
 
     // Analyze each source
-    for (let i = 0; i < sources.length; i++) {
-      const source = sources[i];
+    for (let i = 0; i < submittedSources.length; i++) {
+      const source = submittedSources[i];
       
       try {
         let result;
@@ -60,7 +90,7 @@ function App() {
           result = await analyzeGitHub(source.value, (progress) => {
             setAnalysisProgress({
               currentStep: i + 1,
-              totalSteps: sources.length + 1,
+              totalSteps: submittedSources.length + 1,
               message: progress.message,
               isComplete: false
             });
@@ -70,11 +100,13 @@ function App() {
             type: 'github',
             result
           });
+
+          sourcesData.push(generateMockSource('github', source.value));
         } else if (source.type === 'blog') {
           result = await analyzeBlog([source.value], (progress) => {
             setAnalysisProgress({
               currentStep: i + 1,
-              totalSteps: sources.length + 1,
+              totalSteps: submittedSources.length + 1,
               message: progress.message,
               isComplete: false
             });
@@ -84,11 +116,13 @@ function App() {
             type: 'blog',
             result
           });
+
+          sourcesData.push(generateMockSource('blog', source.value));
         } else if (source.type === 'text') {
           result = await analyzeTextSample(source.value, (progress) => {
             setAnalysisProgress({
               currentStep: i + 1,
-              totalSteps: sources.length + 1,
+              totalSteps: submittedSources.length + 1,
               message: progress.message,
               isComplete: false
             });
@@ -98,6 +132,8 @@ function App() {
             type: 'text',
             result
           });
+
+          sourcesData.push(generateMockSource('text', 'Text Sample'));
         }
       } catch (error) {
         console.error(`Failed to analyze ${source.type}:`, error);
@@ -106,8 +142,8 @@ function App() {
 
     // Build unified style profile
     setAnalysisProgress({
-      currentStep: sources.length,
-      totalSteps: sources.length + 1,
+      currentStep: submittedSources.length,
+      totalSteps: submittedSources.length + 1,
       message: 'Building unified style profile...',
       isComplete: false
     });
@@ -119,9 +155,11 @@ function App() {
       
       // Save to LocalStorage
       localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+      localStorage.setItem(SOURCES_KEY, JSON.stringify(sourcesData));
       
-      // Set profile state
+      // Set profile and sources state
       setStyleProfile(profile);
+      setSources(sourcesData);
       
       // Prepare summary
       setAnalysisSummary({
@@ -134,8 +172,8 @@ function App() {
       
       // Mark analysis as complete
       setAnalysisProgress({
-        currentStep: sources.length + 1,
-        totalSteps: sources.length + 1,
+        currentStep: submittedSources.length + 1,
+        totalSteps: submittedSources.length + 1,
         message: 'Analysis complete!',
         isComplete: true
       });
@@ -150,8 +188,48 @@ function App() {
     console.log('User submitted:', input);
   };
 
+  const handleSettingsClick = () => {
+    setIsSettingsOpen(true);
+  };
+
+  const handleSettingsClose = () => {
+    setIsSettingsOpen(false);
+  };
+
+  const handleUpdateSources = (sourceId) => {
+    console.log('Update sources:', sourceId);
+    // TODO: Implement source management logic
+    // For now, just trigger onboarding flow to add new source
+    if (!sourceId) {
+      setOnboardingStep('connect');
+      setIsSettingsOpen(false);
+    } else {
+      // Remove source
+      const updatedSources = sources.filter(s => s.id !== sourceId);
+      setSources(updatedSources);
+      localStorage.setItem(SOURCES_KEY, JSON.stringify(updatedSources));
+    }
+  };
+
+  const handleUpdatePreferences = (newPreferences) => {
+    setPreferences(newPreferences);
+    localStorage.setItem(PREFERENCES_KEY, JSON.stringify(newPreferences));
+  };
+
+  const handleExportClick = () => {
+    console.log('Export clicked');
+    // TODO: Open export modal (Task 7)
+  };
+
   return (
     <div className="app">
+      {onboardingStep === 'complete' && styleProfile && (
+        <Header 
+          onSettingsClick={handleSettingsClick}
+          onExportClick={handleExportClick}
+        />
+      )}
+      
       {onboardingStep === 'welcome' && (
         <WelcomeScreen onGetStarted={handleGetStarted} />
       )}
@@ -178,6 +256,16 @@ function App() {
           onSubmit={handleSubmit}
         />
       )}
+
+      <SettingsPanel
+        isOpen={isSettingsOpen}
+        onClose={handleSettingsClose}
+        styleProfile={styleProfile}
+        sources={sources}
+        preferences={preferences}
+        onUpdateSources={handleUpdateSources}
+        onUpdatePreferences={handleUpdatePreferences}
+      />
     </div>
   );
 }
