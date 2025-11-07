@@ -160,54 +160,65 @@ The practical benefit is improved application performance and user experience, p
  * @returns {Promise<Object>} Generated text response
  */
 export const generateText = async (prompt, styleProfile, context = []) => {
-  // Simulate AI processing time
-  await delay(2000 + Math.random() * 1000);
-
-  const lowerPrompt = prompt.toLowerCase();
-  
-  // Select appropriate mock response based on prompt
-  let response;
-  if (lowerPrompt.includes('email')) {
-    response = mockTextResponses.email;
-  } else if (lowerPrompt.includes('blog') || lowerPrompt.includes('article')) {
-    response = mockTextResponses.blog;
-  } else if (lowerPrompt.includes('document') || lowerPrompt.includes('readme')) {
-    response = mockTextResponses.documentation;
-  } else if (lowerPrompt.includes('explain') || lowerPrompt.includes('describe')) {
-    response = mockTextResponses.explanation;
-  } else {
-    // Generic response
-    response = `The request has been analyzed according to the specified parameters. The approach involves systematic evaluation of the requirements and implementation of appropriate solutions.
+  try {
+    // Call the real Kiro AI agent with style-aware prompt
+    const aiResponse = await callKiroAgent(prompt, styleProfile);
+    
+    return {
+      success: true,
+      content: aiResponse,
+      contentType: 'text',
+      language: null,
+      metadata: {
+        promptTokens: prompt.split(' ').length,
+        responseTokens: aiResponse.split(' ').length,
+        model: 'kiro-ai',
+        styleProfile: {
+          tone: styleProfile.writing.tone,
+          formality: styleProfile.writing.formality
+        }
+      },
+      generatedAt: Date.now()
+    };
+  } catch (error) {
+    // Fallback to mock response if AI call fails
+    console.warn('AI generation failed, using fallback:', error.message);
+    
+    const lowerPrompt = prompt.toLowerCase();
+    let response;
+    if (lowerPrompt.includes('email')) {
+      response = mockTextResponses.email;
+    } else if (lowerPrompt.includes('blog') || lowerPrompt.includes('article')) {
+      response = mockTextResponses.blog;
+    } else if (lowerPrompt.includes('document') || lowerPrompt.includes('readme')) {
+      response = mockTextResponses.documentation;
+    } else if (lowerPrompt.includes('explain') || lowerPrompt.includes('describe')) {
+      response = mockTextResponses.explanation;
+    } else {
+      response = `The request has been analyzed according to the specified parameters. The approach involves systematic evaluation of the requirements and implementation of appropriate solutions.
 
 Key considerations include maintainability, scalability, and adherence to established patterns. The methodology ensures consistent results while allowing for flexibility in specific implementation details.
 
 This framework provides a solid foundation for addressing similar challenges in future scenarios.`;
+    }
+    
+    return {
+      success: true,
+      content: response,
+      contentType: 'text',
+      language: null,
+      metadata: {
+        promptTokens: prompt.split(' ').length,
+        responseTokens: response.split(' ').length,
+        model: 'fallback-mock',
+        styleProfile: {
+          tone: styleProfile.writing.tone,
+          formality: styleProfile.writing.formality
+        }
+      },
+      generatedAt: Date.now()
+    };
   }
-
-  // Apply style profile characteristics
-  const { writing } = styleProfile;
-  
-  // Adjust response based on formality
-  if (writing.formality === 'informal') {
-    response = response.replace(/The /g, 'The ').replace(/\. /g, '. ');
-  }
-
-  return {
-    success: true,
-    content: response,
-    contentType: 'text',
-    language: null,
-    metadata: {
-      promptTokens: prompt.split(' ').length,
-      responseTokens: response.split(' ').length,
-      model: 'mock-gpt-4',
-      styleProfile: {
-        tone: writing.tone,
-        formality: writing.formality
-      }
-    },
-    generatedAt: Date.now()
-  };
 };
 
 // ============================================================================
@@ -324,6 +335,45 @@ const mockCodeResponses = {
 };
 
 /**
+ * Call Kiro AI agent with style-aware prompt
+ * @param {string} userMessage - User's request
+ * @param {Object} styleProfile - User's style profile
+ * @returns {Promise<string>} AI response
+ */
+const callKiroAgent = async (userMessage, styleProfile) => {
+  // Construct the AI prompt with style profile directives
+  const { coding, writing } = styleProfile;
+  
+  const systemPrompt = `You are my AI 'twin,' my digital doppelgänger. Your primary purpose is to learn from my digital footprint and assist me by responding in my unique style.
+
+TONE OF VOICE:
+- Adopt an ${writing.tone}, ${writing.formality} tone
+- Be direct and to the point
+- Use ${writing.sentenceLength} sentences
+- Vocabulary: ${writing.vocabulary.join(', ')}
+- Avoid: ${writing.avoidance.join(', ')}
+
+CODING STYLE (when generating code):
+- Language: ${coding.language}
+- Framework: ${coding.framework}
+- Component Style: ${coding.componentStyle}
+- Naming Convention: ${coding.namingConvention}
+- Comment Frequency: ${coding.commentFrequency}
+- Patterns: ${coding.patterns.join(', ')}
+
+Your responses should always feel like a reflection of my own thought process. Match my style precisely.
+
+USER REQUEST: ${userMessage}`;
+
+  // Note: In a real implementation, this would call an actual AI API
+  // For now, we return the prompt itself to demonstrate the integration point
+  // TODO: Replace with actual Kiro agent API call
+  
+  // Placeholder for actual AI integration
+  throw new Error('Kiro AI integration not yet implemented. This is where the actual AI call would happen.');
+};
+
+/**
  * Generate code content based on style profile
  * @param {string} prompt - User's code generation request
  * @param {Object} styleProfile - User's style profile
@@ -331,51 +381,66 @@ const mockCodeResponses = {
  * @returns {Promise<Object>} Generated code response
  */
 export const generateCode = async (prompt, styleProfile, context = []) => {
-  // Simulate AI processing time
-  await delay(2500 + Math.random() * 1000);
-
-  const lowerPrompt = prompt.toLowerCase();
   const language = detectLanguage(prompt);
   
-  // Select appropriate mock response based on prompt
-  let code;
-  if (lowerPrompt.includes('component')) {
-    code = mockCodeResponses.component;
-  } else if (lowerPrompt.includes('hook')) {
-    code = mockCodeResponses.hook;
-  } else if (lowerPrompt.includes('api') || lowerPrompt.includes('fetch')) {
-    code = mockCodeResponses.api;
-  } else if (lowerPrompt.includes('validat')) {
-    code = mockCodeResponses.validation;
-  } else {
-    code = mockCodeResponses.function;
+  try {
+    // Call the real Kiro AI agent with style-aware prompt
+    const aiResponse = await callKiroAgent(prompt, styleProfile);
+    
+    return {
+      success: true,
+      content: aiResponse,
+      contentType: 'code',
+      language,
+      metadata: {
+        promptTokens: prompt.split(' ').length,
+        responseTokens: aiResponse.split(' ').length,
+        model: 'kiro-ai',
+        styleProfile: {
+          language: styleProfile.coding.language,
+          framework: styleProfile.coding.framework,
+          componentStyle: styleProfile.coding.componentStyle
+        }
+      },
+      generatedAt: Date.now()
+    };
+  } catch (error) {
+    // Fallback to mock response if AI call fails
+    console.warn('AI generation failed, using fallback:', error.message);
+    
+    // Use mock response as fallback
+    const lowerPrompt = prompt.toLowerCase();
+    let code;
+    if (lowerPrompt.includes('component')) {
+      code = mockCodeResponses.component;
+    } else if (lowerPrompt.includes('hook')) {
+      code = mockCodeResponses.hook;
+    } else if (lowerPrompt.includes('api') || lowerPrompt.includes('fetch')) {
+      code = mockCodeResponses.api;
+    } else if (lowerPrompt.includes('validat')) {
+      code = mockCodeResponses.validation;
+    } else {
+      code = mockCodeResponses.function;
+    }
+    
+    return {
+      success: true,
+      content: code,
+      contentType: 'code',
+      language,
+      metadata: {
+        promptTokens: prompt.split(' ').length,
+        responseTokens: code.split(' ').length,
+        model: 'fallback-mock',
+        styleProfile: {
+          language: styleProfile.coding.language,
+          framework: styleProfile.coding.framework,
+          componentStyle: styleProfile.coding.componentStyle
+        }
+      },
+      generatedAt: Date.now()
+    };
   }
-
-  // Apply coding style profile
-  const { coding } = styleProfile;
-  
-  // Add comments based on comment frequency
-  if (coding.commentFrequency === 'high') {
-    code = `// Implementation following ${coding.framework} best practices\n${code}`;
-  }
-
-  return {
-    success: true,
-    content: code,
-    contentType: 'code',
-    language,
-    metadata: {
-      promptTokens: prompt.split(' ').length,
-      responseTokens: code.split(' ').length,
-      model: 'mock-gpt-4',
-      styleProfile: {
-        language: coding.language,
-        framework: coding.framework,
-        componentStyle: coding.componentStyle
-      }
-    },
-    generatedAt: Date.now()
-  };
 };
 
 // ============================================================================
