@@ -197,3 +197,54 @@
 .settings-content::-webkit-scrollbar-thumb:hover {
   background: var(--text-secondary);
 }
+
+/* Conversation Controls */
+.conversation-controls {
+  margin-top: var(--space-xl);
+  padding-top: var(--space-xl);
+  border-top: 1px solid var(--border);
+}
+
+.conversation-controls h4 {
+  margin: 0 0 var(--space-sm) 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+}
+
+.control-description {
+  margin: 0 0 var(--space-md) 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+}
+
+.clear-history-button {
+  background-color: transparent;
+  border: 1px solid var(--error);
+  color: var(--error);
+  padding: var(--space-sm) var(--space-lg);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.clear-history-button:hover:not(:disabled) {
+  background-color: var(--error);
+  color: var(--primary-bg);
+  box-shadow: 0 0 10px rgba(255, 51, 51, 0.3);
+}
+
+.clear-history-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.clear-history-button:focus {
+  outline: 2px solid var(--error);
+  outline-offset: 2px;
+}

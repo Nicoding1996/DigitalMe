@@ -1,16 +1,29 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import InputArea from './InputArea';
 import ResponseArea from './ResponseArea';
 import MessageHistory from './MessageHistory';
 import { generateId } from '../models';
+import { generateContent } from '../services/ContentGenerator';
 import './MirrorInterface.css';
 
-const MirrorInterface = ({ styleProfile, conversationHistory = [], onSubmit }) => {
+const MirrorInterface = ({ styleProfile, conversationHistory = [], onSubmit, onExport, onConversationUpdate }) => {
   const [messages, setMessages] = useState(conversationHistory);
   const [currentResponse, setCurrentResponse] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const handleSubmit = (input) => {
+  // Sync messages with conversationHistory prop (e.g., when history is cleared)
+  useEffect(() => {
+    setMessages(conversationHistory);
+  }, [conversationHistory]);
+
+  const updateMessages = (newMessages) => {
+    setMessages(newMessages);
+    if (onConversationUpdate) {
+      onConversationUpdate(newMessages);
+    }
+  };
+
+  const handleSubmit = async (input) => {
     // Add user message
     const userMessage = {
       id: generateId(),
@@ -23,31 +36,79 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], onSubmit }) =
       feedback: null
     };
     
-    setMessages(prev => [...prev, userMessage]);
+    const messagesWithUser = [...messages, userMessage];
+    updateMessages(messagesWithUser);
     setIsGenerating(true);
     setCurrentResponse(null);
     
-    // Simulate AI generation
-    setTimeout(() => {
-      const aiMessage = {
+    // Generate AI response using ContentGenerator service
+    try {
+      const result = await generateContent(input, styleProfile, messages);
+      
+      if (result.success) {
+        const aiMessage = {
+          id: generateId(),
+          userId: 'user-1',
+          role: 'ai',
+          content: result.content,
+          contentType: result.contentType,
+          language: result.language,
+          timestamp: Date.now(),
+          feedback: null
+        };
+        
+        const messagesWithAI = [...messagesWithUser, aiMessage];
+        updateMessages(messagesWithAI);
+        setCurrentResponse({
+          content: aiMessage.content,
+          contentType: aiMessage.contentType,
+          language: aiMessage.language
+        });
+      } else {
+        // Handle generation error
+        const errorMessage = {
+          id: generateId(),
+          userId: 'user-1',
+          role: 'ai',
+          content: `Error: ${result.error.message}`,
+          contentType: 'text',
+          language: null,
+          timestamp: Date.now(),
+          feedback: null
+        };
+        
+        const messagesWithError = [...messagesWithUser, errorMessage];
+        updateMessages(messagesWithError);
+        setCurrentResponse({
+          content: errorMessage.content,
+          contentType: errorMessage.contentType,
+          language: errorMessage.language
+        });
+      }
+    } catch (error) {
+      console.error('Generation failed:', error);
+      
+      const errorMessage = {
         id: generateId(),
         userId: 'user-1',
         role: 'ai',
-        content: `Echo: ${input}`,
+        content: 'An unexpected error occurred. Please try again.',
         contentType: 'text',
         language: null,
         timestamp: Date.now(),
         feedback: null
       };
       
-      setMessages(prev => [...prev, aiMessage]);
+      const messagesWithError = [...messagesWithUser, errorMessage];
+      updateMessages(messagesWithError);
       setCurrentResponse({
-        content: aiMessage.content,
-        contentType: aiMessage.contentType,
-        language: aiMessage.language
+        content: errorMessage.content,
+        contentType: errorMessage.contentType,
+        language: errorMessage.language
       });
+    } finally {
       setIsGenerating(false);
-    }, 1500);
+    }
     
     if (onSubmit) {
       onSubmit(input);
@@ -65,6 +126,7 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], onSubmit }) =
           response={currentResponse}
           isGenerating={isGenerating}
           messages={messages}
+          onExport={onExport}
         />
       </div>
     </div>
@@ -84,7 +146,7 @@ const LeftPanel = ({ onSubmit, messages }) => {
   );
 };
 
-const RightPanel = ({ response, isGenerating, messages }) => {
+const RightPanel = ({ response, isGenerating, messages, onExport }) => {
   return (
     <div className="mirror-panel right-panel">
       <div className="panel-content">
@@ -101,7 +163,7 @@ const RightPanel = ({ response, isGenerating, messages }) => {
         <div className="system-status">
           [ SYSTEM: Mirror initialized ]
         </div>
-        <MessageHistory messages={messages} role="ai" />
+        <MessageHistory messages={messages} role="ai" onExport={onExport} />
       </div>
     </div>
   );

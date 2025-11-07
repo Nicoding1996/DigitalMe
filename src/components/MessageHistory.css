@@ -67,7 +67,7 @@
 .message-meta {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: var(--space-sm);
   margin-bottom: var(--space-sm);
 }
 
@@ -91,6 +91,34 @@
   font-size: var(--font-size-xs);
   font-family: var(--font-mono);
   color: var(--text-muted);
+  margin-left: auto;
+}
+
+/* Export Button */
+.export-button {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 14px;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  font-family: var(--font-mono);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.export-button:hover {
+  background: rgba(139, 92, 246, 0.1);
+  border-color: var(--accent-purple);
+  color: var(--accent-purple);
+  transform: translateY(-1px);
+}
+
+.export-button:active {
+  transform: translateY(0);
 }
 
 /* Message Content */

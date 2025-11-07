@@ -1,24 +1,63 @@
 import { useEffect, useState } from 'react';
 import './AnalysisProgress.css';
 
-const AnalysisProgress = ({ isComplete, currentStep, totalSteps, message, summary, onComplete }) => {
+const AnalysisProgress = ({ 
+  isComplete, 
+  currentStep, 
+  totalSteps, 
+  message, 
+  summary, 
+  error, 
+  failedSources = [], 
+  onComplete, 
+  onRetry 
+}) => {
   const [dots, setDots] = useState('');
 
   useEffect(() => {
-    if (!isComplete) {
+    if (!isComplete && !error) {
       const interval = setInterval(() => {
         setDots(prev => (prev.length >= 3 ? '' : prev + '.'));
       }, 500);
       return () => clearInterval(interval);
     }
-  }, [isComplete]);
+  }, [isComplete, error]);
 
   const progressPercentage = (currentStep / totalSteps) * 100;
 
   return (
     <div className="analysis-progress">
       <div className="analysis-content">
-        {!isComplete ? (
+        {error ? (
+          <>
+            <div className="analysis-header">
+              <div className="error-icon">⚠</div>
+              <h2 className="analysis-title error">Analysis Failed</h2>
+              <div className="analysis-subtitle error">
+                {error}
+              </div>
+            </div>
+
+            {failedSources.length > 0 && (
+              <div className="failed-sources">
+                <div className="failed-sources-title">Failed Sources:</div>
+                {failedSources.map((source, index) => (
+                  <div key={index} className="failed-source-item">
+                    <span className="failed-source-type">{source.type}:</span>
+                    <span className="failed-source-value">{source.value || 'Text Sample'}</span>
+                    <span className="failed-source-error">{source.error}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="error-actions">
+              <button className="retry-button" onClick={onRetry}>
+                Try Again
+              </button>
+            </div>
+          </>
+        ) : !isComplete ? (
           <>
             <div className="analysis-header">
               <h2 className="analysis-title">Analyzing Your Style</h2>
@@ -73,6 +112,12 @@ const AnalysisProgress = ({ isComplete, currentStep, totalSteps, message, summar
             {summary && (
               <div className="analysis-summary">
                 <div className="summary-title">Profile Summary</div>
+                
+                {summary.failedSources > 0 && (
+                  <div className="summary-warning">
+                    ⚠ {summary.failedSources} source(s) failed to analyze but profile was created with available data
+                  </div>
+                )}
                 
                 {summary.repositories !== undefined && summary.repositories > 0 && (
                   <div className="summary-item">

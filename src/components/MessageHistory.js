@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import './MessageHistory.css';
 
-const MessageHistory = ({ messages = [], role = 'user' }) => {
+const MessageHistory = ({ messages = [], role = 'user', onExport }) => {
   const historyEndRef = useRef(null);
 
   useEffect(() => {
@@ -26,7 +26,7 @@ const MessageHistory = ({ messages = [], role = 'user' }) => {
       </div>
       <div className="history-messages">
         {roleMessages.map((message) => (
-          <MessageItem key={message.id} message={message} />
+          <MessageItem key={message.id} message={message} onExport={onExport} />
         ))}
         <div ref={historyEndRef} />
       </div>
@@ -34,14 +34,31 @@ const MessageHistory = ({ messages = [], role = 'user' }) => {
   );
 };
 
-const MessageItem = ({ message }) => {
+const MessageItem = ({ message, onExport }) => {
   const isCode = message.contentType === 'code';
+  const showExport = message.role === 'ai' && onExport;
+  
+  const handleExport = () => {
+    if (onExport) {
+      onExport(message.content, message.contentType);
+    }
+  };
   
   return (
     <div className={`message-item ${message.role}-message`}>
       <div className="message-meta">
         <span className="message-role">{message.role === 'user' ? 'YOU' : 'AI'}</span>
         <span className="message-time">{formatTime(message.timestamp)}</span>
+        {showExport && (
+          <button 
+            className="export-button" 
+            onClick={handleExport}
+            aria-label="Export this message"
+            title="Export this message"
+          >
+            ↗
+          </button>
+        )}
       </div>
       <div className={`message-content ${isCode ? 'code-content' : 'text-content'}`}>
         {isCode ? (

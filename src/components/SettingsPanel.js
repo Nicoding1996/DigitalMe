@@ -4,7 +4,7 @@ import SourceManager from './SourceManager';
 import StyleControls from './StyleControls';
 import './SettingsPanel.css';
 
-const SettingsPanel = ({ isOpen, onClose, styleProfile, sources, preferences, onUpdateSources, onUpdatePreferences }) => {
+const SettingsPanel = ({ isOpen, onClose, styleProfile, sources, preferences, conversationHistory = [], onUpdateSources, onUpdatePreferences, onClearHistory }) => {
   const [activeTab, setActiveTab] = useState('profile');
 
   if (!isOpen) return null;
@@ -72,6 +72,20 @@ const SettingsPanel = ({ isOpen, onClose, styleProfile, sources, preferences, on
                 preferences={preferences}
                 onUpdatePreferences={onUpdatePreferences}
               />
+              
+              <div className="conversation-controls">
+                <h4>Conversation History</h4>
+                <p className="control-description">
+                  {conversationHistory.length} message{conversationHistory.length !== 1 ? 's' : ''} stored (max 50)
+                </p>
+                <button 
+                  className="clear-history-button"
+                  onClick={onClearHistory}
+                  disabled={conversationHistory.length === 0}
+                >
+                  Clear History
+                </button>
+              </div>
             </div>
           )}
         </div>

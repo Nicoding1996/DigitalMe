@@ -247,3 +247,112 @@
     gap: var(--space-sm);
   }
 }
+
+/* Error States */
+.error-icon {
+  font-size: 64px;
+  color: var(--error);
+  margin-bottom: var(--space-lg);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.analysis-title.error {
+  color: var(--error);
+}
+
+.analysis-subtitle.error {
+  color: var(--text-secondary);
+}
+
+.failed-sources {
+  background: rgba(255, 51, 51, 0.05);
+  border: 1px solid var(--error);
+  border-radius: 4px;
+  padding: var(--space-lg);
+  margin-bottom: var(--space-xl);
+}
+
+.failed-sources-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--error);
+  margin-bottom: var(--space-md);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.failed-source-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-md);
+  background: var(--secondary-bg);
+  border-left: 3px solid var(--error);
+  border-radius: 2px;
+  margin-bottom: var(--space-sm);
+}
+
+.failed-source-item:last-child {
+  margin-bottom: 0;
+}
+
+.failed-source-type {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.failed-source-value {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  word-break: break-all;
+}
+
+.failed-source-error {
+  font-size: 13px;
+  color: var(--error);
+  font-style: italic;
+}
+
+.error-actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-md);
+}
+
+.retry-button {
+  background: var(--accent-primary);
+  color: var(--primary-bg);
+  border: none;
+  padding: var(--space-md) var(--space-xl);
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.retry-button:hover {
+  background: var(--accent-secondary);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(255, 0, 128, 0.3);
+}
+
+.retry-button:active {
+  transform: translateY(0);
+}
+
+.summary-warning {
+  background: rgba(255, 165, 0, 0.1);
+  border: 1px solid #ffa500;
+  border-radius: 4px;
+  padding: var(--space-md);
+  margin-bottom: var(--space-lg);
+  color: #ffa500;
+  font-size: 14px;
+  text-align: center;
+}
