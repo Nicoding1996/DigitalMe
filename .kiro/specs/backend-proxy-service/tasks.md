@@ -13,7 +13,12 @@
   - Add `.env` to `.gitignore` to prevent committing secrets
   - _Requirements: 2.1, 2.2, 5.2, 6.1_
 
-- [ ] 2. Create environment configuration module
+- [x] 2. Create environment configuration module
+
+
+
+
+
   - Create `config.js` file to load and validate environment variables
   - Implement logic to load variables using `dotenv`
   - Add validation to ensure `ANTHROPIC_API_KEY` is defined and starts with `sk-ant-`
