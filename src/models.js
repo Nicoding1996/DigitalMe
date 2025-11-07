@@ -112,11 +112,11 @@ export const generateMockCodingStyle = () => {
  */
 export const generateMockWritingStyle = () => {
   return {
-    tone: 'analytical',
-    formality: 'formal',
+    tone: 'conversational',
+    formality: 'casual',
     sentenceLength: 'medium',
-    vocabulary: ['technical', 'precise', 'concise'],
-    avoidance: ['emojis', 'slang', 'excessive-punctuation']
+    vocabulary: ['clear', 'direct', 'relatable'],
+    avoidance: ['corporate-jargon', 'overly-formal-language']
   };
 };
 

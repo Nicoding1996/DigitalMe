@@ -341,39 +341,19 @@ const mockCodeResponses = {
  * @returns {Promise<string>} AI response
  */
 const callKiroAgent = async (userMessage, styleProfile) => {
-  // Construct the AI prompt with style profile directives
-  const { coding, writing } = styleProfile;
-  
-  const systemPrompt = `You are my AI 'twin,' my digital doppelgänger. Your primary purpose is to learn from my digital footprint and assist me by responding in my unique style.
-
-TONE OF VOICE:
-- Adopt an ${writing.tone}, ${writing.formality} tone
-- Be direct and to the point
-- Use ${writing.sentenceLength} sentences
-- Vocabulary: ${writing.vocabulary.join(', ')}
-- Avoid: ${writing.avoidance.join(', ')}
-
-CODING STYLE (when generating code):
-- Language: ${coding.language}
-- Framework: ${coding.framework}
-- Component Style: ${coding.componentStyle}
-- Naming Convention: ${coding.namingConvention}
-- Comment Frequency: ${coding.commentFrequency}
-- Patterns: ${coding.patterns.join(', ')}
-
-Your responses should always feel like a reflection of my own thought process. Match my style precisely.
-
-USER REQUEST: ${userMessage}`;
-
-  // Call the backend proxy service
-  console.log('Calling backend with prompt length:', systemPrompt.length);
+  // Call the backend proxy service with both prompt and styleProfile
+  // The backend will construct the meta-prompt dynamically
+  console.log('Calling backend with user message and style profile');
   
   const response = await fetch('http://localhost:3001/api/generate', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ prompt: systemPrompt })
+    body: JSON.stringify({ 
+      prompt: userMessage,
+      styleProfile: styleProfile
+    })
   });
 
   console.log('Response status:', response.status);

@@ -181,6 +181,7 @@ export const analyzeTextSample = async (text, onProgress = null) => {
   // Simulate processing delay
   await delay(800);
 
+  const lowerText = text.toLowerCase();
   const wordCount = text.trim().split(/\s+/).length;
   const sentenceCount = text.split(/[.!?]+/).filter(s => s.trim().length > 0).length;
   const avgWordsPerSentence = Math.round(wordCount / sentenceCount);
@@ -190,10 +191,46 @@ export const analyzeTextSample = async (text, onProgress = null) => {
   if (avgWordsPerSentence < 15) sentenceLength = 'short';
   if (avgWordsPerSentence > 25) sentenceLength = 'long';
 
-  // Mock writing style based on text characteristics
+  // Detect tone from text content
+  const casualMarkers = ['yeah', 'gonna', 'wanna', 'kinda', 'sorta', 'hey', 'cool', 'awesome'];
+  const formalMarkers = ['therefore', 'furthermore', 'consequently', 'nevertheless', 'accordingly'];
+  const conversationalMarkers = ['i think', 'you know', 'basically', 'actually', 'honestly'];
+  
+  const hasCasual = casualMarkers.some(marker => lowerText.includes(marker));
+  const hasFormal = formalMarkers.some(marker => lowerText.includes(marker));
+  const hasConversational = conversationalMarkers.some(marker => lowerText.includes(marker));
+  
+  let tone = 'neutral';
+  if (hasCasual || hasConversational) tone = 'conversational';
+  if (hasFormal) tone = 'professional';
+  
+  // Detect formality
+  const contractions = (text.match(/\b\w+'\w+\b/g) || []).length;
+  const hasContractions = contractions > wordCount * 0.02;
+  const formality = hasContractions ? 'casual' : 'balanced';
+  
+  // Detect vocabulary style
+  const hasEmojis = /[\u{1F300}-\u{1F9FF}]/u.test(text);
+  const hasExclamations = (text.match(/!/g) || []).length > sentenceCount * 0.3;
+  
+  const vocabulary = [];
+  if (avgWordsPerSentence > 20) vocabulary.push('descriptive');
+  if (avgWordsPerSentence < 15) vocabulary.push('concise');
+  if (!hasEmojis && !hasExclamations) vocabulary.push('straightforward');
+  if (hasConversational) vocabulary.push('relatable');
+  if (vocabulary.length === 0) vocabulary.push('clear', 'direct');
+  
+  const avoidance = [];
+  if (!hasEmojis) avoidance.push('emojis');
+  if (!hasExclamations) avoidance.push('excessive-punctuation');
+  if (!hasCasual) avoidance.push('slang');
+
   const writingStyle = {
-    ...generateMockWritingStyle(),
-    sentenceLength
+    tone,
+    formality,
+    sentenceLength,
+    vocabulary,
+    avoidance: avoidance.length > 0 ? avoidance : ['none']
   };
 
   return {

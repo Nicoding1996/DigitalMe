@@ -72,6 +72,28 @@ function validateGenerateRequest(body) {
     };
   }
 
+  // Check for presence of styleProfile field
+  if (!('styleProfile' in body)) {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'Missing required field: styleProfile'
+      }
+    };
+  }
+
+  // Ensure styleProfile is an object
+  if (typeof body.styleProfile !== 'object' || body.styleProfile === null) {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'Field "styleProfile" must be an object'
+      }
+    };
+  }
+
   return { valid: true };
 }
 
