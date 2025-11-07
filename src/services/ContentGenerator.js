@@ -365,12 +365,54 @@ Your responses should always feel like a reflection of my own thought process. M
 
 USER REQUEST: ${userMessage}`;
 
-  // Note: In a real implementation, this would call an actual AI API
-  // For now, we return the prompt itself to demonstrate the integration point
-  // TODO: Replace with actual Kiro agent API call
+  // Call the backend proxy service
+  console.log('Calling backend with prompt length:', systemPrompt.length);
   
-  // Placeholder for actual AI integration
-  throw new Error('Kiro AI integration not yet implemented. This is where the actual AI call would happen.');
+  const response = await fetch('http://localhost:3001/api/generate', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ prompt: systemPrompt })
+  });
+
+  console.log('Response status:', response.status);
+
+  if (!response.ok) {
+    throw new Error(`Backend API error: ${response.status}`);
+  }
+
+  // Read the streaming response properly
+  if (!response.body) {
+    throw new Error('Response body is null');
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let fullText = '';
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      
+      if (done) {
+        console.log('Stream complete. Total length:', fullText.length);
+        break;
+      }
+      
+      if (value) {
+        const chunk = decoder.decode(value, { stream: true });
+        fullText += chunk;
+        console.log('Chunk received, length:', chunk.length);
+      }
+    }
+  } catch (error) {
+    console.error('Error reading stream:', error);
+    throw error;
+  }
+  
+  console.log('Response preview:', fullText.substring(0, 200));
+  return fullText;
 };
 
 /**

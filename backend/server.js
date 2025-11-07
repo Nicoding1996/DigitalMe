@@ -53,9 +53,10 @@ app.post('/api/generate', validateGenerateMiddleware, async (req, res) => {
     const model = genAI.getGenerativeModel({ model: config.GEMINI_MODEL });
     
     // Set appropriate response headers for streaming
-    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
+    res.setHeader('Transfer-Encoding', 'chunked');
     
     // Configure Gemini API call to use streaming mode
     const result = await model.generateContentStream(prompt);
@@ -67,12 +68,6 @@ app.post('/api/generate', validateGenerateMiddleware, async (req, res) => {
     
     // Forward each chunk from Gemini API to the client as it arrives
     for await (const chunk of result.stream) {
-      // Check if client is still connected
-      if (req.destroyed) {
-        console.log('Request destroyed, stopping stream');
-        break;
-      }
-      
       // Extract text from chunk
       const chunkText = chunk.text();
       
