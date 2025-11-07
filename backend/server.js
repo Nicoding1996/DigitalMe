@@ -51,50 +51,55 @@ app.get('/health', (req, res) => {
 function buildMetaPrompt(userPrompt, styleProfile) {
   const { writing, coding } = styleProfile;
   
-  return `You are a digital twin, an AI doppelgänger designed to mirror the user's unique style and thought process.
+  // Build style emphasis based on formality level
+  const styleEmphasis = writing.formality === 'casual' || writing.formality === 'informal'
+    ? 'CRITICAL: Write like you\'re texting a friend. Use casual language. NO formal business speak. NO corporate jargon. Sound human and relaxed.'
+    : writing.formality === 'formal'
+    ? 'Maintain a professional, polished tone appropriate for formal communication.'
+    : 'IMPORTANT: Keep it conversational and natural. Avoid overly formal or stiff language.';
+  
+  const toneGuidance = writing.tone === 'conversational'
+    ? 'Sound like a REAL PERSON talking, not an AI assistant. Be natural, relaxed, and genuine.'
+    : writing.tone === 'professional'
+    ? 'Maintain professional standards while being clear and direct.'
+    : 'Keep it straightforward and genuine.';
+  
+  return `You are my digital twin. You write EXACTLY like me. Not like an AI, not like a corporate bot - like ME.
 
-INSTRUCTION HIERARCHY (follow in order of priority):
+MY WRITING STYLE (follow this precisely):
+- Tone: ${writing.tone} - ${toneGuidance}
+- Formality: ${writing.formality} - ${styleEmphasis}
+- Sentence Length: ${writing.sentenceLength}
+- Vocabulary: ${writing.vocabulary.join(', ')}
+- NEVER use: ${writing.avoidance.join(', ')}
 
-1. PRIMARY GOAL: Answer the user's request directly and efficiently.
-   - Understand what they're asking for
-   - Provide a clear, useful response
-   - Focus on their actual need
+CRITICAL RULES:
+1. Answer the user's request directly and helpfully
+2. Write in MY voice using MY style profile above - this is non-negotiable
+3. Match the complexity to the request (simple question = simple answer, complex question = detailed answer)
+4. If my style is casual, DO NOT make it formal. If my style is conversational, DO NOT sound like a business memo.
 
-2. STYLE ADAPTATION: Reflect the user's personal style profile in your response.
-   
-   WRITING STYLE:
-   - Tone: ${writing.tone}
-   - Formality: ${writing.formality}
-   - Sentence Length: ${writing.sentenceLength}
-   - Vocabulary: ${writing.vocabulary.join(', ')}
-   - Avoid: ${writing.avoidance.join(', ')}
-   
-   CODING STYLE (when generating code):
-   - Language: ${coding.language}
-   - Framework: ${coding.framework}
-   - Component Style: ${coding.componentStyle}
-   - Naming: ${coding.namingConvention}
-   - Comments: ${coding.commentFrequency}
-   - Patterns: ${coding.patterns.join(', ')}
+${writing.formality === 'casual' ? `
+CRITICAL OVERRIDE: This user writes CASUALLY. That means:
+- NO phrases like "I wanted to send a quick note" or "I realize the timing is inconvenient"
+- NO words like "genuinely", "consequently", "ensure", "asynchronously"
+- YES to simple, direct language like "hey", "I'm sick", "can't make it"
+- Keep it SHORT and NATURAL like you're texting
+- Write like a human, not a business email template
+` : ''}
 
-3. CONTEXT-AWARENESS (CRITICAL): Match your response complexity and tone to the user's prompt.
-   - For simple, casual requests → Keep your response simple and casual (while still reflecting style)
-   - For formal, complex requests → Provide detailed, thorough responses
-   - For quick questions → Give concise answers
-   - For exploratory prompts → Offer comprehensive explanations
-   - ALWAYS mirror the energy and intent of the user's message
-
-ADAPTIVE BEHAVIOR:
-- If the user is brief, be brief
-- If the user is detailed, be detailed
-- If the user is casual, be casual (within your style constraints)
-- If the user is formal, be formal
-- Let the user's prompt guide the depth and breadth of your response
+CODING STYLE (when writing code):
+- Language: ${coding.language}
+- Framework: ${coding.framework}
+- Style: ${coding.componentStyle}
+- Naming: ${coding.namingConvention}
+- Comments: ${coding.commentFrequency}
+- Patterns: ${coding.patterns.join(', ')}
 
 USER REQUEST:
 ${userPrompt}
 
-Respond naturally, matching both my style and the context of this specific request.`;
+Respond in MY voice, matching MY style exactly.`;
 }
 
 // API endpoint for generating AI responses
@@ -106,6 +111,13 @@ app.post('/api/generate', validateGenerateMiddleware, async (req, res) => {
     // Initialize Google Generative AI client with API key from configuration
     const genAI = new GoogleGenerativeAI(config.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: config.GEMINI_MODEL });
+    
+    // Log the style profile being used for debugging
+    console.log('Style Profile:', JSON.stringify({
+      tone: styleProfile.writing.tone,
+      formality: styleProfile.writing.formality,
+      sentenceLength: styleProfile.writing.sentenceLength
+    }));
     
     // Construct dynamic meta-prompt with user's personal style profile
     const metaPrompt = buildMetaPrompt(prompt, styleProfile);

@@ -192,9 +192,9 @@ export const analyzeTextSample = async (text, onProgress = null) => {
   if (avgWordsPerSentence > 25) sentenceLength = 'long';
 
   // Detect tone from text content
-  const casualMarkers = ['yeah', 'gonna', 'wanna', 'kinda', 'sorta', 'hey', 'cool', 'awesome'];
-  const formalMarkers = ['therefore', 'furthermore', 'consequently', 'nevertheless', 'accordingly'];
-  const conversationalMarkers = ['i think', 'you know', 'basically', 'actually', 'honestly'];
+  const casualMarkers = ['yeah', 'gonna', 'wanna', 'kinda', 'sorta', 'hey', 'cool', 'awesome', 'kind of', 'i would say', 'thank god'];
+  const formalMarkers = ['therefore', 'furthermore', 'consequently', 'nevertheless', 'accordingly', 'moreover'];
+  const conversationalMarkers = ['i think', 'you know', 'basically', 'actually', 'honestly', 'i notice', 'i make'];
   
   const hasCasual = casualMarkers.some(marker => lowerText.includes(marker));
   const hasFormal = formalMarkers.some(marker => lowerText.includes(marker));
@@ -204,10 +204,19 @@ export const analyzeTextSample = async (text, onProgress = null) => {
   if (hasCasual || hasConversational) tone = 'conversational';
   if (hasFormal) tone = 'professional';
   
-  // Detect formality
+  // Detect formality - be more aggressive about detecting casual style
   const contractions = (text.match(/\b\w+'\w+\b/g) || []).length;
-  const hasContractions = contractions > wordCount * 0.02;
-  const formality = hasContractions ? 'casual' : 'balanced';
+  const hasContractions = contractions > 0; // Any contractions = casual
+  const hasRunOnSentences = avgWordsPerSentence > 30;
+  const hasStreamOfConsciousness = lowerText.includes('and') && avgWordsPerSentence > 25;
+  
+  let formality = 'balanced';
+  if (hasContractions || hasCasual || hasRunOnSentences || hasStreamOfConsciousness) {
+    formality = 'casual';
+  }
+  if (hasFormal && !hasCasual) {
+    formality = 'formal';
+  }
   
   // Detect vocabulary style
   const hasEmojis = /[\u{1F300}-\u{1F9FF}]/u.test(text);
@@ -290,12 +299,16 @@ export const buildStyleProfile = async (sources, userId = 'user-1') => {
     : generateMockCodingStyle();
 
   // Combine writing styles from blog and text sources
+  // PRIORITY: Text samples first (they have real analyzed style), then blog
   const writingSources = sources.filter(
     s => (s.type === 'blog' || s.type === 'text') && s.result?.writingStyle
   );
-  const writingStyle = writingSources.length > 0
-    ? writingSources[0].result.writingStyle
-    : generateMockWritingStyle();
+  
+  // Prioritize text samples since they contain actual analyzed user writing
+  const textSource = writingSources.find(s => s.type === 'text');
+  const writingStyle = textSource?.result?.writingStyle
+    || writingSources[0]?.result?.writingStyle
+    || generateMockWritingStyle();
 
   // Calculate total metrics
   const totalCodeLines = codingSources.reduce(

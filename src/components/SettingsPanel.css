@@ -248,3 +248,38 @@
   outline: 2px solid var(--error);
   outline-offset: 2px;
 }
+
+/* Profile Controls */
+.profile-controls {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border);
+}
+
+.profile-controls h4 {
+  color: var(--text-primary);
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.reset-profile-button {
+  background-color: var(--danger, #dc3545);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all var(--transition-base);
+  margin-top: 1rem;
+}
+
+.reset-profile-button:hover {
+  background-color: #c82333;
+  transform: translateY(-1px);
+}
+
+.reset-profile-button:active {
+  transform: translateY(0);
+}

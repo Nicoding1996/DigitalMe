@@ -51,6 +51,25 @@ const SettingsPanel = ({ isOpen, onClose, styleProfile, sources, preferences, co
             <div className="settings-section">
               <h3>Profile Summary</h3>
               <ProfileSummary styleProfile={styleProfile} />
+              
+              <div className="profile-controls">
+                <h4>Profile Management</h4>
+                <p className="control-description">
+                  Reset your profile to re-analyze your writing style with updated algorithms.
+                </p>
+                <button 
+                  className="reset-profile-button"
+                  onClick={() => {
+                    if (window.confirm('This will clear your profile and require re-analysis. Continue?')) {
+                      localStorage.removeItem('digitalme_profile');
+                      localStorage.removeItem('digitalme_sources');
+                      window.location.reload();
+                    }
+                  }}
+                >
+                  Reset Profile & Re-analyze
+                </button>
+              </div>
             </div>
           )}
 

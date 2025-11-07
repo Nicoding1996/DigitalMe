@@ -151,14 +151,15 @@ export const generateMockStyleProfile = (userId = 'user-1') => {
  * @returns {Source}
  */
 export const generateMockSource = (type, url, userId = 'user-1') => {
+  const now = Date.now();
   return {
     id: generateId(),
     userId,
     type,
     url,
     status: 'complete',
-    addedAt: Date.now() - Math.random() * 86400000 * 30, // Random time in last 30 days
-    lastAnalyzed: Date.now() - Math.random() * 86400000 * 7, // Random time in last 7 days
+    addedAt: now, // Use actual current time
+    lastAnalyzed: now, // Use actual current time
     metadata: {
       itemsAnalyzed: Math.floor(Math.random() * 50) + 10,
       dataSize: Math.floor(Math.random() * 1000000) + 100000
