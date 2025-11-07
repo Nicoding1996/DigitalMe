@@ -1,0 +1,96 @@
+/**
+ * Request validation module
+ * Provides validation functions for API request payloads
+ * 
+ * SECURITY CONSIDERATIONS:
+ * - All validation errors return generic messages without exposing system internals
+ * - User input is validated before processing to prevent injection attacks
+ * - Error messages do not reveal implementation details or sensitive information
+ * - Maximum length limits prevent potential DoS attacks
+ */
+
+const MAX_PROMPT_LENGTH = 10000;
+
+/**
+ * Validates the request payload for the /api/generate endpoint
+ * @param {Object} body - The request body to validate
+ * @returns {Object} - { valid: boolean, error?: { error: string, message: string } }
+ */
+function validateGenerateRequest(body) {
+  // Check if body exists
+  if (!body || typeof body !== 'object') {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'Request body must be a valid JSON object'
+      }
+    };
+  }
+
+  // Check for presence of prompt field
+  if (!('prompt' in body)) {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'Missing required field: prompt'
+      }
+    };
+  }
+
+  // Ensure prompt is a string
+  if (typeof body.prompt !== 'string') {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'Field "prompt" must be a string'
+      }
+    };
+  }
+
+  // Ensure prompt is non-empty
+  if (body.prompt.trim().length === 0) {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'Field "prompt" cannot be empty'
+      }
+    };
+  }
+
+  // Validate maximum prompt length
+  if (body.prompt.length > MAX_PROMPT_LENGTH) {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: `Field "prompt" exceeds maximum length of ${MAX_PROMPT_LENGTH} characters`
+      }
+    };
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Express middleware for validating /api/generate requests
+ * Returns 400 status with error details if validation fails
+ */
+function validateGenerateMiddleware(req, res, next) {
+  const validation = validateGenerateRequest(req.body);
+  
+  if (!validation.valid) {
+    return res.status(400).json(validation.error);
+  }
+  
+  next();
+}
+
+module.exports = {
+  validateGenerateRequest,
+  validateGenerateMiddleware,
+  MAX_PROMPT_LENGTH
+};

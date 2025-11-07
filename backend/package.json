@@ -9,13 +9,13 @@
   },
   "keywords": [
     "express",
-    "anthropic",
+    "gemini",
     "proxy"
   ],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.68.0",
+    "@google/generative-ai": "^0.21.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0"
