@@ -1,5 +1,8 @@
+/**
+ * StyleControls Component
+ * Black Mirror aesthetic - System Preferences
+ */
 import { useState, useEffect } from 'react';
-import './StyleControls.css';
 
 const PREFERENCES_KEY = 'digitalme_preferences';
 
@@ -52,98 +55,78 @@ const StyleControls = ({ preferences, onUpdatePreferences }) => {
   };
 
   return (
-    <div className="style-controls">
-      <div className="control-group">
-        <div className="control-header">
-          <label className="control-label">Theme</label>
-          <span className="control-description">Choose your preferred color scheme</span>
-        </div>
-        <div className="theme-selector">
+    <div className="space-y-6">
+      {/* Theme */}
+      <div className="border border-static-whisper bg-void-surface p-4">
+        <div className="font-mono text-xs text-static-ghost mb-3">THEME</div>
+        <p className="font-mono text-xs text-static-muted mb-4">Choose your preferred color scheme</p>
+        <div className="grid grid-cols-2 gap-2">
           <button
-            className={`theme-option ${localPreferences.theme === 'dark' ? 'active' : ''}`}
+            className={`p-4 border font-mono text-xs transition-all ${
+              localPreferences.theme === 'dark'
+                ? 'border-unsettling-cyan text-unsettling-cyan bg-void-elevated'
+                : 'border-static-whisper text-static-muted hover:border-static-ghost'
+            }`}
             onClick={() => handleThemeChange('dark')}
           >
-            <div className="theme-preview dark-preview">
-              <div className="preview-bar"></div>
-              <div className="preview-bar"></div>
-            </div>
-            <span className="theme-label">Dark</span>
+            <div className="mb-2 h-8 bg-mirror-black border border-static-whisper"></div>
+            Dark
           </button>
           <button
-            className={`theme-option ${localPreferences.theme === 'light' ? 'active' : ''}`}
+            className={`p-4 border font-mono text-xs transition-all ${
+              localPreferences.theme === 'light'
+                ? 'border-unsettling-cyan text-unsettling-cyan bg-void-elevated'
+                : 'border-static-whisper text-static-muted hover:border-static-ghost'
+            }`}
             onClick={() => handleThemeChange('light')}
           >
-            <div className="theme-preview light-preview">
-              <div className="preview-bar"></div>
-              <div className="preview-bar"></div>
-            </div>
-            <span className="theme-label">Light</span>
+            <div className="mb-2 h-8 bg-static-white border border-static-whisper"></div>
+            Light
           </button>
         </div>
       </div>
 
-      <div className="control-group">
-        <div className="control-header">
-          <label className="control-label" htmlFor="glitch-slider">
-            Glitch Effect Intensity
-          </label>
-          <span className="control-description">
-            Adjust the intensity of the glitch animation
+      {/* Glitch Intensity */}
+      <div className="border border-static-whisper bg-void-surface p-4">
+        <div className="font-mono text-xs text-static-ghost mb-3">GLITCH_EFFECT_INTENSITY</div>
+        <p className="font-mono text-xs text-static-muted mb-4">Adjust the intensity of the glitch animation</p>
+        <div className="flex items-center gap-4 mb-3">
+          <span className={`font-mono text-xs ${localPreferences.glitchIntensity === 'low' ? 'text-unsettling-cyan' : 'text-static-ghost'}`}>
+            Low
+          </span>
+          <span className={`font-mono text-xs ${localPreferences.glitchIntensity === 'medium' ? 'text-unsettling-cyan' : 'text-static-ghost'}`}>
+            Medium
+          </span>
+          <span className={`font-mono text-xs ${localPreferences.glitchIntensity === 'high' ? 'text-unsettling-cyan' : 'text-static-ghost'}`}>
+            High
           </span>
         </div>
-        <div className="slider-container">
-          <input
-            id="glitch-slider"
-            type="range"
-            min="0"
-            max="2"
-            step="1"
-            value={localPreferences.glitchIntensity === 'low' ? 0 : localPreferences.glitchIntensity === 'medium' ? 1 : 2}
-            onChange={(e) => {
-              const values = ['low', 'medium', 'high'];
-              handleGlitchIntensityChange({ target: { value: values[e.target.value] } });
-            }}
-            className="glitch-slider"
-          />
-          <div className="slider-labels">
-            <span className={localPreferences.glitchIntensity === 'low' ? 'active' : ''}>Low</span>
-            <span className={localPreferences.glitchIntensity === 'medium' ? 'active' : ''}>Medium</span>
-            <span className={localPreferences.glitchIntensity === 'high' ? 'active' : ''}>High</span>
-          </div>
-        </div>
-        <div className="intensity-display">
-          Current: <span className="intensity-value">{getGlitchIntensityLabel(localPreferences.glitchIntensity)}</span>
+        <div className="font-mono text-xs text-static-white">
+          Current: <span className="text-unsettling-cyan">{getGlitchIntensityLabel(localPreferences.glitchIntensity)}</span>
         </div>
       </div>
 
-      <div className="control-group">
-        <div className="control-header">
-          <label className="control-label">Auto-Save</label>
-          <span className="control-description">
-            Automatically save conversation history
-          </span>
-        </div>
-        <div className="toggle-container">
-          <button
-            className={`toggle-button ${localPreferences.autoSave ? 'active' : ''}`}
-            onClick={handleAutoSaveToggle}
-            role="switch"
-            aria-checked={localPreferences.autoSave}
-          >
-            <div className="toggle-track">
-              <div className="toggle-thumb"></div>
-            </div>
-            <span className="toggle-label">
-              {localPreferences.autoSave ? 'Enabled' : 'Disabled'}
-            </span>
-          </button>
-        </div>
+      {/* Auto-Save */}
+      <div className="border border-static-whisper bg-void-surface p-4">
+        <div className="font-mono text-xs text-static-ghost mb-3">AUTO_SAVE</div>
+        <p className="font-mono text-xs text-static-muted mb-4">Automatically save conversation history</p>
+        <button
+          className={`px-6 py-2 border font-mono text-xs transition-all ${
+            localPreferences.autoSave
+              ? 'border-system-active text-system-active bg-void-elevated'
+              : 'border-static-whisper text-static-muted hover:border-static-ghost'
+          }`}
+          onClick={handleAutoSaveToggle}
+          role="switch"
+          aria-checked={localPreferences.autoSave}
+        >
+          {localPreferences.autoSave ? '[ENABLED]' : '[DISABLED]'}
+        </button>
       </div>
 
-      <div className="preferences-info">
-        <p className="info-text">
-          Preferences are saved locally in your browser and will persist across sessions.
-        </p>
+      {/* Info */}
+      <div className="font-mono text-xs text-static-ghost">
+        Preferences are saved locally in your browser and will persist across sessions.
       </div>
     </div>
   );

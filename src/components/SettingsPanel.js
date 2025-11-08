@@ -1,8 +1,11 @@
+/**
+ * SettingsPanel Component
+ * Black Mirror aesthetic - System Configuration Terminal
+ */
 import { useState } from 'react';
 import ProfileSummary from './ProfileSummary';
 import SourceManager from './SourceManager';
 import StyleControls from './StyleControls';
-import './SettingsPanel.css';
 
 const SettingsPanel = ({ isOpen, onClose, styleProfile, sources, preferences, conversationHistory = [], onUpdateSources, onUpdatePreferences, onClearHistory }) => {
   const [activeTab, setActiveTab] = useState('profile');
@@ -16,66 +19,103 @@ const SettingsPanel = ({ isOpen, onClose, styleProfile, sources, preferences, co
   };
 
   return (
-    <div className="settings-overlay" onClick={handleOverlayClick}>
-      <div className="settings-modal">
-        <div className="settings-header">
-          <h2>Settings</h2>
-          <button className="close-button" onClick={onClose} aria-label="Close settings">
-            ×
+    <div 
+      className="fixed inset-0 bg-overlay-darker backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      onClick={handleOverlayClick}
+    >
+      <div className="w-full max-w-4xl max-h-[90vh] bg-void-deep border border-static-whisper flex flex-col">
+        {/* Terminal header */}
+        <div className="flex items-center justify-between px-6 py-4 bg-void-elevated border-b border-static-whisper">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-glitch-red" />
+              <span className="w-2 h-2 rounded-full bg-system-warning" />
+              <span className="w-2 h-2 rounded-full bg-system-active" />
+            </div>
+            <span className="font-mono text-sm text-static-white">
+              [SYSTEM_CONFIGURATION.exe]
+            </span>
+          </div>
+          <button 
+            className="font-mono text-xl text-static-muted hover:text-glitch-red transition-colors"
+            onClick={onClose}
+            aria-label="Close settings"
+          >
+            [X]
           </button>
         </div>
 
-        <div className="settings-tabs">
+        {/* Tabs */}
+        <div className="flex border-b border-static-whisper bg-void-surface">
           <button
-            className={`tab-button ${activeTab === 'profile' ? 'active' : ''}`}
+            className={`flex-1 px-6 py-3 font-mono text-xs tracking-wider transition-all ${
+              activeTab === 'profile'
+                ? 'bg-void-elevated text-unsettling-cyan border-b-2 border-unsettling-cyan'
+                : 'text-static-muted hover:text-static-white hover:bg-void-elevated'
+            }`}
             onClick={() => setActiveTab('profile')}
           >
-            Profile
+            [PROFILE]
           </button>
           <button
-            className={`tab-button ${activeTab === 'sources' ? 'active' : ''}`}
+            className={`flex-1 px-6 py-3 font-mono text-xs tracking-wider transition-all ${
+              activeTab === 'sources'
+                ? 'bg-void-elevated text-unsettling-cyan border-b-2 border-unsettling-cyan'
+                : 'text-static-muted hover:text-static-white hover:bg-void-elevated'
+            }`}
             onClick={() => setActiveTab('sources')}
           >
-            Sources
+            [SOURCES]
           </button>
           <button
-            className={`tab-button ${activeTab === 'preferences' ? 'active' : ''}`}
+            className={`flex-1 px-6 py-3 font-mono text-xs tracking-wider transition-all ${
+              activeTab === 'preferences'
+                ? 'bg-void-elevated text-unsettling-cyan border-b-2 border-unsettling-cyan'
+                : 'text-static-muted hover:text-static-white hover:bg-void-elevated'
+            }`}
             onClick={() => setActiveTab('preferences')}
           >
-            Preferences
+            [PREFERENCES]
           </button>
         </div>
 
-        <div className="settings-content">
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto scrollbar-minimal p-6">
           {activeTab === 'profile' && (
-            <div className="settings-section">
-              <h3>Profile Summary</h3>
+            <div className="space-y-6">
+              <div className="font-mono text-xs text-static-ghost mb-4">
+                [PROFILE_SUMMARY]
+              </div>
               <ProfileSummary styleProfile={styleProfile} />
               
-              <div className="profile-controls">
-                <h4>Profile Management</h4>
-                <p className="control-description">
+              <div className="mt-8 pt-6 border-t border-static-whisper">
+                <div className="font-mono text-xs text-static-ghost mb-4">
+                  [PROFILE_MANAGEMENT]
+                </div>
+                <p className="font-mono text-xs text-static-muted mb-4 leading-relaxed">
                   Reset your profile to re-analyze your writing style with updated algorithms.
                 </p>
                 <button 
-                  className="reset-profile-button"
+                  className="px-6 py-3 bg-void-surface border border-glitch-red text-glitch-red font-mono text-xs hover:bg-glitch-red hover:text-void-deep transition-all"
                   onClick={() => {
-                    if (window.confirm('This will clear your profile and require re-analysis. Continue?')) {
+                    if (window.confirm('[CONFIRM] This will clear your profile and require re-analysis. Continue?')) {
                       localStorage.removeItem('digitalme_profile');
                       localStorage.removeItem('digitalme_sources');
                       window.location.reload();
                     }
                   }}
                 >
-                  Reset Profile & Re-analyze
+                  [RESET_PROFILE]
                 </button>
               </div>
             </div>
           )}
 
           {activeTab === 'sources' && (
-            <div className="settings-section">
-              <h3>Source Manager</h3>
+            <div className="space-y-6">
+              <div className="font-mono text-xs text-static-ghost mb-4">
+                [SOURCE_MANAGER]
+              </div>
               <SourceManager 
                 sources={sources}
                 onAddSource={onUpdateSources}
@@ -85,24 +125,28 @@ const SettingsPanel = ({ isOpen, onClose, styleProfile, sources, preferences, co
           )}
 
           {activeTab === 'preferences' && (
-            <div className="settings-section">
-              <h3>Style Controls</h3>
+            <div className="space-y-6">
+              <div className="font-mono text-xs text-static-ghost mb-4">
+                [STYLE_CONTROLS]
+              </div>
               <StyleControls 
                 preferences={preferences}
                 onUpdatePreferences={onUpdatePreferences}
               />
               
-              <div className="conversation-controls">
-                <h4>Conversation History</h4>
-                <p className="control-description">
-                  {conversationHistory.length} message{conversationHistory.length !== 1 ? 's' : ''} stored (max 50)
+              <div className="mt-8 pt-6 border-t border-static-whisper">
+                <div className="font-mono text-xs text-static-ghost mb-4">
+                  [CONVERSATION_HISTORY]
+                </div>
+                <p className="font-mono text-xs text-static-muted mb-4">
+                  STORED_MESSAGES: {conversationHistory.length} / 50
                 </p>
                 <button 
-                  className="clear-history-button"
+                  className="px-6 py-3 bg-void-surface border border-static-whisper text-static-white font-mono text-xs hover:border-glitch-red hover:text-glitch-red transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                   onClick={onClearHistory}
                   disabled={conversationHistory.length === 0}
                 >
-                  Clear History
+                  [CLEAR_HISTORY]
                 </button>
               </div>
             </div>
