@@ -51,7 +51,7 @@ const ResponseArea = ({ content, contentType = 'text', language = null, isLoadin
         
         {/* Placeholder content */}
         <div className="p-6 min-h-[160px] flex items-center justify-center">
-          <p className="text-static-ghost text-xs font-mono">AWAITING_RESPONSE...</p>
+          <p className="text-static-ghost text-xs font-mono">[DECRYPTING_STREAM...]</p>
         </div>
       </div>
     );

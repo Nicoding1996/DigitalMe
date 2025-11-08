@@ -29,10 +29,8 @@ const WelcomeScreen = ({ onGetStarted }) => {
 
         {/* System name - Terminal style */}
         <div className="mb-16 border border-static-whisper bg-void-surface p-8">
-          <div className="font-mono text-xs text-static-ghost mb-6">
-            [SYSTEM_IDENTIFICATION]
-          </div>
           <h1 className="text-5xl md:text-6xl font-display font-bold tracking-tighter mb-4">
+            <span className="text-static-ghost text-2xl md:text-3xl block mb-2">[SYSTEM_IDENTIFICATION]</span>
             <span className="text-static-white">DIGITAL</span>
             <span className="text-unsettling-cyan">_</span>
             <span className="text-static-white">ME</span>
@@ -56,7 +54,7 @@ const WelcomeScreen = ({ onGetStarted }) => {
                 </span>
                 <div className="flex-1">
                   <div className="font-mono text-sm text-static-white mb-1">
-                    PATTERN_ANALYSIS
+                    SOURCE_ANALYSIS_PROTOCOL
                   </div>
                   <div className="font-mono text-xs text-static-muted">
                     Analyze coding patterns and writing style from digital sources
@@ -72,7 +70,7 @@ const WelcomeScreen = ({ onGetStarted }) => {
                 </span>
                 <div className="flex-1">
                   <div className="font-mono text-sm text-static-white mb-1">
-                    CONTENT_GENERATION
+                    REFLECTION_GENERATION_ENGINE
                   </div>
                   <div className="font-mono text-xs text-static-muted">
                     Generate text and code in your unique voice and style
@@ -88,7 +86,7 @@ const WelcomeScreen = ({ onGetStarted }) => {
                 </span>
                 <div className="flex-1">
                   <div className="font-mono text-sm text-static-white mb-1">
-                    MIRROR_INTERFACE
+                    DIMENSIONAL_VOID_INTERFACE
                   </div>
                   <div className="font-mono text-xs text-static-muted">
                     Experience human-AI duality across the dimensional void

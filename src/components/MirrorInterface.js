@@ -217,7 +217,7 @@ const RightPanel = ({ response, isGenerating, messages, onExport }) => {
             Doppelgänger
           </h1>
           <p className="text-xs text-static-muted font-mono">
-            &gt; ...the void speaks back
+            &gt; REFLECTING_INPUT...
           </p>
         </div>
         

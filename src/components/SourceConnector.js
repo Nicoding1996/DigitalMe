@@ -68,11 +68,8 @@ const SourceConnector = ({ onSourcesSubmit }) => {
       <div className="relative z-10 w-full max-w-3xl fade-in">
         {/* Header */}
         <div className="mb-12">
-          <div className="font-mono text-xs text-static-ghost mb-6">
-            [DATA_INPUT_TERMINAL]
-          </div>
           <h2 className="text-3xl font-display font-bold text-static-white mb-4 tracking-tight">
-            Connect Your Digital Footprint
+            [ACQUIRE_SOURCE_DATA]
           </h2>
           <p className="font-mono text-xs text-static-muted leading-relaxed">
             &gt; Choose a source to analyze your unique style and build your AI twin
