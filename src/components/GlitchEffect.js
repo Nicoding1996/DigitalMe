@@ -1,5 +1,8 @@
+/**
+ * GlitchEffect Component
+ * Black Mirror aesthetic - Minimal glitch effect
+ */
 import { useEffect, useState } from 'react';
-import './GlitchEffect.css';
 
 const GlitchEffect = ({ children, intensity = 'medium', trigger = false }) => {
   const [isGlitching, setIsGlitching] = useState(false);
@@ -17,11 +20,8 @@ const GlitchEffect = ({ children, intensity = 'medium', trigger = false }) => {
     }
   }, [trigger, intensity]);
 
-  const intensityClass = `glitch-intensity-${intensity}`;
-  const activeClass = isGlitching ? 'glitch-active' : '';
-
   return (
-    <div className={`glitch-wrapper ${intensityClass} ${activeClass}`}>
+    <div className={isGlitching ? 'animate-glitch' : ''}>
       {children}
     </div>
   );

@@ -1,5 +1,7 @@
-import './DownloadButton.css';
-
+/**
+ * DownloadButton Component
+ * Black Mirror aesthetic - Download file
+ */
 const DownloadButton = ({ content, contentType = 'text', format = 'markdown' }) => {
   const detectLanguage = (content) => {
     // Simple language detection based on content patterns
@@ -57,27 +59,11 @@ const DownloadButton = ({ content, contentType = 'text', format = 'markdown' }) 
 
   return (
     <button 
-      className="download-button action-button"
+      className="px-6 py-2 bg-void-surface border border-static-whisper text-static-white font-mono text-xs hover:border-unsettling-cyan hover:text-unsettling-cyan transition-all disabled:opacity-30 disabled:cursor-not-allowed"
       onClick={handleDownload}
       disabled={!content}
     >
-      <svg 
-        className="button-icon" 
-        width="16" 
-        height="16" 
-        viewBox="0 0 16 16" 
-        fill="none" 
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path 
-          d="M8 2V10M8 10L11 7M8 10L5 7M2 11V13C2 13.5523 2.44772 14 3 14H13C13.5523 14 14 13.5523 14 13V11" 
-          stroke="currentColor" 
-          strokeWidth="1.5" 
-          strokeLinecap="round" 
-          strokeLinejoin="round"
-        />
-      </svg>
-      Download
+      [DOWNLOAD]
     </button>
   );
 };
