@@ -1,0 +1,143 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Black Mirror Base Styles */
+@layer base {
+  * {
+    @apply border-static-ghost;
+  }
+  
+  html {
+    @apply antialiased;
+  }
+  
+  body {
+    @apply bg-void-deep text-static-white font-sans;
+    @apply overflow-x-hidden;
+  }
+  
+  /* Selection - Unsettling blue highlight */
+  ::selection {
+    @apply bg-unsettling-blue text-mirror-black;
+  }
+  
+  /* Scrollbar - Minimal and dark */
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-void-surface;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-static-ghost rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-static-muted;
+  }
+  
+  /* Focus states - Minimal glow */
+  :focus-visible {
+    @apply outline-none ring-2 ring-unsettling-blue ring-offset-2 ring-offset-void-deep;
+  }
+}
+
+/* Black Mirror Custom Components */
+@layer components {
+  /* Glass morphism panels */
+  .glass-panel {
+    @apply bg-overlay-medium backdrop-blur-md border border-static-whisper;
+    @apply rounded-lg shadow-void;
+  }
+  
+  /* System text style */
+  .system-text {
+    @apply font-mono text-xs tracking-wider uppercase text-static-muted;
+  }
+  
+  /* Glitch effect utility */
+  .glitch-text {
+    @apply relative inline-block;
+    animation: glitch 3s infinite;
+  }
+  
+  /* Scanline effect */
+  .scanline {
+    @apply pointer-events-none absolute inset-0 z-50;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      rgba(255, 255, 255, 0.02) 50%,
+      transparent 100%
+    );
+    animation: scan 8s linear infinite;
+  }
+  
+  /* Button base - Minimal and flat */
+  .btn-primary {
+    @apply px-6 py-3 bg-void-elevated text-static-white;
+    @apply border border-static-ghost rounded;
+    @apply transition-all duration-300;
+    @apply hover:bg-overlay-medium hover:border-static-muted;
+    @apply active:scale-95;
+  }
+  
+  .btn-danger {
+    @apply px-6 py-3 bg-void-elevated text-glitch-red;
+    @apply border border-glitch-red-dim rounded;
+    @apply transition-all duration-300;
+    @apply hover:bg-glitch-red-dim hover:text-void-deep;
+    @apply active:scale-95;
+  }
+  
+  /* Input fields - Minimal and dark */
+  .input-field {
+    @apply w-full px-4 py-3 bg-void-surface text-static-white;
+    @apply border border-static-whisper rounded;
+    @apply transition-all duration-300;
+    @apply focus:border-unsettling-blue focus:bg-void-elevated;
+    @apply placeholder:text-static-ghost;
+  }
+  
+  /* Divider with glow */
+  .divider-glow {
+    @apply absolute w-px h-full bg-gradient-to-b;
+    @apply from-transparent via-unsettling-blue to-transparent;
+    @apply shadow-glow-blue;
+    animation: pulse-slow 3s ease-in-out infinite;
+  }
+}
+
+/* Black Mirror Utility Classes */
+@layer utilities {
+  /* Text glow effects */
+  .text-glow-red {
+    text-shadow: 0 0 10px rgba(255, 0, 51, 0.6);
+  }
+  
+  .text-glow-blue {
+    text-shadow: 0 0 10px rgba(0, 102, 255, 0.6);
+  }
+  
+  .text-glow-green {
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.6);
+  }
+  
+  /* Flicker animation */
+  .flicker {
+    animation: flicker 2s linear infinite;
+  }
+  
+  /* Fade in animation */
+  .fade-in {
+    animation: fade-in 0.5s ease-out;
+  }
+  
+  /* Slide up animation */
+  .slide-up {
+    animation: slide-up 0.4s ease-out;
+  }
+}
