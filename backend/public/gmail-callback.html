@@ -145,20 +145,25 @@
           spinnerEl.style.display = 'none';
           statusEl.className = 'status success';
           statusEl.textContent = 'Authentication successful!';
-          messageEl.textContent = 'Starting email analysis...';
+          messageEl.textContent = 'Redirecting...';
           
-          // Send success with session ID to parent window
+          // Try postMessage first (may be blocked by COOP)
           if (window.opener) {
-            window.opener.postMessage({
-              type: 'gmail-oauth-success',
-              sessionId: data.sessionId
-            }, window.location.origin);
+            try {
+              window.opener.postMessage({
+                type: 'gmail-oauth-success',
+                sessionId: data.sessionId
+              }, window.location.origin);
+            } catch (e) {
+              console.log('postMessage blocked, using redirect fallback');
+            }
           }
           
-          // Close window automatically after 1 second
+          // Fallback: redirect to main app with session ID
+          // This works even when COOP blocks postMessage
           setTimeout(() => {
-            window.close();
-          }, 1000);
+            window.location.href = `http://localhost:3000?gmail_session=${data.sessionId}&gmail_status=success`;
+          }, 500);
         })
         .catch(error => {
           spinnerEl.style.display = 'none';

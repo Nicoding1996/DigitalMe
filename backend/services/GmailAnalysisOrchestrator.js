@@ -70,9 +70,9 @@ class GmailAnalysisOrchestrator {
         throw new Error('ANALYSIS_INSUFFICIENT_EMAILS: No valid emails after cleansing. All emails were filtered out.');
       }
       
-      // Require at least 10 valid emails for meaningful analysis
-      if (cleansedEmails.length < 10) {
-        throw new Error(`ANALYSIS_INSUFFICIENT_EMAILS: Found ${cleansedEmails.length} valid emails, need at least 10.`);
+      // Require at least 5 valid emails for meaningful analysis
+      if (cleansedEmails.length < 5) {
+        throw new Error(`ANALYSIS_INSUFFICIENT_EMAILS: Found ${cleansedEmails.length} valid emails, need at least 5.`);
       }
       
       console.log(`[${sessionId}] Cleansed ${cleansedEmails.length} emails (filtered ${stats.filteredBySubject + stats.filteredByContent})`);

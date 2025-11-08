@@ -28,6 +28,44 @@ const GmailConnectButton = ({
   const pollingIntervalRef = useRef(null);
   const oauthWindowRef = useRef(null);
 
+  // Check for OAuth completion via localStorage (fallback when postMessage/redirect is blocked)
+  useEffect(() => {
+    const checkAuthCompletion = () => {
+      const sessionId = localStorage.getItem('gmail_session_id');
+      const authStatus = localStorage.getItem('gmail_auth_status');
+      
+      if (sessionId && authStatus === 'success' && connectionStatus === 'connecting') {
+        console.log('Detected Gmail session from localStorage:', sessionId);
+        
+        // Clear localStorage
+        localStorage.removeItem('gmail_session_id');
+        localStorage.removeItem('gmail_auth_status');
+        
+        // Start analysis tracking
+        setSessionId(sessionId);
+        setConnectionStatus('retrieving');
+        setProgressMessage('Retrieving sent emails');
+        
+        // Start polling
+        setTimeout(() => {
+          pollAnalysisStatus(sessionId);
+          const interval = setInterval(() => {
+            pollAnalysisStatus(sessionId);
+          }, 2000);
+          pollingIntervalRef.current = interval;
+        }, 100);
+      }
+    };
+    
+    // Check immediately
+    checkAuthCompletion();
+    
+    // Also check periodically while connecting (in case popup completes after we start checking)
+    const checkInterval = setInterval(checkAuthCompletion, 500);
+    
+    return () => clearInterval(checkInterval);
+  }, [connectionStatus]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Animated dots for loading states
   useEffect(() => {
     if (connectionStatus !== 'idle' && connectionStatus !== 'complete' && connectionStatus !== 'error') {
@@ -261,28 +299,28 @@ const GmailConnectButton = ({
         throw new Error('Popup blocked. Please allow popups for this site.');
       }
 
-      // Monitor popup closure
-      const checkPopupClosed = setInterval(() => {
-        if (oauthWindowRef.current && oauthWindowRef.current.closed) {
-          clearInterval(checkPopupClosed);
-          window.removeEventListener('message', handleMessage);
-          
-          // Only set error if we're still in connecting state
-          if (connectionStatus === 'connecting') {
-            setConnectionStatus('error');
-            setError('OAuth cancelled by user');
-          }
-        }
-      }, 500);
+      // Note: We don't monitor popup closure anymore to avoid COOP warnings
+      // The popup will redirect back to the main app with session ID in URL
 
     } catch (err) {
       console.error('Error initiating Gmail connection:', err);
       setConnectionStatus('error');
       
-      // Handle error object or create one
-      const errorObj = typeof err === 'object' && err !== null && err.message
-        ? err
-        : { message: err.message || 'Failed to connect to Gmail', canRetry: true };
+      // Handle error object or create one - ensure we have a proper error object
+      let errorObj;
+      if (typeof err === 'object' && err !== null) {
+        // If it's already an error object with message, code, etc., use it
+        errorObj = {
+          message: err.message || 'Failed to connect to Gmail',
+          code: err.code,
+          canRetry: err.canRetry !== false,
+          userAction: err.userAction
+        };
+      } else if (typeof err === 'string') {
+        errorObj = { message: err, canRetry: true };
+      } else {
+        errorObj = { message: 'Failed to connect to Gmail', canRetry: true };
+      }
       
       setError(errorObj);
       
@@ -374,8 +412,8 @@ const GmailConnectButton = ({
   const renderContent = () => {
     // Error state
     if (connectionStatus === 'error') {
-      // Parse error object if it's JSON
-      let errorMessage = error || 'Failed to connect to Gmail';
+      // Parse error object - ensure we always have strings for rendering
+      let errorMessage = 'Failed to connect to Gmail';
       let userAction = null;
       let canRetry = true;
       
@@ -384,14 +422,19 @@ const GmailConnectButton = ({
           errorMessage = error.message || errorMessage;
           userAction = error.userAction;
           canRetry = error.canRetry !== false;
-        } else if (typeof error === 'string' && error.startsWith('{')) {
-          const errorObj = JSON.parse(error);
-          errorMessage = errorObj.message || errorMessage;
-          userAction = errorObj.userAction;
-          canRetry = errorObj.canRetry !== false;
+        } else if (typeof error === 'string') {
+          if (error.startsWith('{')) {
+            const errorObj = JSON.parse(error);
+            errorMessage = errorObj.message || errorMessage;
+            userAction = errorObj.userAction;
+            canRetry = errorObj.canRetry !== false;
+          } else {
+            errorMessage = error;
+          }
         }
       } catch (e) {
-        // Use error as-is if parsing fails
+        // Use default error message if parsing fails
+        errorMessage = 'Failed to connect to Gmail';
       }
 
       return (

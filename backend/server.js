@@ -40,6 +40,13 @@ app.use(cors({
   credentials: true
 }));
 
+// Add Cross-Origin-Opener-Policy header to allow popup communication
+app.use((req, res, next) => {
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+  res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
+  next();
+});
+
 // Basic health check endpoint
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });

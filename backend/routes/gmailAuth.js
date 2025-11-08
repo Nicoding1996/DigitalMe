@@ -133,11 +133,45 @@ router.get('/callback', gmailAuthLimiter, validateGmailCallback, async (req, res
     
     // Handle OAuth errors (user denied permission, etc.)
     if (oauthError) {
-      const errorInfo = GmailErrorHandler.handleError(
-        new Error(oauthError === 'access_denied' ? 'access_denied' : 'OAuth authorization failed'),
-        'oauth'
-      );
-      return res.status(400).json(errorInfo);
+      const errorMessage = oauthError === 'access_denied' 
+        ? 'Gmail access was denied' 
+        : 'OAuth authorization failed';
+      
+      return res.send(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Gmail Authentication Error</title>
+  <style>
+    body {
+      font-family: 'Courier New', monospace;
+      background: #0a0a0a;
+      color: #ff0055;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    .container { text-align: center; max-width: 500px; }
+    .status { font-size: 18px; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="status">${errorMessage}</div>
+    <div>Redirecting...</div>
+  </div>
+  <script>
+    setTimeout(() => {
+      window.location.href = 'http://localhost:3000?gmail_status=error&gmail_error=${encodeURIComponent(errorMessage)}';
+    }, 2000);
+  </script>
+</body>
+</html>
+      `);
     }
     
     // Find session by state token
@@ -174,12 +208,82 @@ router.get('/callback', gmailAuthLimiter, validateGmailCallback, async (req, res
     session.expiresAt = expiresAt;
     session.status = 'authenticated';
     
-    // Return success response with session ID
-    res.json({
-      success: true,
-      sessionId: sessionId,
-      message: 'Gmail authentication successful'
-    });
+    // Serve HTML page that will redirect to main app
+    res.send(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gmail Authentication</title>
+  <style>
+    body {
+      font-family: 'Courier New', monospace;
+      background: #0a0a0a;
+      color: #00ff9f;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      text-align: center;
+      max-width: 500px;
+    }
+    .status {
+      font-size: 18px;
+      margin-bottom: 20px;
+      color: #00ff9f;
+    }
+    .spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(0, 255, 159, 0.3);
+      border-top-color: #00ff9f;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="spinner"></div>
+    <div class="status">Authentication successful! Redirecting...</div>
+  </div>
+  <script>
+    // Store session ID in localStorage so parent window can access it
+    localStorage.setItem('gmail_session_id', '${sessionId}');
+    localStorage.setItem('gmail_auth_status', 'success');
+    
+    setTimeout(() => {
+      // Try to notify parent window via postMessage (may be blocked by COOP)
+      try {
+        if (window.opener && !window.opener.closed) {
+          window.opener.postMessage({
+            type: 'gmail-oauth-complete',
+            sessionId: '${sessionId}',
+            status: 'success'
+          }, 'http://localhost:3000');
+        }
+      } catch (e) {
+        console.log('postMessage blocked, parent will check localStorage');
+      }
+      
+      // Close popup after a short delay
+      setTimeout(() => {
+        window.close();
+      }, 1000);
+    }, 500);
+  </script>
+</body>
+</html>
+    `);
     
     // Trigger analysis asynchronously (don't wait for completion)
     // The frontend will poll /api/gmail/analysis-status/:sessionId for progress

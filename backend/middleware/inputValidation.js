@@ -154,7 +154,12 @@ function validateGmailInitiate(req, res, next) {
   }
   
   const config = require('../config');
-  const allowedOrigins = [config.FRONTEND_URL];
+  // Allow both frontend and backend URLs for redirect
+  const allowedOrigins = [
+    config.FRONTEND_URL,
+    `http://localhost:${config.PORT}`,
+    `https://localhost:${config.PORT}`
+  ];
   const urlValidation = validateUrl(redirectUri, allowedOrigins);
   
   if (!urlValidation.valid) {
