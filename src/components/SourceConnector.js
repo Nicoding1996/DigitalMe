@@ -61,18 +61,21 @@ const SourceConnector = ({ onSourcesSubmit }) => {
   };
 
   return (
-    <div className="relative flex items-center justify-center min-h-screen bg-void-deep px-6 py-12">
+    <div className="relative flex items-center justify-center min-h-screen bg-mirror-black px-6 py-12">
       {/* Scanline effect */}
       <div className="scanline" />
       
-      <div className="relative z-10 w-full max-w-2xl fade-in">
+      <div className="relative z-10 w-full max-w-3xl fade-in">
         {/* Header */}
-        <div className="text-center mb-12">
+        <div className="mb-12">
+          <div className="font-mono text-xs text-static-ghost mb-6">
+            [DATA_INPUT_TERMINAL]
+          </div>
           <h2 className="text-3xl font-display font-bold text-static-white mb-4 tracking-tight">
             Connect Your Digital Footprint
           </h2>
-          <p className="text-sm text-static-dim leading-relaxed">
-            Choose a source to analyze your unique style and build your AI twin
+          <p className="font-mono text-xs text-static-muted leading-relaxed">
+            &gt; Choose a source to analyze your unique style and build your AI twin
           </p>
         </div>
 
@@ -80,43 +83,43 @@ const SourceConnector = ({ onSourcesSubmit }) => {
         <div className="flex gap-2 mb-8">
           <button
             onClick={() => handleTabChange('github')}
-            className={`flex-1 px-6 py-4 font-mono text-sm tracking-wide transition-all duration-300 ${
+            className={`flex-1 px-6 py-4 font-mono text-xs tracking-wider transition-all ${
               activeTab === 'github'
-                ? 'bg-void-elevated text-static-white border-2 border-unsettling-blue'
-                : 'bg-void-surface text-static-muted border-2 border-static-whisper hover:border-static-ghost'
+                ? 'bg-void-elevated text-unsettling-cyan border border-unsettling-cyan'
+                : 'bg-void-surface text-static-muted border border-static-whisper hover:border-static-ghost'
             }`}
           >
-            <span className="block mb-1 text-lg">{'<>'}</span>
-            GitHub
+            <span className="block mb-2 text-lg">{'<>'}</span>
+            [GITHUB]
           </button>
           
           <button
             onClick={() => handleTabChange('blog')}
-            className={`flex-1 px-6 py-4 font-mono text-sm tracking-wide transition-all duration-300 ${
+            className={`flex-1 px-6 py-4 font-mono text-xs tracking-wider transition-all ${
               activeTab === 'blog'
-                ? 'bg-void-elevated text-static-white border-2 border-unsettling-blue'
-                : 'bg-void-surface text-static-muted border-2 border-static-whisper hover:border-static-ghost'
+                ? 'bg-void-elevated text-unsettling-cyan border border-unsettling-cyan'
+                : 'bg-void-surface text-static-muted border border-static-whisper hover:border-static-ghost'
             }`}
           >
-            <span className="block mb-1 text-lg">✎</span>
-            Blog
+            <span className="block mb-2 text-lg">✎</span>
+            [BLOG]
           </button>
           
           <button
             onClick={() => handleTabChange('text')}
-            className={`flex-1 px-6 py-4 font-mono text-sm tracking-wide transition-all duration-300 ${
+            className={`flex-1 px-6 py-4 font-mono text-xs tracking-wider transition-all ${
               activeTab === 'text'
-                ? 'bg-void-elevated text-static-white border-2 border-unsettling-blue'
-                : 'bg-void-surface text-static-muted border-2 border-static-whisper hover:border-static-ghost'
+                ? 'bg-void-elevated text-unsettling-cyan border border-unsettling-cyan'
+                : 'bg-void-surface text-static-muted border border-static-whisper hover:border-static-ghost'
             }`}
           >
-            <span className="block mb-1 text-lg">⌘</span>
-            Text Sample
+            <span className="block mb-2 text-lg">⌘</span>
+            [TEXT]
           </button>
         </div>
 
         {/* Input Area */}
-        <div className="glass-panel p-8 mb-8">
+        <div className="border border-static-whisper bg-void-surface p-8 mb-8">
           {activeTab === 'github' && (
             <div className="space-y-4">
               <label className="system-text block">GITHUB USERNAME</label>
@@ -178,10 +181,9 @@ const SourceConnector = ({ onSourcesSubmit }) => {
         {/* Action Button */}
         <button 
           onClick={validateAndSubmit}
-          className="btn-primary w-full text-base tracking-wide group relative overflow-hidden"
+          className="w-full px-8 py-4 bg-void-surface border border-static-whisper text-static-white font-mono text-sm tracking-wider hover:border-unsettling-cyan hover:text-unsettling-cyan transition-all"
         >
-          <span className="relative z-10">ANALYZE STYLE</span>
-          <div className="absolute inset-0 bg-unsettling-blue opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
+          &gt; ANALYZE_STYLE
         </button>
       </div>
     </div>
