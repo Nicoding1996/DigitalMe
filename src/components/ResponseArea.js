@@ -1,7 +1,10 @@
+/**
+ * ResponseArea Component
+ * Black Mirror aesthetic - AI response display
+ */
 import { useState, useEffect } from 'react';
 import LoadingIndicator from './LoadingIndicator';
 import GlitchEffect from './GlitchEffect';
-import './ResponseArea.css';
 
 const ResponseArea = ({ content, contentType = 'text', language = null, isLoading = false, glitchIntensity = 'medium' }) => {
   const [triggerGlitch, setTriggerGlitch] = useState(false);
@@ -12,7 +15,6 @@ const ResponseArea = ({ content, contentType = 'text', language = null, isLoadin
       setTriggerGlitch(true);
       setPrevContent(content);
       
-      // Reset trigger after animation
       const timer = setTimeout(() => {
         setTriggerGlitch(false);
       }, 100);
@@ -23,7 +25,7 @@ const ResponseArea = ({ content, contentType = 'text', language = null, isLoadin
 
   if (isLoading) {
     return (
-      <div className="response-area">
+      <div className="glass-panel p-6 mb-6 min-h-[160px] flex items-center justify-center">
         <LoadingIndicator />
       </div>
     );
@@ -31,19 +33,21 @@ const ResponseArea = ({ content, contentType = 'text', language = null, isLoadin
 
   if (!content) {
     return (
-      <div className="response-area">
-        <p className="response-placeholder">Your reflection awaits...</p>
+      <div className="glass-panel p-6 mb-6 min-h-[160px] flex items-center justify-center">
+        <p className="text-static-ghost text-sm italic">Your reflection awaits...</p>
       </div>
     );
   }
 
   return (
-    <div className="response-area">
+    <div className="glass-panel p-6 mb-6 min-h-[160px]">
       <GlitchEffect intensity={glitchIntensity} trigger={triggerGlitch}>
         {contentType === 'code' ? (
           <CodeBlock code={content} language={language} />
         ) : (
-          <p className="response-text">{content}</p>
+          <p className="text-static-white text-sm leading-relaxed whitespace-pre-wrap">
+            {content}
+          </p>
         )}
       </GlitchEffect>
     </div>
@@ -52,14 +56,16 @@ const ResponseArea = ({ content, contentType = 'text', language = null, isLoadin
 
 const CodeBlock = ({ code, language }) => {
   return (
-    <div className="code-block">
+    <div className="bg-void-surface border border-static-whisper overflow-hidden">
       {language && (
-        <div className="code-header">
-          <span className="code-language">{language}</span>
+        <div className="px-4 py-2 bg-void-elevated border-b border-static-whisper">
+          <span className="system-text text-unsettling-blue">{language}</span>
         </div>
       )}
-      <pre className="code-pre">
-        <code className="code-content">{code}</code>
+      <pre className="p-4 overflow-x-auto">
+        <code className="text-static-white text-xs font-mono leading-relaxed">
+          {code}
+        </code>
       </pre>
     </div>
   );

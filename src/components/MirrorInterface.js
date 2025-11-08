@@ -1,10 +1,13 @@
+/**
+ * MirrorInterface Component
+ * Black Mirror aesthetic - Split-screen human-AI duality
+ */
 import { useState, useEffect } from 'react';
 import InputArea from './InputArea';
 import ResponseArea from './ResponseArea';
 import MessageHistory from './MessageHistory';
 import { generateId } from '../models';
 import { generateContent } from '../services/ContentGenerator';
-import './MirrorInterface.css';
 
 const MirrorInterface = ({ styleProfile, conversationHistory = [], onSubmit, onExport, onConversationUpdate }) => {
   const [messages, setMessages] = useState(conversationHistory);
@@ -116,12 +119,20 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], onSubmit, onE
   };
 
   return (
-    <div className="mirror-interface">
-      <div className="mirror-split-container">
+    <div className="relative w-full h-screen bg-void-deep overflow-hidden" style={{ marginTop: '60px', height: 'calc(100vh - 60px)' }}>
+      {/* Scanline effect */}
+      <div className="scanline" />
+      
+      {/* Split container */}
+      <div className="grid grid-cols-1 md:grid-cols-2 w-full h-full relative">
         <LeftPanel 
           onSubmit={handleSubmit}
           messages={messages}
         />
+        
+        {/* Center divider with glow */}
+        <div className="hidden md:block divider-glow left-1/2 -translate-x-1/2" />
+        
         <RightPanel 
           response={currentResponse}
           isGenerating={isGenerating}
@@ -135,11 +146,19 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], onSubmit, onE
 
 const LeftPanel = ({ onSubmit, messages }) => {
   return (
-    <div className="mirror-panel left-panel">
-      <div className="panel-content">
-        <h1 className="panel-title">Human</h1>
-        <p className="panel-subtitle">Speak into the void...</p>
+    <div className="relative flex items-start justify-center p-8 md:p-12 overflow-y-auto">
+      <div className="w-full max-w-md pt-8">
+        <div className="mb-8">
+          <h1 className="text-4xl font-display font-bold text-static-white mb-2 tracking-tight">
+            Human
+          </h1>
+          <p className="text-sm text-static-muted italic">
+            Speak into the void...
+          </p>
+        </div>
+        
         <InputArea onSubmit={onSubmit} />
+        
         <MessageHistory messages={messages} role="user" />
       </div>
     </div>
@@ -148,21 +167,28 @@ const LeftPanel = ({ onSubmit, messages }) => {
 
 const RightPanel = ({ response, isGenerating, messages, onExport }) => {
   return (
-    <div className="mirror-panel right-panel">
-      <div className="panel-content">
-        <h1 className="panel-title glitch-effect" data-text="Doppelgänger">
-          Doppelgänger
-        </h1>
-        <p className="panel-subtitle">...the void speaks back</p>
+    <div className="relative flex items-start justify-center p-8 md:p-12 overflow-y-auto">
+      <div className="w-full max-w-md pt-8">
+        <div className="mb-8">
+          <h1 className="text-4xl font-display font-bold text-static-white mb-2 tracking-tight">
+            Doppelgänger
+          </h1>
+          <p className="text-sm text-static-muted italic">
+            ...the void speaks back
+          </p>
+        </div>
+        
         <ResponseArea 
           content={response?.content}
           contentType={response?.contentType}
           language={response?.language}
           isLoading={isGenerating}
         />
-        <div className="system-status">
-          [ SYSTEM: Mirror initialized ]
+        
+        <div className="system-text text-static-ghost text-center mt-6 animate-pulse-slow">
+          [ SYSTEM: MIRROR INITIALIZED ]
         </div>
+        
         <MessageHistory messages={messages} role="ai" onExport={onExport} />
       </div>
     </div>
