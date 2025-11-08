@@ -7,34 +7,42 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Black Mirror Core Palette
+        // The Void - Pure darkness
         'mirror-black': '#000000',
-        'void-deep': '#0a0a0a',
-        'void-surface': '#0f0f0f',
-        'void-elevated': '#141414',
+        'void-deep': '#050505',
+        'void-surface': '#0a0a0a',
+        'void-elevated': '#0f0f0f',
         
-        // Neutral Grays - Cold and Clinical
+        // Static - Cold, lifeless grays
         'static-white': '#e8e8e8',
-        'static-dim': '#b0b0b0',
-        'static-muted': '#6b6b6b',
-        'static-ghost': '#3a3a3a',
-        'static-whisper': '#1f1f1f',
+        'static-dim': '#a0a0a0',
+        'static-muted': '#606060',
+        'static-ghost': '#2a2a2a',
+        'static-whisper': '#1a1a1a',
         
-        // Accent Colors - Unsettling and Minimal
+        // Glitch - Error states, warnings
         'glitch-red': '#ff0033',
         'glitch-red-dim': '#cc0029',
+        'glitch-pink': '#ff0080',
+        
+        // Unsettling - Primary interactions
+        'unsettling-cyan': '#00d9ff',
+        'unsettling-cyan-dim': '#00a8cc',
         'unsettling-blue': '#0066ff',
         'unsettling-blue-dim': '#0052cc',
-        'warning-amber': '#ffaa00',
-        'warning-amber-dim': '#cc8800',
         
-        // System Status Colors
+        // System - Status indicators
         'system-active': '#00ff88',
         'system-error': '#ff1744',
-        'system-warning': '#ffc107',
+        'system-warning': '#ffaa00',
         'system-idle': '#546e7a',
         
-        // Overlay and Glass Effects
+        // The Chasm - For the central void
+        'chasm-start': 'rgba(0, 217, 255, 0.0)',
+        'chasm-mid': 'rgba(0, 217, 255, 0.15)',
+        'chasm-end': 'rgba(0, 217, 255, 0.0)',
+        
+        // Overlay effects
         'overlay-light': 'rgba(255, 255, 255, 0.03)',
         'overlay-medium': 'rgba(255, 255, 255, 0.06)',
         'overlay-heavy': 'rgba(255, 255, 255, 0.10)',
@@ -43,30 +51,28 @@ module.exports = {
       },
       
       fontFamily: {
-        // Primary: Clean, minimal, slightly cold
+        // Primary: Cold, clinical, slightly unsettling
         'sans': [
+          'IBM Plex Sans',
           'Inter',
           '-apple-system',
           'BlinkMacSystemFont',
-          'Segoe UI',
-          'Roboto',
           'sans-serif'
         ],
         
-        // Monospace: For system messages and technical elements
+        // Monospace: Terminal, logs, system messages
         'mono': [
+          'IBM Plex Mono',
           'JetBrains Mono',
           'Fira Code',
           'Consolas',
-          'Monaco',
-          'Courier New',
           'monospace'
         ],
         
-        // Display: For dramatic moments (optional, can use sans)
+        // Display: For dramatic moments
         'display': [
           'Space Grotesk',
-          'Inter',
+          'IBM Plex Sans',
           'sans-serif'
         ]
       },
@@ -115,6 +121,7 @@ module.exports = {
         'scan': 'scan 8s linear infinite',
         'fade-in': 'fadeIn 0.5s ease-out',
         'slide-up': 'slideUp 0.4s ease-out',
+        'scroll-pulse': 'scrollPulse 2s ease-in-out infinite',
       },
       
       keyframes: {
@@ -147,6 +154,10 @@ module.exports = {
         slideUp: {
           '0%': { transform: 'translateY(20px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        scrollPulse: {
+          '0%, 100%': { opacity: '0' },
+          '50%': { opacity: '1' },
         },
       },
       

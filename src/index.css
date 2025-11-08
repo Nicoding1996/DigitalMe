@@ -118,8 +118,8 @@
     text-shadow: 0 0 10px rgba(255, 0, 51, 0.6);
   }
   
-  .text-glow-blue {
-    text-shadow: 0 0 10px rgba(0, 102, 255, 0.6);
+  .text-glow-cyan {
+    text-shadow: 0 0 10px rgba(0, 217, 255, 0.6);
   }
   
   .text-glow-green {
@@ -139,5 +139,29 @@
   /* Slide up animation */
   .slide-up {
     animation: slide-up 0.4s ease-out;
+  }
+  
+  /* Minimal scrollbar - Data stream aesthetic */
+  .scrollbar-minimal {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 217, 255, 0.2) transparent;
+  }
+  
+  .scrollbar-minimal::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  
+  .scrollbar-minimal::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollbar-minimal::-webkit-scrollbar-thumb {
+    background: rgba(0, 217, 255, 0.2);
+    border-radius: 0;
+  }
+  
+  .scrollbar-minimal::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 217, 255, 0.4);
   }
 }

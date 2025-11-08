@@ -1,6 +1,6 @@
 /**
  * InputArea Component
- * Black Mirror aesthetic - Minimal message input
+ * Black Mirror aesthetic - Command Terminal Interface
  */
 import { useState } from 'react';
 
@@ -14,7 +14,7 @@ const InputArea = ({ onSubmit }) => {
     const value = e.target.value;
     
     if (value.length > MAX_INPUT_LENGTH) {
-      setError(`Input exceeds maximum length of ${MAX_INPUT_LENGTH} characters`);
+      setError(`BUFFER_OVERFLOW`);
       return;
     }
     
@@ -26,12 +26,12 @@ const InputArea = ({ onSubmit }) => {
     const trimmedInput = input.trim();
     
     if (!trimmedInput) {
-      setError('Please enter a message');
+      setError('EMPTY_INPUT');
       return;
     }
     
     if (trimmedInput.length > MAX_INPUT_LENGTH) {
-      setError(`Input exceeds maximum length of ${MAX_INPUT_LENGTH} characters`);
+      setError('BUFFER_OVERFLOW');
       return;
     }
     
@@ -51,41 +51,57 @@ const InputArea = ({ onSubmit }) => {
   const isNearLimit = characterCount > MAX_INPUT_LENGTH * 0.9;
 
   return (
-    <div className="mb-6">
-      <textarea
-        className={`input-field min-h-[160px] resize-none ${error ? 'border-glitch-red' : ''}`}
-        placeholder="Type your message..."
-        value={input}
-        onChange={handleInputChange}
-        onKeyDown={handleKeyDown}
-        rows={6}
-      />
+    <div className="w-full mb-6 border border-static-whisper bg-void-surface">
+      {/* Terminal header */}
+      <div className="flex items-center justify-between px-4 py-2 bg-void-elevated border-b border-static-whisper">
+        <div className="flex items-center gap-2 font-mono text-xs text-static-muted">
+          <span className="w-2 h-2 rounded-full bg-glitch-red" />
+          <span className="w-2 h-2 rounded-full bg-system-warning" />
+          <span className="w-2 h-2 rounded-full bg-system-active" />
+          <span className="ml-4">TERMINAL_INPUT.exe</span>
+        </div>
+        <span className="font-mono text-xs text-static-ghost">
+          [{characterCount}/{MAX_INPUT_LENGTH}]
+        </span>
+      </div>
       
-      {error && (
-        <div className="text-glitch-red text-xs font-mono mt-2">{error}</div>
-      )}
+      {/* Terminal body */}
+      <div className="p-4">
+        {/* Command prompt */}
+        <div className="flex items-start gap-2 font-mono text-sm">
+          <span className="text-unsettling-cyan select-none pt-1">&gt;</span>
+          <textarea
+            className="flex-1 bg-transparent text-static-white font-mono text-sm leading-relaxed resize-none outline-none placeholder:text-static-ghost"
+            placeholder="Enter command..."
+            value={input}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            rows={6}
+          />
+        </div>
+      </div>
       
-      <div className="flex items-center justify-between mt-3">
-        <p className="text-xs text-static-ghost font-mono">
-          CTRL+ENTER TO SEND
-          {isNearLimit && (
-            <span className={`ml-2 ${characterCount >= MAX_INPUT_LENGTH ? 'text-glitch-red' : 'text-warning-amber'}`}>
-              • {characterCount}/{MAX_INPUT_LENGTH}
-            </span>
-          )}
-        </p>
-        
+      {/* Terminal footer */}
+      <div className="flex items-center justify-between px-4 py-2 bg-void-elevated border-t border-static-whisper font-mono text-xs">
+        <span className="text-static-ghost">
+          [CTRL+ENTER] EXECUTE
+        </span>
+        {error && (
+          <span className="text-glitch-red">
+            [ERROR: {error}]
+          </span>
+        )}
+        {isNearLimit && !error && (
+          <span className={characterCount >= MAX_INPUT_LENGTH ? 'text-glitch-red' : 'text-system-warning'}>
+            [WARNING: BUFFER_{Math.round((characterCount / MAX_INPUT_LENGTH) * 100)}%]
+          </span>
+        )}
         <button 
-          className="btn-primary px-6 py-2 text-sm disabled:opacity-40 disabled:cursor-not-allowed group"
           onClick={handleSubmit}
           disabled={!input.trim() || !!error}
+          className="px-4 py-1 bg-void-surface border border-static-whisper text-static-white hover:border-unsettling-cyan hover:text-unsettling-cyan disabled:opacity-30 disabled:cursor-not-allowed transition-all"
         >
-          <span className="flex items-center gap-2">
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
-            </svg>
-            SEND
-          </span>
+          EXECUTE
         </button>
       </div>
     </div>
