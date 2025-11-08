@@ -52,7 +52,7 @@
 - **POST** `/api/generate` - Generates AI responses with style profile
   - Accepts: `{ prompt: string, styleProfile: object }`
   - Returns: Streaming text response
-  - Uses: Google Gemini 2.0 Flash Exp model
+  - Uses: Google Gemini Flash Latest (1M token context, enhanced reasoning)
 
 #### Files
 - `backend/server.js` - Main server with Gemini integration
@@ -107,7 +107,7 @@ Frontend runs on: **http://localhost:3000**
 GEMINI_API_KEY=AIza-your-api-key-here
 PORT=3001
 FRONTEND_URL=http://localhost:3000
-GEMINI_MODEL=gemini-2.0-flash-exp
+GEMINI_MODEL=gemini-flash-latest
 ```
 
 ---
@@ -297,7 +297,7 @@ To showcase the complete experience:
 
 ## 📝 NOTES
 
-- Backend uses **Google Gemini 2.0 Flash Exp** (free tier: 15 req/min)
+- Backend uses **Google Gemini Flash Latest** (1M token context, enhanced reasoning with thinking budgets)
 - Frontend has **fallback mock responses** if backend unavailable
 - All styling is **pure Tailwind** - no custom CSS files
 - Design system is **fully documented** in `BLACK_MIRROR_DESIGN_SYSTEM.md`

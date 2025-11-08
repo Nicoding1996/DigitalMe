@@ -83,6 +83,7 @@
 **Features:**
 - Email analysis (Gmail, Outlook integration)
 - Slack/Discord message history
+- Messenger/FB
 - Twitter/social media posts
 - Code commit messages
 - Real GitHub API integration (not mock)
