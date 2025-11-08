@@ -31,6 +31,9 @@ const app = express();
 // Configure JSON body parser middleware
 app.use(express.json());
 
+// Serve static files for OAuth callback page
+app.use(express.static('public'));
+
 // Configure CORS middleware with origin from FRONTEND_URL
 app.use(cors({
   origin: config.FRONTEND_URL,
@@ -41,6 +44,16 @@ app.use(cors({
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
+
+// Gmail OAuth routes (if Gmail integration is enabled)
+if (config.isGmailEnabled()) {
+  const { router: gmailAuthRouter } = require('./routes/gmailAuth');
+  app.use('/api/auth/gmail', gmailAuthRouter);
+  app.use('/api/gmail', gmailAuthRouter);
+  console.log('Gmail integration enabled');
+} else {
+  console.log('Gmail integration disabled (missing configuration)');
+}
 
 /**
  * Build a dynamic meta-prompt that combines user request with their style profile

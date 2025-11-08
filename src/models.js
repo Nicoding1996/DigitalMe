@@ -32,6 +32,8 @@
  * @property {number} textWords - Number of text words analyzed
  * @property {number} repositories - Number of repositories analyzed
  * @property {number} articles - Number of articles analyzed
+ * @property {number} emails - Number of emails analyzed
+ * @property {number} emailWords - Total words from analyzed emails
  */
 
 /**
@@ -50,12 +52,12 @@
  * @typedef {Object} Source
  * @property {string} id - Unique identifier
  * @property {string} userId - Associated user ID
- * @property {'github'|'blog'|'text'} type - Source type
+ * @property {'github'|'blog'|'text'|'gmail'} type - Source type
  * @property {string} url - Source URL or identifier
  * @property {'pending'|'analyzing'|'complete'|'error'} status - Analysis status
  * @property {number} addedAt - Timestamp when added
  * @property {number} lastAnalyzed - Timestamp of last analysis
- * @property {Object} metadata - Additional metadata
+ * @property {Object} metadata - Additional metadata (for Gmail: connectedAt, emailsAnalyzed, lastSync)
  */
 
 /**
@@ -138,14 +140,16 @@ export const generateMockStyleProfile = (userId = 'user-1') => {
       codeLines: 15420,
       textWords: 8750,
       repositories: 12,
-      articles: 8
+      articles: 8,
+      emails: 0,
+      emailWords: 0
     }
   };
 };
 
 /**
  * Generate mock source
- * @param {'github'|'blog'|'text'} type - Source type
+ * @param {'github'|'blog'|'text'|'gmail'} type - Source type
  * @param {string} url - Source URL
  * @param {string} userId - User ID
  * @returns {Source}
@@ -163,6 +167,35 @@ export const generateMockSource = (type, url, userId = 'user-1') => {
     metadata: {
       itemsAnalyzed: Math.floor(Math.random() * 50) + 10,
       dataSize: Math.floor(Math.random() * 1000000) + 100000
+    }
+  };
+};
+
+/**
+ * Generate Gmail source object
+ * @param {Object} stats - Gmail analysis statistics
+ * @param {number} stats.emailsAnalyzed - Number of emails analyzed
+ * @param {number} stats.emailWords - Total words from emails
+ * @param {number} stats.connectedAt - Timestamp when Gmail was connected
+ * @param {string} userId - User ID
+ * @returns {Source}
+ */
+export const generateGmailSource = (stats, userId = 'user-1') => {
+  const now = Date.now();
+  return {
+    id: generateId(),
+    userId,
+    type: 'gmail',
+    url: 'gmail:sent',
+    status: 'complete',
+    addedAt: stats.connectedAt || now,
+    lastAnalyzed: now,
+    metadata: {
+      connectedAt: stats.connectedAt || now,
+      emailsAnalyzed: stats.emailsAnalyzed || 0,
+      lastSync: now,
+      itemsAnalyzed: stats.emailsAnalyzed || 0,
+      dataSize: stats.emailWords || 0
     }
   };
 };

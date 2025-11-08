@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gmail Authentication</title>
+  <style>
+    body {
+      font-family: 'Courier New', monospace;
+      background: #0a0a0a;
+      color: #00ff9f;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      text-align: center;
+      max-width: 500px;
+    }
+    .status {
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+    .error {
+      color: #ff0055;
+    }
+    .success {
+      color: #00ff9f;
+    }
+    .spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(0, 255, 159, 0.3);
+      border-top-color: #00ff9f;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .message {
+      margin-top: 20px;
+      font-size: 14px;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="spinner" id="spinner"></div>
+    <div class="status" id="status">Processing authentication...</div>
+    <div class="message" id="message"></div>
+  </div>
+
+  <script>
+    (function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+      const state = urlParams.get('state');
+      const error = urlParams.get('error');
+      const errorDescription = urlParams.get('error_description');
+
+      const statusEl = document.getElementById('status');
+      const messageEl = document.getElementById('message');
+      const spinnerEl = document.getElementById('spinner');
+
+      // Handle OAuth errors from Google
+      if (error) {
+        spinnerEl.style.display = 'none';
+        statusEl.className = 'status error';
+        
+        let errorMessage = 'Authentication failed';
+        let userAction = 'Please try again.';
+        
+        if (error === 'access_denied') {
+          errorMessage = 'Gmail access was denied';
+          userAction = 'Please grant permission to analyze your sent emails.';
+        } else if (errorDescription) {
+          errorMessage = errorDescription;
+        }
+        
+        statusEl.textContent = errorMessage;
+        messageEl.textContent = userAction;
+        
+        // Send error to parent window
+        if (window.opener) {
+          window.opener.postMessage({
+            type: 'gmail-oauth-error',
+            error: {
+              message: errorMessage,
+              userAction: userAction,
+              canRetry: true
+            }
+          }, window.location.origin);
+        }
+        
+        // Close window after 3 seconds
+        setTimeout(() => {
+          window.close();
+        }, 3000);
+        
+        return;
+      }
+
+      // Validate required parameters
+      if (!code || !state) {
+        spinnerEl.style.display = 'none';
+        statusEl.className = 'status error';
+        statusEl.textContent = 'Invalid authentication response';
+        messageEl.textContent = 'Missing required parameters. Please try again.';
+        
+        if (window.opener) {
+          window.opener.postMessage({
+            type: 'gmail-oauth-error',
+            error: {
+              message: 'Invalid authentication response',
+              userAction: 'Please try connecting again.',
+              canRetry: true
+            }
+          }, window.location.origin);
+        }
+        
+        setTimeout(() => {
+          window.close();
+        }, 3000);
+        
+        return;
+      }
+
+      // Exchange code for token via backend
+      fetch('/api/auth/gmail/callback?' + new URLSearchParams({ code, state }))
+        .then(response => {
+          if (!response.ok) {
+            return response.json().then(data => {
+              throw data;
+            });
+          }
+          return response.json();
+        })
+        .then(data => {
+          spinnerEl.style.display = 'none';
+          statusEl.className = 'status success';
+          statusEl.textContent = 'Authentication successful!';
+          messageEl.textContent = 'Starting email analysis...';
+          
+          // Send success with session ID to parent window
+          if (window.opener) {
+            window.opener.postMessage({
+              type: 'gmail-oauth-success',
+              sessionId: data.sessionId
+            }, window.location.origin);
+          }
+          
+          // Close window automatically after 1 second
+          setTimeout(() => {
+            window.close();
+          }, 1000);
+        })
+        .catch(error => {
+          spinnerEl.style.display = 'none';
+          statusEl.className = 'status error';
+          
+          const errorMessage = error.message || 'Authentication failed';
+          const userAction = error.userAction || 'Please try again.';
+          
+          statusEl.textContent = errorMessage;
+          messageEl.textContent = userAction;
+          
+          // Send error to parent window
+          if (window.opener) {
+            window.opener.postMessage({
+              type: 'gmail-oauth-error',
+              error: {
+                message: errorMessage,
+                userAction: userAction,
+                canRetry: error.canRetry !== false
+              }
+            }, window.location.origin);
+          }
+          
+          // Close window after 3 seconds
+          setTimeout(() => {
+            window.close();
+          }, 3000);
+        });
+    })();
+  </script>
+</body>
+</html>

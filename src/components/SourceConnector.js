@@ -4,6 +4,7 @@
  */
 import { useState } from 'react';
 import { validateGitHubUsername, validateBlogUrl, validateTextSample } from '../services/StyleAnalyzer';
+import GmailConnectButton from './GmailConnectButton';
 
 const SourceConnector = ({ onSourcesSubmit }) => {
   const [activeTab, setActiveTab] = useState('github');
@@ -11,10 +12,38 @@ const SourceConnector = ({ onSourcesSubmit }) => {
   const [blogUrls, setBlogUrls] = useState('');
   const [textSample, setTextSample] = useState('');
   const [errors, setErrors] = useState({});
+  const [gmailConnected, setGmailConnected] = useState(false);
+  const [gmailStats, setGmailStats] = useState(null);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setErrors({});
+  };
+
+  const handleGmailConnectionStart = () => {
+    setErrors({});
+  };
+
+  const handleGmailConnectionComplete = (stats) => {
+    setGmailConnected(true);
+    setGmailStats(stats);
+    
+    // Submit Gmail source automatically after successful connection
+    const gmailSource = {
+      type: 'gmail',
+      value: {
+        emailsAnalyzed: stats.emailsAnalyzed,
+        emailsFiltered: stats.emailsFiltered,
+        patternsExtracted: stats.patternsExtracted
+      }
+    };
+    
+    onSourcesSubmit([gmailSource]);
+  };
+
+  const handleGmailConnectionError = (error) => {
+    setErrors({ gmail: error });
+    setGmailConnected(false);
   };
 
   const validateAndSubmit = () => {
@@ -79,6 +108,18 @@ const SourceConnector = ({ onSourcesSubmit }) => {
         {/* Tabs */}
         <div className="flex gap-2 mb-8">
           <button
+            onClick={() => handleTabChange('gmail')}
+            className={`flex-1 px-6 py-4 font-mono text-xs tracking-wider transition-all ${
+              activeTab === 'gmail'
+                ? 'bg-void-elevated text-unsettling-cyan border border-unsettling-cyan'
+                : 'bg-void-surface text-static-muted border border-static-whisper hover:border-static-ghost'
+            }`}
+          >
+            <span className="block mb-2 text-lg">✉</span>
+            [GMAIL]
+          </button>
+          
+          <button
             onClick={() => handleTabChange('github')}
             className={`flex-1 px-6 py-4 font-mono text-xs tracking-wider transition-all ${
               activeTab === 'github'
@@ -117,6 +158,24 @@ const SourceConnector = ({ onSourcesSubmit }) => {
 
         {/* Input Area */}
         <div className="border border-static-whisper bg-void-surface p-8 mb-8">
+          {activeTab === 'gmail' && (
+            <div className="space-y-4">
+              <label className="system-text block">GMAIL ACCOUNT</label>
+              <div className="text-static-ghost text-xs mb-6">
+                Connect your Gmail account to analyze your sent emails and extract your writing style patterns
+              </div>
+              <GmailConnectButton
+                onConnectionStart={handleGmailConnectionStart}
+                onConnectionComplete={handleGmailConnectionComplete}
+                onConnectionError={handleGmailConnectionError}
+                isConnected={gmailConnected}
+              />
+              {errors.gmail && (
+                <div className="text-glitch-red text-sm font-mono mt-4">{errors.gmail}</div>
+              )}
+            </div>
+          )}
+
           {activeTab === 'github' && (
             <div className="space-y-4">
               <label className="system-text block">GITHUB USERNAME</label>
@@ -175,13 +234,15 @@ const SourceConnector = ({ onSourcesSubmit }) => {
           )}
         </div>
 
-        {/* Action Button */}
-        <button 
-          onClick={validateAndSubmit}
-          className="w-full px-8 py-4 bg-void-surface border border-static-whisper text-static-white font-mono text-sm tracking-wider hover:border-unsettling-cyan hover:text-unsettling-cyan transition-all"
-        >
-          &gt; ANALYZE_STYLE
-        </button>
+        {/* Action Button - Only show for non-Gmail tabs */}
+        {activeTab !== 'gmail' && (
+          <button 
+            onClick={validateAndSubmit}
+            className="w-full px-8 py-4 bg-void-surface border border-static-whisper text-static-white font-mono text-sm tracking-wider hover:border-unsettling-cyan hover:text-unsettling-cyan transition-all"
+          >
+            &gt; ANALYZE_STYLE
+          </button>
+        )}
       </div>
     </div>
   );
