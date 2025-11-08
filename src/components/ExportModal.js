@@ -17,6 +17,21 @@ const ExportModal = ({ isOpen, onClose, content, contentType = 'text' }) => {
     }
   };
 
+  // Format content based on selected format
+  const getFormattedContent = () => {
+    if (!content) return '[NO_DATA_AVAILABLE]';
+    
+    if (selectedFormat === 'markdown') {
+      // Add markdown formatting
+      return `# Digital Me - Conversation Export\n\n${content}`;
+    }
+    
+    // Plain text - strip any markdown if present
+    return content;
+  };
+
+  const displayContent = getFormattedContent();
+
   return (
     <div 
       className="fixed inset-0 bg-overlay-darker backdrop-blur-sm z-50 flex items-center justify-center p-4"
@@ -82,11 +97,11 @@ const ExportModal = ({ isOpen, onClose, content, contentType = 'text' }) => {
             </div>
             <div className="border border-static-whisper bg-void-surface">
               <div className="px-4 py-2 bg-void-elevated border-b border-static-whisper font-mono text-xs text-static-ghost">
-                [BUFFER_SIZE: {content?.length || 0} BYTES]
+                [BUFFER_SIZE: {displayContent.length} BYTES]
               </div>
               <pre className="p-4 max-h-96 overflow-auto scrollbar-minimal">
                 <code className="font-mono text-xs text-static-white leading-relaxed">
-                  {content || '[NO_DATA_AVAILABLE]'}
+                  {displayContent}
                 </code>
               </pre>
             </div>
@@ -101,9 +116,9 @@ const ExportModal = ({ isOpen, onClose, content, contentType = 'text' }) => {
           >
             [CANCEL]
           </button>
-          <CopyButton content={content} />
+          <CopyButton content={displayContent} />
           <DownloadButton 
-            content={content} 
+            content={displayContent} 
             contentType={contentType}
             format={selectedFormat}
           />

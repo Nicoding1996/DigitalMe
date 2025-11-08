@@ -315,8 +315,30 @@ function App() {
   };
 
   const handleExportClick = (content = '', contentType = 'text') => {
-    setExportContent(content);
-    setExportContentType(contentType);
+    // Check if first parameter is an event object (from button click)
+    const isEvent = content && typeof content === 'object' && content.nativeEvent;
+    
+    // If no content provided or it's an event, export full conversation history
+    if (isEvent || !content) {
+      if (conversationHistory.length > 0) {
+        const formattedConversation = conversationHistory
+          .map(msg => {
+            const role = msg.role === 'user' ? 'YOU' : 'DIGITAL_ME';
+            const timestamp = new Date(msg.timestamp).toLocaleString();
+            return `[${role}] ${timestamp}\n${msg.content}\n`;
+          })
+          .join('\n---\n\n');
+        
+        setExportContent(formattedConversation);
+        setExportContentType('text');
+      } else {
+        setExportContent('[NO_CONVERSATION_HISTORY]');
+        setExportContentType('text');
+      }
+    } else {
+      setExportContent(content);
+      setExportContentType(contentType);
+    }
     setIsExportOpen(true);
   };
 
@@ -332,6 +354,7 @@ function App() {
           <Header 
             onSettingsClick={handleSettingsClick}
             onExportClick={handleExportClick}
+            hasContent={conversationHistory.length > 0}
           />
         )}
         
