@@ -179,7 +179,6 @@ class GmailAnalysisOrchestrator {
       return 'unknown';
     }
   }
-  }
 
   /**
    * Get analysis progress for a session
