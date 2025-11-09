@@ -298,15 +298,17 @@ export const buildStyleProfile = async (sources, userId = 'user-1') => {
     ? codingSources[0].result.codingStyle
     : generateMockCodingStyle();
 
-  // Combine writing styles from blog and text sources
-  // PRIORITY: Text samples first (they have real analyzed style), then blog
+  // Combine writing styles from blog, text, and Gmail sources
+  // PRIORITY: Gmail (real analyzed emails), text samples, then blog
   const writingSources = sources.filter(
-    s => (s.type === 'blog' || s.type === 'text') && s.result?.writingStyle
+    s => (s.type === 'blog' || s.type === 'text' || s.type === 'gmail') && (s.result?.writingStyle || s.result?.profile?.writing)
   );
   
-  // Prioritize text samples since they contain actual analyzed user writing
+  // Prioritize Gmail since it contains real analyzed emails
+  const gmailSource = writingSources.find(s => s.type === 'gmail');
   const textSource = writingSources.find(s => s.type === 'text');
-  const writingStyle = textSource?.result?.writingStyle
+  const writingStyle = gmailSource?.result?.profile?.writing
+    || textSource?.result?.writingStyle
     || writingSources[0]?.result?.writingStyle
     || generateMockWritingStyle();
 
@@ -316,7 +318,7 @@ export const buildStyleProfile = async (sources, userId = 'user-1') => {
     0
   );
   const totalTextWords = writingSources.reduce(
-    (sum, s) => sum + (s.result?.metrics?.totalWords || s.result?.metrics?.wordCount || 0),
+    (sum, s) => sum + (s.result?.metrics?.totalWords || s.result?.metrics?.wordCount || s.result?.profile?.sampleCount?.textWords || 0),
     0
   );
   const totalRepos = codingSources.reduce(
@@ -325,6 +327,10 @@ export const buildStyleProfile = async (sources, userId = 'user-1') => {
   );
   const totalArticles = writingSources.filter(s => s.type === 'blog').reduce(
     (sum, s) => sum + (s.result?.metrics?.totalPosts || 0),
+    0
+  );
+  const totalEmails = writingSources.filter(s => s.type === 'gmail').reduce(
+    (sum, s) => sum + (s.result?.profile?.sampleCount?.emails || 0),
     0
   );
 

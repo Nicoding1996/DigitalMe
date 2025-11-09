@@ -129,6 +129,10 @@ function updateSession(sessionId, updates) {
     session.error = updates.error;
   }
   
+  if (updates.profile !== undefined) {
+    session.profile = updates.profile;
+  }
+  
   session.updatedAt = new Date();
   
   console.log(`Session updated: ${sessionId} - Status: ${session.status}`);
@@ -198,7 +202,7 @@ function updateAnalyzing(sessionId, emailsAnalyzed) {
  * @param {string} sessionId - Session identifier
  * @param {number} patternsExtracted - Number of patterns extracted
  */
-function updateComplete(sessionId, patternsExtracted) {
+function updateComplete(sessionId, patternsExtracted, profile = null) {
   return updateSession(sessionId, {
     status: 'complete',
     progress: {
@@ -208,7 +212,8 @@ function updateComplete(sessionId, patternsExtracted) {
     },
     stats: {
       patternsExtracted: patternsExtracted
-    }
+    },
+    profile: profile // Store the analysis profile
   });
 }
 

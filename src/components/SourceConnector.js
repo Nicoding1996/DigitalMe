@@ -25,19 +25,22 @@ const SourceConnector = ({ onSourcesSubmit }) => {
   };
 
   const handleGmailConnectionComplete = (stats) => {
+    console.log('[SourceConnector] Gmail connection complete, stats:', stats);
     setGmailConnected(true);
     setGmailStats(stats);
     
-    // Submit Gmail source automatically after successful connection
+    // Submit Gmail source with profile automatically after successful connection
     const gmailSource = {
       type: 'gmail',
       value: {
         emailsAnalyzed: stats.emailsAnalyzed,
         emailsFiltered: stats.emailsFiltered,
         patternsExtracted: stats.patternsExtracted
-      }
+      },
+      profile: stats.profile // Include the pre-analyzed profile from backend
     };
     
+    console.log('[SourceConnector] Submitting Gmail source:', gmailSource);
     onSourcesSubmit([gmailSource]);
   };
 
@@ -171,7 +174,9 @@ const SourceConnector = ({ onSourcesSubmit }) => {
                 isConnected={gmailConnected}
               />
               {errors.gmail && (
-                <div className="text-glitch-red text-sm font-mono mt-4">{errors.gmail}</div>
+                <div className="text-glitch-red text-sm font-mono mt-4">
+                  {typeof errors.gmail === 'object' ? errors.gmail.message : errors.gmail}
+                </div>
               )}
             </div>
           )}

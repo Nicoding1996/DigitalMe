@@ -117,7 +117,7 @@ class GmailAnalysisOrchestrator {
       // Step 5: Mark analysis as complete
       // Requirements: 7.4, 7.5
       const patternsCount = Object.keys(analysisResult.patterns).length;
-      analysisSessionService.updateComplete(sessionId, patternsCount);
+      analysisSessionService.updateComplete(sessionId, patternsCount, updatedProfile);
       
       console.log(`[${sessionId}] Gmail analysis completed successfully`);
       

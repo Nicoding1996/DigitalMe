@@ -108,10 +108,37 @@ function App() {
     for (let i = 0; i < submittedSources.length; i++) {
       const source = submittedSources[i];
       
+      console.log('[Analysis] Processing source:', {
+        type: source.type,
+        hasProfile: !!source.profile,
+        source: source
+      });
+      
       try {
         let result;
         
-        if (source.type === 'github') {
+        // Gmail sources are already analyzed by the backend
+        if (source.type === 'gmail' && source.profile) {
+          console.log('[Analysis] Using pre-analyzed Gmail profile');
+          setAnalysisProgress({
+            currentStep: i + 1,
+            totalSteps: submittedSources.length + 1,
+            message: 'Gmail analysis complete',
+            isComplete: false
+          });
+          
+          analysisResults.push({
+            type: 'gmail',
+            result: {
+              success: true,
+              profile: source.profile
+            }
+          });
+          sourcesData.push(generateMockSource('gmail', 'Gmail Account'));
+        } else if (source.type === 'gmail') {
+          console.error('[Analysis] Gmail source missing profile!', source);
+          failed.push({ ...source, error: 'Gmail profile not received from backend' });
+        } else if (source.type === 'github') {
           result = await analyzeGitHub(source.value, (progress) => {
             setAnalysisProgress({
               currentStep: i + 1,

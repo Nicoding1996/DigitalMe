@@ -150,8 +150,8 @@ const rateLimiter = new RateLimiter();
 
 // Pre-configured limiters for different use cases
 const gmailApiLimiter = rateLimiter.createLimiter({
-  maxRequests: 10,
-  windowMs: 60 * 60 * 1000, // 10 requests per hour
+  maxRequests: 100,
+  windowMs: 60 * 60 * 1000, // 100 requests per hour (increased for development)
   message: 'Gmail API rate limit exceeded. Please try again in an hour.',
   keyGenerator: (req) => {
     // Use session ID if available, otherwise fall back to IP
@@ -160,8 +160,8 @@ const gmailApiLimiter = rateLimiter.createLimiter({
 });
 
 const gmailAuthLimiter = rateLimiter.createLimiter({
-  maxRequests: 5,
-  windowMs: 15 * 60 * 1000, // 5 requests per 15 minutes
+  maxRequests: 50,
+  windowMs: 15 * 60 * 1000, // 50 requests per 15 minutes (increased for development)
   message: 'Too many authentication attempts. Please try again later.',
   keyGenerator: (req) => req.ip || req.connection.remoteAddress
 });

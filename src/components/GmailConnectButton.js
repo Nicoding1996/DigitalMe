@@ -28,43 +28,8 @@ const GmailConnectButton = ({
   const pollingIntervalRef = useRef(null);
   const oauthWindowRef = useRef(null);
 
-  // Check for OAuth completion via localStorage (fallback when postMessage/redirect is blocked)
-  useEffect(() => {
-    const checkAuthCompletion = () => {
-      const sessionId = localStorage.getItem('gmail_session_id');
-      const authStatus = localStorage.getItem('gmail_auth_status');
-      
-      if (sessionId && authStatus === 'success' && connectionStatus === 'connecting') {
-        console.log('Detected Gmail session from localStorage:', sessionId);
-        
-        // Clear localStorage
-        localStorage.removeItem('gmail_session_id');
-        localStorage.removeItem('gmail_auth_status');
-        
-        // Start analysis tracking
-        setSessionId(sessionId);
-        setConnectionStatus('retrieving');
-        setProgressMessage('Retrieving sent emails');
-        
-        // Start polling
-        setTimeout(() => {
-          pollAnalysisStatus(sessionId);
-          const interval = setInterval(() => {
-            pollAnalysisStatus(sessionId);
-          }, 2000);
-          pollingIntervalRef.current = interval;
-        }, 100);
-      }
-    };
-    
-    // Check immediately
-    checkAuthCompletion();
-    
-    // Also check periodically while connecting (in case popup completes after we start checking)
-    const checkInterval = setInterval(checkAuthCompletion, 500);
-    
-    return () => clearInterval(checkInterval);
-  }, [connectionStatus]); // eslint-disable-line react-hooks/exhaustive-deps
+  // No need for URL parameter or localStorage checking anymore
+  // The postMessage from the popup will handle everything
 
   // Animated dots for loading states
   useEffect(() => {
@@ -121,17 +86,26 @@ const GmailConnectButton = ({
 
       // Handle completion
       if (data.status === 'complete') {
+        console.log('[Gmail OAuth] Analysis complete! Data received:', {
+          hasProfile: !!data.profile,
+          stats: data.stats,
+          profileKeys: data.profile ? Object.keys(data.profile) : []
+        });
+        
         if (pollingIntervalRef.current) {
           clearInterval(pollingIntervalRef.current);
           pollingIntervalRef.current = null;
         }
         
         if (onConnectionComplete) {
-          onConnectionComplete({
+          const completionData = {
             emailsAnalyzed: data.stats.emailsAnalyzed || 0,
             emailsFiltered: data.stats.emailsFiltered || 0,
-            patternsExtracted: data.stats.patternsExtracted || 0
-          });
+            patternsExtracted: data.stats.patternsExtracted || 0,
+            profile: data.profile // Include the analysis profile
+          };
+          console.log('[Gmail OAuth] Calling onConnectionComplete with:', completionData);
+          onConnectionComplete(completionData);
         }
       }
 
@@ -247,12 +221,20 @@ const GmailConnectButton = ({
 
       // Listen for OAuth callback message
       const handleMessage = (event) => {
+        console.log('[Gmail OAuth] Received postMessage:', {
+          origin: event.origin,
+          type: event.data?.type,
+          hasSessionId: !!event.data?.sessionId
+        });
+        
         // Verify origin for security
         if (event.origin !== window.location.origin && event.origin !== API_BASE_URL) {
+          console.log('[Gmail OAuth] Message rejected - invalid origin:', event.origin);
           return;
         }
 
         if (event.data.type === 'gmail-oauth-success') {
+          console.log('[Gmail OAuth] Success message received, sessionId:', event.data.sessionId);
           window.removeEventListener('message', handleMessage);
           
           if (oauthWindowRef.current && !oauthWindowRef.current.closed) {
@@ -261,11 +243,13 @@ const GmailConnectButton = ({
 
           // Start analysis progress tracking
           const sid = event.data.sessionId;
+          console.log('[Gmail OAuth] Starting analysis tracking for session:', sid);
           setSessionId(sid);
           setConnectionStatus('retrieving');
           setProgressMessage('Retrieving sent emails');
           startPolling(sid);
         } else if (event.data.type === 'gmail-oauth-error') {
+          console.log('[Gmail OAuth] Error message received:', event.data.error);
           window.removeEventListener('message', handleMessage);
           
           if (oauthWindowRef.current && !oauthWindowRef.current.closed) {
@@ -291,16 +275,100 @@ const GmailConnectButton = ({
         }
       };
 
+      console.log('[Gmail OAuth] Registering message listener, expecting origin:', API_BASE_URL);
+      console.log('[Gmail OAuth] Session ID for this OAuth flow:', data.sessionId);
       window.addEventListener('message', handleMessage);
 
       // Check if popup was blocked
       if (!oauthWindowRef.current || oauthWindowRef.current.closed) {
+        console.log('[Gmail OAuth] Popup was blocked');
         window.removeEventListener('message', handleMessage);
         throw new Error('Popup blocked. Please allow popups for this site.');
       }
+      
+      console.log('[Gmail OAuth] Popup opened successfully');
 
-      // Note: We don't monitor popup closure anymore to avoid COOP warnings
-      // The popup will redirect back to the main app with session ID in URL
+      // FALLBACK: Poll for session authentication if postMessage fails
+      // This handles cases where postMessage is blocked by browser security
+      const sessionId = data.sessionId;
+      let pollAttempts = 0;
+      const maxPollAttempts = 60; // Poll for up to 2 minutes (60 * 2 seconds)
+      let messageReceived = false;
+      
+      // Update handleMessage to set flag
+      const originalHandleMessage = handleMessage;
+      const wrappedHandleMessage = (event) => {
+        messageReceived = true;
+        originalHandleMessage(event);
+      };
+      
+      // Replace the message handler
+      window.removeEventListener('message', handleMessage);
+      window.addEventListener('message', wrappedHandleMessage);
+      
+      const pollForAuth = setInterval(async () => {
+        pollAttempts++;
+        
+        // Stop polling if message was received or max attempts reached
+        if (messageReceived || pollAttempts >= maxPollAttempts) {
+          clearInterval(pollForAuth);
+          if (!messageReceived) {
+            window.removeEventListener('message', wrappedHandleMessage);
+            console.log('[Gmail OAuth] Polling stopped - max attempts reached');
+          }
+          return;
+        }
+        
+        // Check if OAuth session has been authenticated
+        try {
+          const statusResponse = await fetch(`${API_BASE_URL}/api/auth/gmail/session-status/${sessionId}`);
+          
+          // Session exists
+          if (statusResponse.ok) {
+            const statusData = await statusResponse.json();
+            
+            // If session status is 'authenticated', OAuth completed successfully
+            if (statusData.status === 'authenticated') {
+              console.log('[Gmail OAuth] OAuth completed! Session authenticated via polling');
+              clearInterval(pollForAuth);
+              window.removeEventListener('message', wrappedHandleMessage);
+              messageReceived = true;
+              
+              // Try to close popup (may fail due to COOP, but that's okay)
+              try {
+                if (oauthWindowRef.current) {
+                  oauthWindowRef.current.close();
+                }
+              } catch (e) {
+                // Ignore COOP errors
+              }
+              
+              // Start analysis tracking
+              setSessionId(sessionId);
+              setConnectionStatus('retrieving');
+              setProgressMessage('Retrieving sent emails');
+              startPolling(sessionId);
+            } else {
+              // Still pending - user hasn't completed OAuth yet
+              console.log('[Gmail OAuth] Waiting for user to complete OAuth... (attempt', pollAttempts, '/', maxPollAttempts, ')');
+            }
+          } else if (statusResponse.status === 404) {
+            // Session doesn't exist - shouldn't happen since we created it
+            console.log('[Gmail OAuth] Session not found (unexpected)');
+          } else {
+            // Other error - try to get error details
+            try {
+              const errorData = await statusResponse.json();
+              console.log('[Gmail OAuth] Polling error:', statusResponse.status, errorData);
+            } catch (e) {
+              console.log('[Gmail OAuth] Polling error:', statusResponse.status, statusResponse.statusText);
+            }
+          }
+        } catch (err) {
+          // Network error - ignore and keep polling
+          console.log('[Gmail OAuth] Polling network error (will retry):', err.message);
+        }
+      }, 2000); // Poll every 2 seconds
 
     } catch (err) {
       console.error('Error initiating Gmail connection:', err);

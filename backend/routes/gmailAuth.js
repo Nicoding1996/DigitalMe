@@ -165,9 +165,54 @@ router.get('/callback', gmailAuthLimiter, validateGmailCallback, async (req, res
     <div>Redirecting...</div>
   </div>
   <script>
-    setTimeout(() => {
-      window.location.href = 'http://localhost:3000?gmail_status=error&gmail_error=${encodeURIComponent(errorMessage)}';
-    }, 2000);
+    (function() {
+      const errorMessage = '${errorMessage}';
+      
+      // Try to notify parent window via postMessage
+      function notifyParent() {
+        try {
+          if (window.opener && !window.opener.closed) {
+            console.log('Sending error postMessage to parent window');
+            window.opener.postMessage({
+              type: 'gmail-oauth-error',
+              error: errorMessage
+            }, 'http://localhost:3000');
+            return true;
+          }
+        } catch (e) {
+          console.error('postMessage failed:', e);
+        }
+        return false;
+      }
+      
+      // Try to close the window
+      function closeWindow() {
+        try {
+          window.close();
+          
+          // If window didn't close after 500ms, show manual close message
+          setTimeout(() => {
+            if (!window.closed) {
+              document.body.innerHTML = '<div style="text-align:center;padding:40px;font-family:monospace;color:#ff0055;">Authentication failed. Please close this window.</div>';
+            }
+          }, 500);
+        } catch (e) {
+          console.error('Failed to close window:', e);
+          document.body.innerHTML = '<div style="text-align:center;padding:40px;font-family:monospace;color:#ff0055;">Authentication failed. Please close this window.</div>';
+        }
+      }
+      
+      // Execute notification and close
+      const messageSent = notifyParent();
+      
+      if (messageSent) {
+        // Wait a bit for message to be received, then close
+        setTimeout(closeWindow, 1000);
+      } else {
+        // No parent window, show message
+        document.body.innerHTML = '<div style="text-align:center;padding:40px;font-family:monospace;color:#ff0055;">Authentication failed. Please close this window.</div>';
+      }
+    })();
   </script>
 </body>
 </html>
@@ -257,29 +302,88 @@ router.get('/callback', gmailAuthLimiter, validateGmailCallback, async (req, res
     <div class="status">Authentication successful! Redirecting...</div>
   </div>
   <script>
-    // Store session ID in localStorage so parent window can access it
-    localStorage.setItem('gmail_session_id', '${sessionId}');
-    localStorage.setItem('gmail_auth_status', 'success');
-    
-    setTimeout(() => {
-      // Try to notify parent window via postMessage (may be blocked by COOP)
-      try {
-        if (window.opener && !window.opener.closed) {
-          window.opener.postMessage({
-            type: 'gmail-oauth-complete',
-            sessionId: '${sessionId}',
-            status: 'success'
-          }, 'http://localhost:3000');
+    (function() {
+      const sessionId = '${sessionId}';
+      
+      // Try to notify parent window via postMessage
+      function notifyParent() {
+        try {
+          if (window.opener && !window.opener.closed) {
+            console.log('Sending postMessage to parent window');
+            window.opener.postMessage({
+              type: 'gmail-oauth-success',
+              sessionId: sessionId
+            }, 'http://localhost:3000');
+            return true;
+          }
+        } catch (e) {
+          console.error('postMessage failed:', e);
         }
-      } catch (e) {
-        console.log('postMessage blocked, parent will check localStorage');
+        return false;
       }
       
-      // Close popup after a short delay
-      setTimeout(() => {
-        window.close();
-      }, 1000);
-    }, 500);
+      // Try to close the window
+      function closeWindow() {
+        try {
+          window.close();
+          
+          // If window didn't close after 500ms, show manual close message with button
+          setTimeout(() => {
+            document.querySelector('.spinner').style.display = 'none';
+            document.querySelector('.status').innerHTML = 
+              'Authentication complete!<br><br>' +
+              '<button onclick="window.close()" style="' +
+              'padding: 12px 24px; ' +
+              'background: #0a0a0a; ' +
+              'border: 1px solid #00ff9f; ' +
+              'color: #00ff9f; ' +
+              'font-family: monospace; ' +
+              'cursor: pointer; ' +
+              'font-size: 14px;' +
+              '">CLOSE WINDOW</button><br><br>' +
+              '<small style="color: #666;">You can also close this tab manually</small>';
+          }, 500);
+        } catch (e) {
+          console.error('Failed to close window:', e);
+          document.querySelector('.spinner').style.display = 'none';
+          document.querySelector('.status').innerHTML = 
+            'Authentication complete!<br><br>' +
+            '<button onclick="window.close()" style="' +
+            'padding: 12px 24px; ' +
+            'background: #0a0a0a; ' +
+            'border: 1px solid #00ff9f; ' +
+            'color: #00ff9f; ' +
+            'font-family: monospace; ' +
+            'cursor: pointer; ' +
+            'font-size: 14px;' +
+            '">CLOSE WINDOW</button><br><br>' +
+            '<small style="color: #666;">You can also close this tab manually</small>';
+        }
+      }
+      
+      // Execute notification and close
+      const messageSent = notifyParent();
+      
+      if (messageSent) {
+        // Wait a bit for message to be received, then try to close
+        setTimeout(closeWindow, 500);
+      } else {
+        // No parent window, show message
+        document.querySelector('.spinner').style.display = 'none';
+        document.querySelector('.status').innerHTML = 
+          'Authentication complete!<br><br>' +
+          '<button onclick="window.close()" style="' +
+          'padding: 12px 24px; ' +
+          'background: #0a0a0a; ' +
+          'border: 1px solid #00ff9f; ' +
+          'color: #00ff9f; ' +
+          'font-family: monospace; ' +
+          'cursor: pointer; ' +
+          'font-size: 14px;' +
+          '">CLOSE WINDOW</button><br><br>' +
+          '<small style="color: #666;">You can also close this tab manually</small>';
+      }
+    })();
   </script>
 </body>
 </html>
@@ -402,6 +506,41 @@ router.post('/start-analysis', gmailApiLimiter, validateSessionIdMiddleware('ses
 });
 
 /**
+ * GET /api/auth/gmail/session-status/:sessionId
+ * 
+ * Returns OAuth session status (for polling during OAuth flow)
+ * 
+ * SECURITY: Rate limited to 10 requests per hour per session
+ * SECURITY: Session ID validation prevents enumeration attacks
+ */
+router.get('/session-status/:sessionId', gmailApiLimiter, validateSessionIdMiddleware('sessionId', 'params'), (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    
+    // Get OAuth session
+    const session = sessions.get(sessionId);
+    
+    if (!session) {
+      return res.status(404).json({
+        code: 'session_not_found',
+        message: 'OAuth session not found or expired',
+        status: 'not_found'
+      });
+    }
+    
+    // Return session status
+    res.json({
+      status: session.status, // 'pending' or 'authenticated'
+      sessionId: sessionId
+    });
+    
+  } catch (error) {
+    const errorInfo = GmailErrorHandler.handleError(error, 'oauth');
+    res.status(500).json(errorInfo);
+  }
+});
+
+/**
  * GET /api/gmail/analysis-status/:sessionId
  * 
  * Returns real-time progress of email analysis
@@ -432,6 +571,11 @@ router.get('/analysis-status/:sessionId', gmailApiLimiter, validateSessionIdMidd
       stats: analysisSession.stats,
       error: analysisSession.error
     };
+    
+    // Include profile if analysis is complete
+    if (analysisSession.status === 'complete' && analysisSession.profile) {
+      response.profile = analysisSession.profile;
+    }
     
     // Add retry capability flag for errors
     if (analysisSession.status === 'error' && analysisSession.error) {

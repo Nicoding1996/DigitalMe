@@ -224,7 +224,7 @@ function validateGmailCallback(req, res, next) {
 /**
  * Middleware to validate session ID in request
  */
-function validateSessionId(paramName = 'sessionId', location = 'body') {
+function validateSessionIdMiddleware(paramName = 'sessionId', location = 'body') {
   return (req, res, next) => {
     const sessionId = location === 'params' 
       ? req.params[paramName]
@@ -289,10 +289,10 @@ function validateStyleProfile(req, res, next) {
 module.exports = {
   sanitizeString,
   validateUrl,
-  validateSessionId: validateSessionId,
+  validateSessionId,
   validateStateToken,
   validateGmailInitiate,
   validateGmailCallback,
-  validateSessionIdMiddleware: validateSessionId,
+  validateSessionIdMiddleware,
   validateStyleProfile
 };
