@@ -2,6 +2,30 @@
 
 ## Recent Completions
 
+### ✅ Tier 1 Features (Completed - Vibe Mode)
+**Completed:** November 11, 2025
+**Mode:** Vibe Mode (fast iteration, no spec overhead)
+**Time:** ~2 hours
+
+**Features Shipped:**
+1. **Source Attribution UI** ✅
+   - Visual display of which sources contributed to each style attribute
+   - Color-coded attribution with percentage bars
+   - Per-term breakdown for vocabulary and avoidance
+   - Integrated into Settings → Profile tab
+
+2. **Source History Tracking** ✅
+   - Fixed "Previous Profile" issue - now shows real source types
+   - Stores raw analysis results in localStorage
+   - Proper re-merging when adding new sources
+   - Data migration for existing users
+
+3. **Multi-Source UI Enhancement** ✅
+   - Visual checkmarks (✓) on tabs when sources are filled
+   - Inline source counter `[X/4]` on analyze button
+   - Compact button layout with inline tips
+   - Supports filling multiple sources before analyzing
+
 ### ✅ True Multi-Source Style Merging (Completed)
 **What:** Intelligent blending of writing styles from multiple data sources using weighted averaging
 **Impact:** HIGH - Dramatically improves profile accuracy when users provide multiple sources
