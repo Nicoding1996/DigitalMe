@@ -93,10 +93,14 @@ function App() {
     setOnboardingStep('analyzing');
     setAnalysisError(null);
     setFailedSources([]);
+    
+    // Check if we're adding to existing sources or creating new profile
+    const isAddingToExisting = sources && sources.length > 0 && styleProfile;
+    
     setAnalysisProgress({
       currentStep: 0,
       totalSteps: submittedSources.length + 1, // +1 for building profile
-      message: 'Initializing analysis...',
+      message: isAddingToExisting ? 'Adding new sources...' : 'Initializing analysis...',
       isComplete: false
     });
 
@@ -110,7 +114,7 @@ function App() {
       
       console.log('[Analysis] Processing source:', {
         type: source.type,
-        hasProfile: !!source.profile,
+        hasProfile: !!source.result?.profile,
         source: source
       });
       
@@ -118,7 +122,7 @@ function App() {
         let result;
         
         // Gmail sources are already analyzed by the backend
-        if (source.type === 'gmail' && source.profile) {
+        if (source.type === 'gmail' && source.result?.profile) {
           console.log('[Analysis] Using pre-analyzed Gmail profile');
           setAnalysisProgress({
             currentStep: i + 1,
@@ -129,10 +133,7 @@ function App() {
           
           analysisResults.push({
             type: 'gmail',
-            result: {
-              success: true,
-              profile: source.profile
-            }
+            result: source.result
           });
           sourcesData.push(generateMockSource('gmail', 'Gmail Account'));
         } else if (source.type === 'gmail') {
@@ -227,18 +228,50 @@ function App() {
     });
 
     try {
-      const profileResult = await buildStyleProfile(analysisResults);
+      // If adding to existing profile, we need to rebuild with ALL sources
+      let allAnalysisResults = analysisResults;
+      let allSourcesData = sourcesData;
+      
+      if (isAddingToExisting) {
+        console.log('[Analysis] Merging with existing sources:', sources.length);
+        
+        // Merge new sources with existing ones
+        allSourcesData = [...sources, ...sourcesData];
+        
+        // Create a "virtual" analysis result from the existing profile
+        // This allows us to merge the existing profile data with new sources
+        const existingProfileAsSource = {
+          type: 'existing',
+          result: {
+            writingStyle: styleProfile.writing,
+            profile: {
+              writing: styleProfile.writing,
+              sampleCount: styleProfile.sampleCount
+            },
+            metrics: {
+              wordCount: styleProfile.sampleCount?.textWords || styleProfile.sampleCount?.emailWords || 0
+            }
+          }
+        };
+        
+        // Prepend existing profile to analysis results so it gets merged
+        allAnalysisResults = [existingProfileAsSource, ...analysisResults];
+        
+        console.log('[Analysis] Rebuilding profile with', allAnalysisResults.length, 'sources');
+      }
+      
+      const profileResult = await buildStyleProfile(allAnalysisResults);
       
       if (profileResult.success) {
         const profile = profileResult.profile;
         
         // Save to LocalStorage
         localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
-        localStorage.setItem(SOURCES_KEY, JSON.stringify(sourcesData));
+        localStorage.setItem(SOURCES_KEY, JSON.stringify(allSourcesData));
         
         // Set profile and sources state
         setStyleProfile(profile);
-        setSources(sourcesData);
+        setSources(allSourcesData);
         
         // Prepare summary
         setAnalysisSummary({

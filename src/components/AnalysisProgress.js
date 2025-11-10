@@ -54,19 +54,31 @@ const AnalysisProgress = ({
               <div className="border border-static-whisper bg-void-surface p-6 mb-8">
                 <div className="font-mono text-xs text-static-ghost mb-4">[FAILED_SOURCES]</div>
                 <div className="space-y-3">
-                  {failedSources.map((source, index) => (
-                    <div key={index} className="p-4 bg-void-elevated border border-static-whisper">
-                      <div className="font-mono text-xs text-unsettling-cyan mb-2">
-                        [{source.type.toUpperCase()}]
+                  {failedSources.map((source, index) => {
+                    // Format the source value for display
+                    let displayValue = 'Text Sample';
+                    if (source.type === 'gmail') {
+                      displayValue = 'Gmail Account';
+                    } else if (typeof source.value === 'string') {
+                      displayValue = source.value;
+                    } else if (typeof source.value === 'object' && source.value !== null) {
+                      displayValue = JSON.stringify(source.value);
+                    }
+                    
+                    return (
+                      <div key={index} className="p-4 bg-void-elevated border border-static-whisper">
+                        <div className="font-mono text-xs text-unsettling-cyan mb-2">
+                          [{source.type.toUpperCase()}]
+                        </div>
+                        <div className="font-mono text-sm text-static-white mb-2">
+                          {displayValue}
+                        </div>
+                        <div className="font-mono text-xs text-glitch-red">
+                          ERROR: {source.error}
+                        </div>
                       </div>
-                      <div className="font-mono text-sm text-static-white mb-2">
-                        {source.value || 'Text Sample'}
-                      </div>
-                      <div className="font-mono text-xs text-glitch-red">
-                        ERROR: {source.error}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}

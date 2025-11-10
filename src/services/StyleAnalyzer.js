@@ -57,9 +57,10 @@ const simulateProgress = async (onProgress, steps) => {
 export const calculateSourceWeight = (source) => {
   // Quality weight mapping based on source type
   const qualityWeights = {
-    gmail: 1.0,  // Natural, unedited writing
-    text: 0.8,   // User-provided samples
-    blog: 0.6    // Polished, edited content
+    gmail: 1.0,     // Natural, unedited writing
+    existing: 0.9,  // Previously analyzed profile (high quality, already validated)
+    text: 0.8,      // User-provided samples
+    blog: 0.6       // Polished, edited content
   };
 
   // Get quality weight, default to 0.5 for invalid types
@@ -68,23 +69,23 @@ export const calculateSourceWeight = (source) => {
   // Extract word count from source metadata
   let wordCount = 500; // Default if missing
 
-  if (source.result && source.result.metrics) {
-    const metrics = source.result.metrics;
-    
-    // Different sources store word count in different places
-    if (source.type === 'gmail') {
-      // Gmail stores in profile.sampleCount.emailWords or metrics.wordCount
-      const rawCount = metrics.wordCount ?? source.result.profile?.sampleCount?.emailWords;
-      wordCount = (rawCount !== undefined && rawCount !== null) ? rawCount : 500;
-    } else if (source.type === 'text') {
-      // Text samples store in metrics.wordCount
-      const rawCount = metrics.wordCount;
-      wordCount = (rawCount !== undefined && rawCount !== null) ? rawCount : 500;
-    } else if (source.type === 'blog') {
-      // Blog stores in metrics.totalWords
-      const rawCount = metrics.totalWords;
-      wordCount = (rawCount !== undefined && rawCount !== null) ? rawCount : 500;
-    }
+  // Different sources store word count in different places
+  if (source.type === 'gmail') {
+    // Gmail stores in profile.sampleCount.emailWords or metadata.wordCount
+    const rawCount = source.result?.profile?.sampleCount?.emailWords ?? source.result?.metadata?.wordCount ?? source.result?.metrics?.wordCount;
+    wordCount = (rawCount !== undefined && rawCount !== null) ? rawCount : 500;
+  } else if (source.type === 'existing') {
+    // Existing profile stores in profile.sampleCount (textWords or emailWords)
+    const rawCount = source.result?.profile?.sampleCount?.textWords ?? source.result?.profile?.sampleCount?.emailWords ?? source.result?.metrics?.wordCount;
+    wordCount = (rawCount !== undefined && rawCount !== null) ? rawCount : 500;
+  } else if (source.type === 'text') {
+    // Text samples store in metrics.wordCount
+    const rawCount = source.result?.metrics?.wordCount;
+    wordCount = (rawCount !== undefined && rawCount !== null) ? rawCount : 500;
+  } else if (source.type === 'blog') {
+    // Blog stores in metrics.totalWords
+    const rawCount = source.result?.metrics?.totalWords;
+    wordCount = (rawCount !== undefined && rawCount !== null) ? rawCount : 500;
   }
 
   // Handle edge case: zero word count
@@ -875,21 +876,21 @@ export const calculateMergedConfidence = (sources) => {
   let totalWordCount = 0;
 
   sources.forEach(source => {
-    if (!source.result || !source.result.metrics) return;
-
-    const metrics = source.result.metrics;
     let wordCount = 0;
 
     // Extract word count based on source type
     if (source.type === 'gmail') {
-      // Gmail stores in profile.sampleCount.emailWords or metrics.wordCount
-      wordCount = metrics.wordCount ?? source.result.profile?.sampleCount?.emailWords ?? 0;
+      // Gmail stores in profile.sampleCount.emailWords or metadata.wordCount
+      wordCount = source.result?.profile?.sampleCount?.emailWords ?? source.result?.metadata?.wordCount ?? source.result?.metrics?.wordCount ?? 0;
+    } else if (source.type === 'existing') {
+      // Existing profile stores in profile.sampleCount (textWords or emailWords)
+      wordCount = source.result?.profile?.sampleCount?.textWords ?? source.result?.profile?.sampleCount?.emailWords ?? source.result?.metrics?.wordCount ?? 0;
     } else if (source.type === 'text') {
       // Text samples store in metrics.wordCount
-      wordCount = metrics.wordCount ?? 0;
+      wordCount = source.result?.metrics?.wordCount ?? 0;
     } else if (source.type === 'blog') {
       // Blog stores in metrics.totalWords
-      wordCount = metrics.totalWords ?? 0;
+      wordCount = source.result?.metrics?.totalWords ?? 0;
     }
 
     totalWordCount += wordCount;
@@ -1167,9 +1168,9 @@ export const buildStyleProfile = async (sources, userId = 'user-1') => {
     ? codingSources[0].result.codingStyle
     : generateMockCodingStyle();
 
-  // Combine writing styles from blog, text, and Gmail sources using merging algorithm
+  // Combine writing styles from blog, text, Gmail, and existing profile sources using merging algorithm
   const writingSources = sources.filter(
-    s => (s.type === 'blog' || s.type === 'text' || s.type === 'gmail') && (s.result?.writingStyle || s.result?.profile?.writing)
+    s => (s.type === 'blog' || s.type === 'text' || s.type === 'gmail' || s.type === 'existing') && (s.result?.writingStyle || s.result?.profile?.writing)
   );
   
   // Use mergeWritingStyles to intelligently blend all writing sources
@@ -1184,7 +1185,19 @@ export const buildStyleProfile = async (sources, userId = 'user-1') => {
     0
   );
   const totalTextWords = writingSources.reduce(
-    (sum, s) => sum + (s.result?.metrics?.totalWords || s.result?.metrics?.wordCount || s.result?.profile?.sampleCount?.textWords || 0),
+    (sum, s) => {
+      // Handle different word count locations based on source type
+      if (s.type === 'gmail') {
+        // Gmail stores word count in profile.sampleCount.emailWords or metadata.wordCount
+        return sum + (s.result?.profile?.sampleCount?.emailWords || s.result?.metadata?.wordCount || 0);
+      } else if (s.type === 'existing') {
+        // Existing profile stores in sampleCount (textWords or emailWords)
+        return sum + (s.result?.profile?.sampleCount?.textWords || s.result?.profile?.sampleCount?.emailWords || 0);
+      } else {
+        // Other sources use metrics.totalWords or metrics.wordCount
+        return sum + (s.result?.metrics?.totalWords || s.result?.metrics?.wordCount || 0);
+      }
+    },
     0
   );
   const totalRepos = codingSources.reduce(

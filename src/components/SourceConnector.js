@@ -30,6 +30,7 @@ const SourceConnector = ({ onSourcesSubmit }) => {
     setGmailStats(stats);
     
     // Submit Gmail source with profile automatically after successful connection
+    // Format it to match what App.js expects (result.profile structure)
     const gmailSource = {
       type: 'gmail',
       value: {
@@ -37,7 +38,10 @@ const SourceConnector = ({ onSourcesSubmit }) => {
         emailsFiltered: stats.emailsFiltered,
         patternsExtracted: stats.patternsExtracted
       },
-      profile: stats.profile // Include the pre-analyzed profile from backend
+      result: {
+        profile: stats.profile, // Include the pre-analyzed profile from backend
+        metadata: stats.profile?.metadata // Include metadata if available
+      }
     };
     
     console.log('[SourceConnector] Submitting Gmail source:', gmailSource);
