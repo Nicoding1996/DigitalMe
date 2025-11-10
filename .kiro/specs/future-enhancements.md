@@ -1,5 +1,14 @@
 # Future Enhancements - DigitalMe
 
+## Recent Completions
+
+### ✅ True Multi-Source Style Merging (Completed)
+**What:** Intelligent blending of writing styles from multiple data sources using weighted averaging
+**Impact:** HIGH - Dramatically improves profile accuracy when users provide multiple sources
+**Status:** Fully implemented with source attribution tracking
+
+---
+
 ## Priority: Low (Nice-to-Have Features)
 
 ### 1. Advanced Style Analysis
@@ -33,58 +42,67 @@
 
 ---
 
-### 2. True Multi-Source Style Merging
+### 2. ✅ True Multi-Source Style Merging (COMPLETED)
 **Goal:** Intelligently blend writing styles from multiple data sources instead of priority selection
 
-**Current Limitation:**
-- System uses priority selection (Gmail > Text > Blog)
-- Only the highest-priority source's style is used
-- Other sources are ignored for style analysis (only used for metrics)
+**Status:** ✅ **IMPLEMENTED** (Completed in Gmail integration sprint)
 
-**Proposed Solution:**
-- **Weighted Averaging Algorithm**
-  - Assign weights based on source quality:
+**What Was Built:**
+- **Weighted Averaging Algorithm** ✅
+  - Quality weights based on source type:
     - Gmail: 1.0 (natural, unedited writing)
+    - Existing: 0.9 (previously validated profile)
     - Text: 0.8 (user-provided samples)
     - Blog: 0.6 (polished, edited content)
-  - Weight by data quantity (more words = more influence)
-  - Merge tone, formality, vocabulary, and sentence patterns
+  - Quantity weights based on word count:
+    - < 500 words: 0.5x multiplier
+    - 500-1500 words: 1.0x multiplier
+    - > 1500 words: 1.5x multiplier
+  - Weights normalized to sum to 1.0
 
-- **Merging Strategy:**
-  - **Tone**: Weighted vote (most common across sources)
-  - **Formality**: Weighted average (casual=0, balanced=1, formal=2)
-  - **Vocabulary**: Union of unique terms from all sources
-  - **Avoidance**: Intersection (only things ALL sources avoid)
-  - **Sentence Length**: Weighted average
+- **Merging Strategies by Attribute** ✅
+  - **Tone**: Weighted voting (highest total weight wins)
+  - **Formality**: Weighted averaging with numeric scores
+  - **Vocabulary**: Weighted union (top 4 terms by total weight)
+  - **Avoidance**: Weighted intersection (≥50% appearance or weight >0.6)
+  - **Sentence Length**: Weighted voting
 
-- **Confidence Scoring:**
-  - Higher confidence with more diverse sources
-  - Show per-attribute confidence (e.g., "Tone: 85% confident")
-  - Indicate which sources contributed most to each attribute
+- **Confidence Scoring** ✅
+  - Base: 50% for single source
+  - +15% per additional source (up to 4 sources)
+  - +5% bonus if total words > 1000
+  - +5% bonus if total words > 2000
+  - Maximum: 95%
 
-**Implementation:**
-```javascript
-// New function in StyleAnalyzer.js
-const mergeWritingStyles = (writingSources) => {
-  // Weighted averaging logic
-  // Returns blended style profile
-};
+- **Source Attribution** ✅
+  - Tracks which sources contributed to each attribute
+  - Shows contribution percentages per source
+  - Stored in `profile.sourceAttribution` field
 
-// Update buildStyleProfile to use merging
-const writingStyle = mergeWritingStyles(writingStylesWithMetadata);
-```
+- **Incremental Source Addition** ✅
+  - Users can add sources after initial onboarding
+  - Existing profile preserved and merged with new sources
+  - Profile automatically recalculated with all sources
 
-**Benefits:**
-- More accurate profiles with multiple sources
-- Better utilizes all user data
-- Reduces bias from single source
-- Allows for nuanced style representation
+**Implementation Files:**
+- `src/services/StyleAnalyzer.js`: Core merging algorithms
+  - `calculateSourceWeight()` - Quality × Quantity weighting
+  - `normalizeWeights()` - Weight normalization
+  - `mergeTone()`, `mergeFormality()`, `mergeSentenceLength()` - Attribute merging
+  - `mergeVocabulary()`, `mergeAvoidance()` - List merging
+  - `mergeWritingStyles()` - Main orchestrator
+  - `calculateMergedConfidence()` - Confidence scoring
+- `src/App.js`: Source management and profile rebuilding
+  - Detects when adding to existing profile
+  - Creates "virtual" source from existing profile
+  - Rebuilds profile with all sources combined
 
-**Effort:** Medium (4-6 hours)
-- Implement merging algorithm
-- Update buildStyleProfile function
-- Add unit tests for edge cases
-- Update UI to show source contributions
+**Benefits Achieved:**
+- ✅ More accurate profiles with multiple sources
+- ✅ Better utilizes all user data
+- ✅ Reduces bias from single source
+- ✅ Allows for nuanced style representation
+- ✅ Sources can be added incrementally without data loss
 
 ---
 
@@ -144,9 +162,11 @@ Sources ready: 2/4
 - "Why did the AI respond this way?" explanations
 - Style comparison: "Your style vs AI response"
 - Adjustable style sliders (more/less formal, more/less verbose)
-- **Source Attribution**: Show which sources contributed to each style attribute
-  - "Your casual tone comes from: Text samples (60%), Gmail (40%)"
-  - "Sentence length influenced by: Blog posts (70%), Text (30%)"
+- ✅ **Source Attribution** (Backend Complete, UI Pending): Show which sources contributed to each style attribute
+  - Data structure exists in `profile.sourceAttribution`
+  - Example: "Your casual tone comes from: Text samples (60%), Gmail (40%)"
+  - Example: "Sentence length influenced by: Blog posts (70%), Text (30%)"
+  - **TODO**: Build UI component to display this data
 
 ---
 
@@ -216,15 +236,16 @@ Sources ready: 2/4
 ## Implementation Priority (When Time Allows)
 
 ### Phase 1: Core Improvements (Next Sprint)
-1. **True Multi-Source Merging** (4-6 hours) - HIGH IMPACT
-   - Implement weighted averaging algorithm
-   - Better utilizes existing multi-source capability
-   - Immediate accuracy improvement
+1. ~~**True Multi-Source Merging**~~ ✅ **COMPLETED**
+   - ~~Implement weighted averaging algorithm~~
+   - ~~Better utilizes existing multi-source capability~~
+   - ~~Immediate accuracy improvement~~
 
 2. **Multi-Source UI Enhancement** (2-4 hours) - MEDIUM IMPACT
    - Visual indicators for filled sources
    - Optional "fill multiple before analyzing" flow
    - Better UX for power users
+   - Show source attribution in UI (which sources influenced each trait)
 
 ### Phase 2: Data Source Expansion
 3. **Chat Integration** (8-12 hours)

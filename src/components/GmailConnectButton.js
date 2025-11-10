@@ -315,6 +315,19 @@ const GmailConnectButton = ({
           if (!messageReceived) {
             window.removeEventListener('message', wrappedHandleMessage);
             console.log('[Gmail OAuth] Polling stopped - max attempts reached');
+            
+            // Show timeout error to user
+            setConnectionStatus('error');
+            const timeoutError = {
+              message: 'OAuth authentication timed out. Please try again.',
+              canRetry: true,
+              userAction: 'The authentication window may have been closed or the process took too long. Click RETRY to try again.'
+            };
+            setError(timeoutError);
+            
+            if (onConnectionError) {
+              onConnectionError(timeoutError);
+            }
           }
           return;
         }
@@ -350,23 +363,32 @@ const GmailConnectButton = ({
               startPolling(sessionId);
             } else {
               // Still pending - user hasn't completed OAuth yet
-              console.log('[Gmail OAuth] Waiting for user to complete OAuth... (attempt', pollAttempts, '/', maxPollAttempts, ')');
+              // Only log every 10 attempts to reduce console spam
+              if (pollAttempts % 10 === 0 || pollAttempts === 1) {
+                console.log('[Gmail OAuth] Waiting for user to complete OAuth... (attempt', pollAttempts, '/', maxPollAttempts, ')');
+              }
             }
           } else if (statusResponse.status === 404) {
             // Session doesn't exist - shouldn't happen since we created it
-            console.log('[Gmail OAuth] Session not found (unexpected)');
+            if (pollAttempts % 10 === 0) {
+              console.log('[Gmail OAuth] Session not found (unexpected)');
+            }
           } else {
             // Other error - try to get error details
-            try {
-              const errorData = await statusResponse.json();
-              console.log('[Gmail OAuth] Polling error:', statusResponse.status, errorData);
-            } catch (e) {
-              console.log('[Gmail OAuth] Polling error:', statusResponse.status, statusResponse.statusText);
+            if (pollAttempts % 10 === 0) {
+              try {
+                const errorData = await statusResponse.json();
+                console.log('[Gmail OAuth] Polling error:', statusResponse.status, errorData);
+              } catch (e) {
+                console.log('[Gmail OAuth] Polling error:', statusResponse.status, statusResponse.statusText);
+              }
             }
           }
         } catch (err) {
           // Network error - ignore and keep polling
-          console.log('[Gmail OAuth] Polling network error (will retry):', err.message);
+          if (pollAttempts % 10 === 0) {
+            console.log('[Gmail OAuth] Polling network error (will retry):', err.message);
+          }
         }
       }, 2000); // Poll every 2 seconds
 
