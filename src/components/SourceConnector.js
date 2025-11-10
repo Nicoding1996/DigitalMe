@@ -14,6 +14,7 @@ const SourceConnector = ({ onSourcesSubmit }) => {
   const [errors, setErrors] = useState({});
   const [gmailConnected, setGmailConnected] = useState(false);
   const [gmailStats, setGmailStats] = useState(null);
+  const [gmailSource, setGmailSource] = useState(null); // Store Gmail source for multi-source submission
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -29,9 +30,9 @@ const SourceConnector = ({ onSourcesSubmit }) => {
     setGmailConnected(true);
     setGmailStats(stats);
     
-    // Submit Gmail source with profile automatically after successful connection
+    // Store Gmail source for multi-source submission
     // Format it to match what App.js expects (result.profile structure)
-    const gmailSource = {
+    const source = {
       type: 'gmail',
       value: {
         emailsAnalyzed: stats.emailsAnalyzed,
@@ -44,8 +45,8 @@ const SourceConnector = ({ onSourcesSubmit }) => {
       }
     };
     
-    console.log('[SourceConnector] Submitting Gmail source:', gmailSource);
-    onSourcesSubmit([gmailSource]);
+    setGmailSource(source);
+    console.log('[SourceConnector] Gmail source ready for submission');
   };
 
   const handleGmailConnectionError = (error) => {
@@ -53,11 +54,45 @@ const SourceConnector = ({ onSourcesSubmit }) => {
     setGmailConnected(false);
   };
 
+  // Check which sources are filled and valid
+  const getFilledSources = () => {
+    const filled = {
+      text: false,
+      gmail: false,
+      blog: false,
+      github: false
+    };
+
+    // Text
+    if (textSample.trim()) {
+      const validation = validateTextSample(textSample.trim());
+      filled.text = validation.valid;
+    }
+
+    // Gmail
+    filled.gmail = gmailConnected && gmailSource !== null;
+
+    // Blog
+    if (blogUrls.trim()) {
+      const urls = blogUrls.split('\n').map(url => url.trim()).filter(url => url);
+      const invalidUrls = urls.filter(url => !validateBlogUrl(url));
+      filled.blog = urls.length > 0 && invalidUrls.length === 0;
+    }
+
+    // GitHub
+    if (githubUsername.trim()) {
+      filled.github = validateGitHubUsername(githubUsername.trim());
+    }
+
+    return filled;
+  };
+
   const validateAndSubmit = () => {
     const newErrors = {};
     const sources = [];
 
-    if (activeTab === 'github' && githubUsername.trim()) {
+    // Collect all filled sources
+    if (githubUsername.trim()) {
       if (!validateGitHubUsername(githubUsername.trim())) {
         newErrors.github = 'Invalid GitHub username format';
       } else {
@@ -65,7 +100,7 @@ const SourceConnector = ({ onSourcesSubmit }) => {
       }
     }
 
-    if (activeTab === 'blog' && blogUrls.trim()) {
+    if (blogUrls.trim()) {
       const urls = blogUrls.split('\n').map(url => url.trim()).filter(url => url);
       const invalidUrls = urls.filter(url => !validateBlogUrl(url));
       
@@ -76,7 +111,7 @@ const SourceConnector = ({ onSourcesSubmit }) => {
       }
     }
 
-    if (activeTab === 'text' && textSample.trim()) {
+    if (textSample.trim()) {
       const validation = validateTextSample(textSample.trim());
       if (!validation.valid) {
         newErrors.text = validation.message;
@@ -85,8 +120,13 @@ const SourceConnector = ({ onSourcesSubmit }) => {
       }
     }
 
+    // Add Gmail source if connected
+    if (gmailConnected && gmailSource) {
+      sources.push(gmailSource);
+    }
+
     if (sources.length === 0 && Object.keys(newErrors).length === 0) {
-      newErrors[activeTab] = 'Please provide at least one source';
+      newErrors.general = 'Please provide at least one source';
     }
 
     setErrors(newErrors);
@@ -96,12 +136,16 @@ const SourceConnector = ({ onSourcesSubmit }) => {
     }
   };
 
+  const filledSources = getFilledSources();
+  const filledCount = Object.values(filledSources).filter(Boolean).length;
+  const hasAnySources = filledCount > 0;
+
   return (
-    <div className="relative flex items-center justify-center min-h-screen bg-mirror-black px-6 py-12">
+    <div className="relative min-h-screen bg-mirror-black px-6 py-8 overflow-y-auto">
       {/* Scanline effect */}
       <div className="scanline" />
       
-      <div className="relative z-10 w-full max-w-3xl fade-in">
+      <div className="relative z-10 w-full max-w-3xl mx-auto fade-in">
         {/* Header */}
         <div className="mb-12">
           <h2 className="text-3xl font-display font-bold text-static-white mb-4 tracking-tight">
@@ -115,59 +159,71 @@ const SourceConnector = ({ onSourcesSubmit }) => {
           </p>
         </div>
 
-        {/* Tabs */}
+        {/* Tabs with status indicators */}
         <div className="flex gap-2 mb-8">
           <button
             onClick={() => handleTabChange('text')}
-            className={`flex-1 px-6 py-4 font-mono text-xs tracking-wider transition-all ${
+            className={`relative flex-1 px-6 py-4 font-mono text-xs tracking-wider transition-all ${
               activeTab === 'text'
                 ? 'bg-void-elevated text-unsettling-cyan border border-unsettling-cyan'
                 : 'bg-void-surface text-static-muted border border-static-whisper hover:border-static-ghost'
             }`}
           >
+            {filledSources.text && (
+              <span className="absolute top-2 right-2 text-system-active text-sm">✓</span>
+            )}
             <span className="block mb-2 text-lg">⌘</span>
             [TEXT]
           </button>
           
           <button
             onClick={() => handleTabChange('gmail')}
-            className={`flex-1 px-6 py-4 font-mono text-xs tracking-wider transition-all ${
+            className={`relative flex-1 px-6 py-4 font-mono text-xs tracking-wider transition-all ${
               activeTab === 'gmail'
                 ? 'bg-void-elevated text-unsettling-cyan border border-unsettling-cyan'
                 : 'bg-void-surface text-static-muted border border-static-whisper hover:border-static-ghost'
             }`}
           >
+            {filledSources.gmail && (
+              <span className="absolute top-2 right-2 text-system-active text-sm">✓</span>
+            )}
             <span className="block mb-2 text-lg">✉</span>
             [GMAIL]
           </button>
           
           <button
             onClick={() => handleTabChange('blog')}
-            className={`flex-1 px-6 py-4 font-mono text-xs tracking-wider transition-all ${
+            className={`relative flex-1 px-6 py-4 font-mono text-xs tracking-wider transition-all ${
               activeTab === 'blog'
                 ? 'bg-void-elevated text-unsettling-cyan border border-unsettling-cyan'
                 : 'bg-void-surface text-static-muted border border-static-whisper hover:border-static-ghost'
             }`}
           >
+            {filledSources.blog && (
+              <span className="absolute top-2 right-2 text-system-active text-sm">✓</span>
+            )}
             <span className="block mb-2 text-lg">✎</span>
             [BLOG]
           </button>
           
           <button
             onClick={() => handleTabChange('github')}
-            className={`flex-1 px-6 py-4 font-mono text-xs tracking-wider transition-all ${
+            className={`relative flex-1 px-6 py-4 font-mono text-xs tracking-wider transition-all ${
               activeTab === 'github'
                 ? 'bg-void-elevated text-unsettling-cyan border border-unsettling-cyan'
                 : 'bg-void-surface text-static-muted border border-static-whisper hover:border-static-ghost'
             }`}
           >
+            {filledSources.github && (
+              <span className="absolute top-2 right-2 text-system-active text-sm">✓</span>
+            )}
             <span className="block mb-2 text-lg">{'<>'}</span>
             [GITHUB]
           </button>
         </div>
 
         {/* Input Area */}
-        <div className="border border-static-whisper bg-void-surface p-8 mb-8">
+        <div className="border border-static-whisper bg-void-surface p-8 mb-6 max-h-[400px] overflow-y-auto">
           {activeTab === 'gmail' && (
             <div className="space-y-4">
               <label className="system-text block">GMAIL ACCOUNT</label>
@@ -211,11 +267,11 @@ const SourceConnector = ({ onSourcesSubmit }) => {
             <div className="space-y-4">
               <label className="system-text block">BLOG & CONTENT URLS</label>
               <textarea
-                className={`input-field min-h-[180px] ${errors.blog ? 'border-glitch-red' : ''}`}
+                className={`input-field min-h-[120px] max-h-[250px] ${errors.blog ? 'border-glitch-red' : ''}`}
                 placeholder="Enter URLs to your writing (one per line)&#10;https://yourblog.com/post-1&#10;https://medium.com/@you/article&#10;https://linkedin.com/posts/you/..."
                 value={blogUrls}
                 onChange={(e) => setBlogUrls(e.target.value)}
-                rows={6}
+                rows={5}
               />
               {errors.blog && (
                 <div className="text-glitch-red text-sm font-mono">{errors.blog}</div>
@@ -230,11 +286,11 @@ const SourceConnector = ({ onSourcesSubmit }) => {
             <div className="space-y-4">
               <label className="system-text block">TEXT SAMPLE</label>
               <textarea
-                className={`input-field min-h-[200px] ${errors.text ? 'border-glitch-red' : ''}`}
+                className={`input-field min-h-[150px] max-h-[300px] ${errors.text ? 'border-glitch-red' : ''}`}
                 placeholder="Paste a sample of your writing (minimum 100 words)&#10;&#10;This can be from emails, documentation, articles, chat messages, or any text that represents your writing style..."
                 value={textSample}
                 onChange={(e) => setTextSample(e.target.value)}
-                rows={8}
+                rows={6}
               />
               {errors.text && (
                 <div className="text-glitch-red text-sm font-mono">{errors.text}</div>
@@ -249,15 +305,40 @@ const SourceConnector = ({ onSourcesSubmit }) => {
           )}
         </div>
 
-        {/* Action Button - Only show for non-Gmail tabs */}
-        {activeTab !== 'gmail' && (
+        {/* Source Status and Action Button */}
+        <div className="space-y-3">
+          {/* Error message for general errors */}
+          {errors.general && (
+            <div className="px-4 py-2 bg-void-surface border border-glitch-red text-glitch-red font-mono text-xs">
+              {errors.general}
+            </div>
+          )}
+
+          {/* Action Button with inline source count */}
           <button 
             onClick={validateAndSubmit}
-            className="w-full px-8 py-4 bg-void-surface border border-static-whisper text-static-white font-mono text-sm tracking-wider hover:border-unsettling-cyan hover:text-unsettling-cyan transition-all"
+            disabled={!hasAnySources}
+            className={`w-full px-8 py-3 font-mono text-sm tracking-wider transition-all ${
+              hasAnySources
+                ? 'bg-void-surface border border-static-whisper text-static-white hover:border-unsettling-cyan hover:text-unsettling-cyan'
+                : 'bg-void-surface border border-static-whisper text-static-ghost opacity-40 cursor-not-allowed'
+            }`}
           >
-            &gt; ANALYZE_STYLE
+            <div className="flex items-center justify-between">
+              <span>
+                {filledCount > 1 
+                  ? `> ANALYZE_ALL_SOURCES`
+                  : '> ANALYZE_STYLE'
+                }
+              </span>
+              {hasAnySources && (
+                <span className="text-system-active text-xs">
+                  [{filledCount}/4] {filledCount === 1 && '• Add more for accuracy'}
+                </span>
+              )}
+            </div>
           </button>
-        )}
+        </div>
       </div>
     </div>
   );
