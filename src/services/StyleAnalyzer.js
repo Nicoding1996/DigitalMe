@@ -44,6 +44,257 @@ const simulateProgress = async (onProgress, steps) => {
 };
 
 // ============================================================================
+// WEIGHT CALCULATION FOR MULTI-SOURCE MERGING
+// ============================================================================
+
+/**
+ * Calculate the weight for a data source based on quality and quantity
+ * @param {Object} source - Source object with type and analysis result
+ * @param {string} source.type - Source type ('gmail', 'text', 'blog')
+ * @param {Object} source.result - Analysis result with metrics
+ * @returns {number} Calculated weight (0.0 - 2.0 range before normalization)
+ */
+export const calculateSourceWeight = (source) => {
+  // Quality weight mapping based on source type
+  const qualityWeights = {
+    gmail: 1.0,  // Natural, unedited writing
+    text: 0.8,   // User-provided samples
+    blog: 0.6    // Polished, edited content
+  };
+
+  // Get quality weight, default to 0.5 for invalid types
+  const qualityWeight = qualityWeights[source.type] || 0.5;
+
+  // Extract word count from source metadata
+  let wordCount = 500; // Default if missing
+
+  if (source.result && source.result.metrics) {
+    const metrics = source.result.metrics;
+    
+    // Different sources store word count in different places
+    if (source.type === 'gmail') {
+      // Gmail stores in profile.sampleCount.emailWords or metrics.wordCount
+      const rawCount = metrics.wordCount ?? source.result.profile?.sampleCount?.emailWords;
+      wordCount = (rawCount !== undefined && rawCount !== null) ? rawCount : 500;
+    } else if (source.type === 'text') {
+      // Text samples store in metrics.wordCount
+      const rawCount = metrics.wordCount;
+      wordCount = (rawCount !== undefined && rawCount !== null) ? rawCount : 500;
+    } else if (source.type === 'blog') {
+      // Blog stores in metrics.totalWords
+      const rawCount = metrics.totalWords;
+      wordCount = (rawCount !== undefined && rawCount !== null) ? rawCount : 500;
+    }
+  }
+
+  // Handle edge case: zero word count
+  if (wordCount === 0) {
+    wordCount = 100;
+  }
+
+  // Calculate quantity factor based on word count thresholds
+  let quantityFactor;
+  if (wordCount < 500) {
+    quantityFactor = 0.5;
+  } else if (wordCount <= 1500) {
+    quantityFactor = 1.0;
+  } else {
+    quantityFactor = 1.5;
+  }
+
+  // Return final weight: quality × quantity
+  return qualityWeight * quantityFactor;
+};
+
+/**
+ * Normalize source weights to sum to 1.0
+ * @param {Array<Object>} sourcesWithWeights - Sources with calculated weights
+ * @returns {Array<Object>} Sources with normalized weights
+ */
+export const normalizeWeights = (sourcesWithWeights) => {
+  // Handle edge case: empty array
+  if (!sourcesWithWeights || sourcesWithWeights.length === 0) {
+    return [];
+  }
+
+  // Handle edge case: single source
+  if (sourcesWithWeights.length === 1) {
+    return [{
+      ...sourcesWithWeights[0],
+      weight: 1.0
+    }];
+  }
+
+  // Calculate sum of all weights
+  const totalWeight = sourcesWithWeights.reduce((sum, source) => sum + (source.weight || 0), 0);
+
+  // Handle edge case: sum is zero - assign equal weights
+  if (totalWeight === 0) {
+    const equalWeight = 1.0 / sourcesWithWeights.length;
+    return sourcesWithWeights.map(source => ({
+      ...source,
+      weight: equalWeight
+    }));
+  }
+
+  // Normalize weights to sum to 1.0
+  return sourcesWithWeights.map(source => ({
+    ...source,
+    weight: (source.weight || 0) / totalWeight
+  }));
+};
+
+// ============================================================================
+// ATTRIBUTE MERGING FUNCTIONS
+// ============================================================================
+
+/**
+ * Merge tone attributes using weighted voting strategy
+ * @param {Array<Object>} sources - Sources with normalized weights and writing styles
+ * @returns {Object} Merged tone and attribution data
+ */
+export const mergeTone = (sources) => {
+  // Initialize vote tally for all possible tone values
+  const voteTally = {
+    conversational: 0,
+    professional: 0,
+    neutral: 0
+  };
+
+  // Track which sources contributed to each tone for attribution
+  const sourceContributions = {
+    conversational: [],
+    professional: [],
+    neutral: []
+  };
+
+  // Accumulate weighted votes for each tone
+  sources.forEach(source => {
+    // Extract tone from source (handle different result structures)
+    const writingStyle = source.result?.writingStyle || source.result?.profile?.writing;
+    if (!writingStyle || !writingStyle.tone) return;
+
+    const tone = writingStyle.tone;
+    const weight = source.weight || 0;
+
+    // Add weight to the tally for this tone
+    if (voteTally.hasOwnProperty(tone)) {
+      voteTally[tone] += weight;
+      sourceContributions[tone].push({
+        type: source.type,
+        weight: weight
+      });
+    }
+  });
+
+  // Find the tone with the highest total weight
+  let maxWeight = -1;
+  let selectedTone = 'neutral'; // Default fallback
+  let tiedTones = [];
+
+  for (const [tone, weight] of Object.entries(voteTally)) {
+    if (weight > maxWeight) {
+      maxWeight = weight;
+      selectedTone = tone;
+      tiedTones = [tone];
+    } else if (weight === maxWeight && weight > 0) {
+      tiedTones.push(tone);
+    }
+  }
+
+  // Handle ties: select tone from highest-quality source
+  if (tiedTones.length > 1) {
+    // Quality order: gmail (1.0) > text (0.8) > blog (0.6)
+    const qualityOrder = ['gmail', 'text', 'blog'];
+    
+    for (const sourceType of qualityOrder) {
+      for (const tone of tiedTones) {
+        const hasSourceType = sourceContributions[tone].some(s => s.type === sourceType);
+        if (hasSourceType) {
+          selectedTone = tone;
+          break;
+        }
+      }
+      if (selectedTone) break;
+    }
+  }
+
+  // Generate attribution data
+  const attribution = sourceContributions[selectedTone].map(contrib => ({
+    type: contrib.type,
+    contribution: Math.round(contrib.weight * 100)
+  }));
+
+  return {
+    value: selectedTone,
+    attribution: attribution
+  };
+};
+
+/**
+ * Merge formality attributes using weighted averaging strategy
+ * @param {Array<Object>} sources - Sources with normalized weights and writing styles
+ * @returns {Object} Merged formality and attribution data
+ */
+export const mergeFormality = (sources) => {
+  // Map formality values to numeric scores
+  const formalityScores = {
+    casual: 0,
+    balanced: 1,
+    formal: 2
+  };
+
+  // Track source contributions for attribution
+  const sourceContributions = [];
+  let weightedSum = 0;
+
+  // Calculate weighted average of formality scores
+  sources.forEach(source => {
+    // Extract formality from source (handle different result structures)
+    const writingStyle = source.result?.writingStyle || source.result?.profile?.writing;
+    if (!writingStyle || !writingStyle.formality) return;
+
+    const formality = writingStyle.formality;
+    const weight = source.weight || 0;
+
+    // Map formality to numeric score
+    const score = formalityScores[formality];
+    if (score !== undefined) {
+      weightedSum += score * weight;
+      sourceContributions.push({
+        type: source.type,
+        weight: weight,
+        formality: formality,
+        score: score
+      });
+    }
+  });
+
+  // Map averaged score back to formality value
+  let mergedFormality = 'balanced'; // Default fallback
+  
+  if (weightedSum < 0.5) {
+    mergedFormality = 'casual';
+  } else if (weightedSum <= 1.5) {
+    mergedFormality = 'balanced';
+  } else {
+    mergedFormality = 'formal';
+  }
+
+  // Generate attribution data - show all contributing sources
+  const attribution = sourceContributions.map(contrib => ({
+    type: contrib.type,
+    contribution: Math.round(contrib.weight * 100)
+  }));
+
+  return {
+    value: mergedFormality,
+    attribution: attribution,
+    averageScore: parseFloat(weightedSum.toFixed(2))
+  };
+};
+
+// ============================================================================
 // GITHUB ANALYSIS
 // ============================================================================
 

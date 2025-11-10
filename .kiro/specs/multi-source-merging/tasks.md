@@ -1,19 +1,34 @@
 # Implementation Plan: Multi-Source Style Merging
 
-- [ ] 1. Implement core weight calculation utilities
+- [x] 1. Implement core weight calculation utilities
+
+
+
+
+
   - Create `calculateSourceWeight()` function that determines weight based on source type and word count
   - Implement quality weight mapping (Gmail: 1.0, Text: 0.8, Blog: 0.6)
   - Implement quantity factor calculation based on word count thresholds (<500: 0.5, 500-1500: 1.0, >1500: 1.5)
   - Handle edge cases: missing word count defaults to 500, invalid type defaults to 0.5
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 2.1, 2.2, 2.3, 2.4, 2.5_
 
-- [ ] 2. Implement weight normalization
+- [x] 2. Implement weight normalization
+
+
+
+
+
   - Create `normalizeWeights()` function that normalizes source weights to sum to 1.0
   - Handle edge case where sum is zero by assigning equal weights
   - Handle single source case where weight becomes 1.0
   - _Requirements: 2.5_
 
-- [ ] 3. Implement tone merging with weighted voting
+- [x] 3. Implement tone merging with weighted voting
+
+
+
+
+
   - Create `mergeTone()` function using weighted voting strategy
   - Build vote tally for each tone value (conversational, professional, neutral)
   - Select tone with highest total weight
@@ -21,7 +36,12 @@
   - Return merged tone value and attribution data
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-- [ ] 4. Implement formality merging with weighted averaging
+- [x] 4. Implement formality merging with weighted averaging
+
+
+
+
+
   - Create `mergeFormality()` function using weighted averaging strategy
   - Map formality values to numeric scores (casual: 0, balanced: 1, formal: 2)
   - Calculate weighted average across all sources
