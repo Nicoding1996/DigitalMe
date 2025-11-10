@@ -7,7 +7,7 @@ import { validateGitHubUsername, validateBlogUrl, validateTextSample } from '../
 import GmailConnectButton from './GmailConnectButton';
 
 const SourceConnector = ({ onSourcesSubmit }) => {
-  const [activeTab, setActiveTab] = useState('github');
+  const [activeTab, setActiveTab] = useState('text');
   const [githubUsername, setGithubUsername] = useState('');
   const [blogUrls, setBlogUrls] = useState('');
   const [textSample, setTextSample] = useState('');
@@ -104,12 +104,24 @@ const SourceConnector = ({ onSourcesSubmit }) => {
             [ACQUIRE_SOURCE_DATA]
           </h2>
           <p className="font-mono text-xs text-static-muted leading-relaxed">
-            &gt; Choose a source to analyze your unique style and build your AI twin
+            &gt; Choose a source to analyze your unique style and build your digital doppelgänger
           </p>
         </div>
 
         {/* Tabs */}
         <div className="flex gap-2 mb-8">
+          <button
+            onClick={() => handleTabChange('text')}
+            className={`flex-1 px-6 py-4 font-mono text-xs tracking-wider transition-all ${
+              activeTab === 'text'
+                ? 'bg-void-elevated text-unsettling-cyan border border-unsettling-cyan'
+                : 'bg-void-surface text-static-muted border border-static-whisper hover:border-static-ghost'
+            }`}
+          >
+            <span className="block mb-2 text-lg">⌘</span>
+            [TEXT]
+          </button>
+          
           <button
             onClick={() => handleTabChange('gmail')}
             className={`flex-1 px-6 py-4 font-mono text-xs tracking-wider transition-all ${
@@ -120,18 +132,6 @@ const SourceConnector = ({ onSourcesSubmit }) => {
           >
             <span className="block mb-2 text-lg">✉</span>
             [GMAIL]
-          </button>
-          
-          <button
-            onClick={() => handleTabChange('github')}
-            className={`flex-1 px-6 py-4 font-mono text-xs tracking-wider transition-all ${
-              activeTab === 'github'
-                ? 'bg-void-elevated text-unsettling-cyan border border-unsettling-cyan'
-                : 'bg-void-surface text-static-muted border border-static-whisper hover:border-static-ghost'
-            }`}
-          >
-            <span className="block mb-2 text-lg">{'<>'}</span>
-            [GITHUB]
           </button>
           
           <button
@@ -147,15 +147,15 @@ const SourceConnector = ({ onSourcesSubmit }) => {
           </button>
           
           <button
-            onClick={() => handleTabChange('text')}
+            onClick={() => handleTabChange('github')}
             className={`flex-1 px-6 py-4 font-mono text-xs tracking-wider transition-all ${
-              activeTab === 'text'
+              activeTab === 'github'
                 ? 'bg-void-elevated text-unsettling-cyan border border-unsettling-cyan'
                 : 'bg-void-surface text-static-muted border border-static-whisper hover:border-static-ghost'
             }`}
           >
-            <span className="block mb-2 text-lg">⌘</span>
-            [TEXT]
+            <span className="block mb-2 text-lg">{'<>'}</span>
+            [GITHUB]
           </button>
         </div>
 
@@ -202,10 +202,10 @@ const SourceConnector = ({ onSourcesSubmit }) => {
 
           {activeTab === 'blog' && (
             <div className="space-y-4">
-              <label className="system-text block">BLOG URLS</label>
+              <label className="system-text block">BLOG & CONTENT URLS</label>
               <textarea
                 className={`input-field min-h-[180px] ${errors.blog ? 'border-glitch-red' : ''}`}
-                placeholder="Enter blog URLs (one per line)&#10;https://example.com/post-1&#10;https://example.com/post-2"
+                placeholder="Enter URLs to your writing (one per line)&#10;https://yourblog.com/post-1&#10;https://medium.com/@you/article&#10;https://linkedin.com/posts/you/..."
                 value={blogUrls}
                 onChange={(e) => setBlogUrls(e.target.value)}
                 rows={6}
@@ -214,7 +214,7 @@ const SourceConnector = ({ onSourcesSubmit }) => {
                 <div className="text-glitch-red text-sm font-mono">{errors.blog}</div>
               )}
               <div className="text-static-ghost text-xs italic mt-3">
-                We'll analyze your blog posts to learn your writing style
+                We'll analyze your blog posts, articles, and public writing to learn your style
               </div>
             </div>
           )}
@@ -223,17 +223,20 @@ const SourceConnector = ({ onSourcesSubmit }) => {
             <div className="space-y-4">
               <label className="system-text block">TEXT SAMPLE</label>
               <textarea
-                className={`input-field min-h-[280px] ${errors.text ? 'border-glitch-red' : ''}`}
-                placeholder="Paste a sample of your writing (minimum 100 words)&#10;&#10;This can be from emails, documentation, articles, or any text that represents your writing style..."
+                className={`input-field min-h-[200px] ${errors.text ? 'border-glitch-red' : ''}`}
+                placeholder="Paste a sample of your writing (minimum 100 words)&#10;&#10;This can be from emails, documentation, articles, chat messages, or any text that represents your writing style..."
                 value={textSample}
                 onChange={(e) => setTextSample(e.target.value)}
-                rows={12}
+                rows={8}
               />
               {errors.text && (
                 <div className="text-glitch-red text-sm font-mono">{errors.text}</div>
               )}
               <div className="text-static-ghost text-xs font-mono mt-3">
                 WORD COUNT: {textSample.trim().split(/\s+/).filter(w => w).length} / 100 MINIMUM
+              </div>
+              <div className="text-unsettling-cyan text-xs font-mono mt-2">
+                💡 TIP: For chat conversations, paste only YOUR messages (not the other person's)
               </div>
             </div>
           )}
