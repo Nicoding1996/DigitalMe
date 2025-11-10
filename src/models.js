@@ -46,6 +46,28 @@
  * @property {WritingStyle} writing - Writing style characteristics
  * @property {number} confidence - Confidence score (0-1)
  * @property {SampleCount} sampleCount - Sample counts for analysis
+ * @property {SourceAttribution} [sourceAttribution] - Optional source attribution metadata
+ */
+
+/**
+ * @typedef {Object} SourceAttribution
+ * @property {AttributeAttribution} tone - Tone attribution
+ * @property {AttributeAttribution} formality - Formality attribution
+ * @property {AttributeAttribution} sentenceLength - Sentence length attribution
+ * @property {AttributeAttribution} vocabulary - Vocabulary attribution
+ * @property {AttributeAttribution} avoidance - Avoidance attribution
+ */
+
+/**
+ * @typedef {Object} AttributeAttribution
+ * @property {string|string[]} value - The merged value
+ * @property {SourceContribution[]|Object} sources - Contributing sources (array for simple attributes, object for vocabulary/avoidance)
+ */
+
+/**
+ * @typedef {Object} SourceContribution
+ * @property {string} type - Source type ('gmail', 'text', 'blog')
+ * @property {number} contribution - Percentage contribution (0-100)
  */
 
 /**
