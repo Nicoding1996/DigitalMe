@@ -22,14 +22,22 @@ const ProfileSummary = ({ styleProfile }) => {
   const getCompletenessPercentage = () => {
     const hasCode = sampleCount.codeLines > 0;
     const hasText = sampleCount.textWords > 0;
-    const hasMultipleSources = (sampleCount.repositories + sampleCount.articles) > 1;
+    const hasRepos = sampleCount.repositories > 0;
+    const hasArticles = sampleCount.articles > 0;
     
-    let percentage = 0;
-    if (hasCode) percentage += 40;
-    if (hasText) percentage += 40;
-    if (hasMultipleSources) percentage += 20;
+    // Count active data sources
+    const activeSources = [hasCode, hasText, hasRepos, hasArticles].filter(Boolean).length;
     
-    return percentage;
+    // Base percentage from active sources (25% each)
+    let percentage = activeSources * 25;
+    
+    // Bonus for data quantity
+    if (sampleCount.textWords >= 500) percentage += 5;
+    if (sampleCount.textWords >= 1000) percentage += 5;
+    if (sampleCount.codeLines >= 1000) percentage += 5;
+    if (sampleCount.repositories >= 3) percentage += 5;
+    
+    return Math.min(100, percentage);
   };
 
   const confidenceLevel = getConfidenceLevel(confidence);
@@ -37,6 +45,27 @@ const ProfileSummary = ({ styleProfile }) => {
 
   return (
     <div className="space-y-6">
+      {/* Improvement Suggestion */}
+      {confidence < 0.8 && (
+        <div className="border border-system-warning bg-void-elevated p-4">
+          <div className="font-mono text-xs text-system-warning mb-2">
+            [!] [OPTIMIZATION_PROTOCOL_AVAILABLE]
+          </div>
+          <div className="font-mono text-xs text-static-white mb-3 leading-relaxed">
+            Profile accuracy suboptimal. Recommended data source augmentation:
+          </div>
+          <div className="font-mono text-xs text-static-muted space-y-1 border-l-2 border-static-whisper pl-4">
+            {sampleCount.textWords === 0 && <div><span className="text-unsettling-cyan">&gt;</span> TEXT_SAMPLES (emails, articles, messages)</div>}
+            {sampleCount.codeLines === 0 && <div><span className="text-unsettling-cyan">&gt;</span> GITHUB_REPOSITORY (coding patterns)</div>}
+            {sampleCount.articles === 0 && <div><span className="text-unsettling-cyan">&gt;</span> BLOG_CONTENT (published writing)</div>}
+            {sampleCount.textWords < 1000 && sampleCount.textWords > 0 && <div><span className="text-unsettling-cyan">&gt;</span> ADDITIONAL_TEXT (current: {sampleCount.textWords} words)</div>}
+          </div>
+          <div className="font-mono text-xs text-static-ghost mt-3 pt-3 border-t border-static-whisper">
+            <span className="text-static-muted">OPTIMAL_THRESHOLD:</span> <span className="text-system-active">80%+</span>
+          </div>
+        </div>
+      )}
+
       {/* Metrics */}
       <div className="grid grid-cols-2 gap-4">
         <div className="border border-static-whisper bg-void-surface p-4">
@@ -72,19 +101,19 @@ const ProfileSummary = ({ styleProfile }) => {
           [ANALYZED_CONTENT]
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y divide-static-whisper">
-          <div className="p-4">
+          <div className={`p-4 ${sampleCount.repositories === 0 ? 'opacity-40' : ''}`}>
             <div className="font-mono text-xs text-static-ghost mb-1">📦 Repositories</div>
             <div className="font-mono text-xl text-static-white">{sampleCount.repositories}</div>
           </div>
-          <div className="p-4">
+          <div className={`p-4 ${sampleCount.codeLines === 0 ? 'opacity-40' : ''}`}>
             <div className="font-mono text-xs text-static-ghost mb-1">💻 Lines of Code</div>
             <div className="font-mono text-xl text-static-white">{sampleCount.codeLines.toLocaleString()}</div>
           </div>
-          <div className="p-4">
+          <div className={`p-4 ${sampleCount.articles === 0 ? 'opacity-40' : ''}`}>
             <div className="font-mono text-xs text-static-ghost mb-1">📝 Articles</div>
             <div className="font-mono text-xl text-static-white">{sampleCount.articles}</div>
           </div>
-          <div className="p-4">
+          <div className={`p-4 ${sampleCount.textWords === 0 ? 'opacity-40' : ''}`}>
             <div className="font-mono text-xs text-static-ghost mb-1">✍️ Words</div>
             <div className="font-mono text-xl text-static-white">{sampleCount.textWords.toLocaleString()}</div>
           </div>

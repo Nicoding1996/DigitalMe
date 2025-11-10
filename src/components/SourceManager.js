@@ -70,6 +70,16 @@ const SourceManager = ({ sources, onAddSource, onRemoveSource }) => {
 
   return (
     <div className="space-y-4">
+      {/* Info Banner */}
+      <div className="border border-static-whisper bg-void-elevated p-4">
+        <div className="font-mono text-xs text-static-ghost mb-2">
+          <span className="text-unsettling-cyan">[i]</span> [DATA_SOURCE_PROTOCOL]
+        </div>
+        <p className="font-mono text-xs text-static-muted leading-relaxed">
+          Multiple data sources enhance profile accuracy through pattern aggregation. Each source vector contributes unique behavioral signatures to the doppelgänger construct.
+        </p>
+      </div>
+
       <div className="flex items-center justify-between">
         <p className="font-mono text-xs text-static-muted">
           Manage your connected sources. Adding or removing sources will trigger a profile recalculation.

@@ -193,6 +193,24 @@ const AnalysisProgress = ({
               </div>
             )}
 
+            {/* Improvement Suggestion */}
+            {summary && summary.confidence < 0.8 && (
+              <div className="border border-system-warning bg-void-surface p-6 mb-8">
+                <div className="font-mono text-xs text-system-warning mb-3">
+                  [!] [SYSTEM_RECOMMENDATION: ACCURACY_OPTIMIZATION]
+                </div>
+                <div className="font-mono text-xs text-static-white mb-4 leading-relaxed">
+                  Profile initialization complete. Additional data sources recommended for enhanced accuracy. 
+                  Access [SYSTEM_CONFIGURATION.exe] to append: GMAIL, GITHUB, or TEXT_SAMPLES.
+                </div>
+                <div className="font-mono text-xs text-static-ghost">
+                  <span className="text-static-muted">CURRENT_CONFIDENCE:</span> {(summary.confidence * 100).toFixed(0)}% 
+                  <span className="text-static-muted mx-2">→</span> 
+                  <span className="text-static-muted">OPTIMAL_THRESHOLD:</span> <span className="text-system-active">80%+</span>
+                </div>
+              </div>
+            )}
+
             <button 
               className="w-full px-8 py-4 bg-void-surface border border-static-whisper text-static-white font-mono text-sm tracking-wider hover:border-unsettling-cyan hover:text-unsettling-cyan transition-all"
               onClick={onComplete}

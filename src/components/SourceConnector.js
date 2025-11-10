@@ -103,8 +103,11 @@ const SourceConnector = ({ onSourcesSubmit }) => {
           <h2 className="text-3xl font-display font-bold text-static-white mb-4 tracking-tight">
             [ACQUIRE_SOURCE_DATA]
           </h2>
-          <p className="font-mono text-xs text-static-muted leading-relaxed">
+          <p className="font-mono text-xs text-static-muted leading-relaxed mb-3">
             &gt; Choose a source to analyze your unique style and build your digital doppelgänger
+          </p>
+          <p className="font-mono text-xs text-static-ghost leading-relaxed">
+            <span className="text-unsettling-cyan">&gt;</span> [SYSTEM_NOTE] Additional data sources increase profile accuracy. Sources can be added post-initialization via [CONFIG]
           </p>
         </div>
 
@@ -235,8 +238,8 @@ const SourceConnector = ({ onSourcesSubmit }) => {
               <div className="text-static-ghost text-xs font-mono mt-3">
                 WORD COUNT: {textSample.trim().split(/\s+/).filter(w => w).length} / 100 MINIMUM
               </div>
-              <div className="text-unsettling-cyan text-xs font-mono mt-2">
-                💡 TIP: For chat conversations, paste only YOUR messages (not the other person's)
+              <div className="text-static-ghost text-xs font-mono mt-2 border-t border-static-whisper pt-3">
+                <span className="text-system-warning">[!]</span> <span className="text-static-muted">CHAT_PROTOCOL:</span> Extract only user-generated messages. Exclude external participant data.
               </div>
             </div>
           )}

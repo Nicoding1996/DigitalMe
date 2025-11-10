@@ -334,9 +334,25 @@ export const buildStyleProfile = async (sources, userId = 'user-1') => {
     0
   );
 
-  // Calculate confidence based on data quantity
+  // Calculate confidence based on data quantity and quality
   const dataPoints = sources.length;
-  const confidence = Math.min(0.95, 0.5 + (dataPoints * 0.15));
+  
+  // Base confidence from number of sources
+  let confidence = 0.5 + (dataPoints * 0.15);
+  
+  // Boost confidence based on data quantity
+  if (totalTextWords >= 500) confidence += 0.05;
+  if (totalTextWords >= 1000) confidence += 0.05;
+  if (totalTextWords >= 2000) confidence += 0.05;
+  
+  if (totalCodeLines >= 500) confidence += 0.05;
+  if (totalCodeLines >= 2000) confidence += 0.05;
+  
+  if (totalEmails >= 10) confidence += 0.05;
+  if (totalEmails >= 50) confidence += 0.05;
+  
+  // Cap at 95%
+  confidence = Math.min(0.95, confidence);
 
   const profile = {
     id: generateId(),
