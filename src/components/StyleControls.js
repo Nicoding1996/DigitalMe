@@ -8,7 +8,6 @@ const PREFERENCES_KEY = 'digitalme_preferences';
 
 const StyleControls = ({ preferences, onUpdatePreferences }) => {
   const [localPreferences, setLocalPreferences] = useState(preferences || {
-    theme: 'dark',
     glitchIntensity: 'medium',
     autoSave: true
   });
@@ -18,12 +17,6 @@ const StyleControls = ({ preferences, onUpdatePreferences }) => {
       setLocalPreferences(preferences);
     }
   }, [preferences]);
-
-  const handleThemeChange = (theme) => {
-    const updated = { ...localPreferences, theme };
-    setLocalPreferences(updated);
-    savePreferences(updated);
-  };
 
   const handleGlitchIntensityChange = (e) => {
     const intensity = e.target.value;
@@ -56,53 +49,44 @@ const StyleControls = ({ preferences, onUpdatePreferences }) => {
 
   return (
     <div className="space-y-6">
-      {/* Theme */}
-      <div className="border border-static-whisper bg-void-surface p-4">
-        <div className="font-mono text-xs text-static-ghost mb-3">THEME</div>
-        <p className="font-mono text-xs text-static-muted mb-4">Choose your preferred color scheme</p>
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            className={`p-4 border font-mono text-xs transition-all ${
-              localPreferences.theme === 'dark'
-                ? 'border-unsettling-cyan text-unsettling-cyan bg-void-elevated'
-                : 'border-static-whisper text-static-muted hover:border-static-ghost'
-            }`}
-            onClick={() => handleThemeChange('dark')}
-          >
-            <div className="mb-2 h-8 bg-mirror-black border border-static-whisper"></div>
-            Dark
-          </button>
-          <button
-            className={`p-4 border font-mono text-xs transition-all ${
-              localPreferences.theme === 'light'
-                ? 'border-unsettling-cyan text-unsettling-cyan bg-void-elevated'
-                : 'border-static-whisper text-static-muted hover:border-static-ghost'
-            }`}
-            onClick={() => handleThemeChange('light')}
-          >
-            <div className="mb-2 h-8 bg-static-white border border-static-whisper"></div>
-            Light
-          </button>
-        </div>
-      </div>
-
       {/* Glitch Intensity */}
       <div className="border border-static-whisper bg-void-surface p-4">
         <div className="font-mono text-xs text-static-ghost mb-3">GLITCH_EFFECT_INTENSITY</div>
         <p className="font-mono text-xs text-static-muted mb-4">Adjust the intensity of the glitch animation</p>
-        <div className="flex items-center gap-4 mb-3">
-          <span className={`font-mono text-xs ${localPreferences.glitchIntensity === 'low' ? 'text-unsettling-cyan' : 'text-static-ghost'}`}>
-            Low
-          </span>
-          <span className={`font-mono text-xs ${localPreferences.glitchIntensity === 'medium' ? 'text-unsettling-cyan' : 'text-static-ghost'}`}>
-            Medium
-          </span>
-          <span className={`font-mono text-xs ${localPreferences.glitchIntensity === 'high' ? 'text-unsettling-cyan' : 'text-static-ghost'}`}>
-            High
-          </span>
+        <div className="grid grid-cols-3 gap-2 mb-3">
+          <button
+            className={`p-3 border font-mono text-xs transition-all ${
+              localPreferences.glitchIntensity === 'low'
+                ? 'border-unsettling-cyan text-unsettling-cyan bg-void-elevated'
+                : 'border-static-whisper text-static-muted hover:border-static-ghost'
+            }`}
+            onClick={() => handleGlitchIntensityChange({ target: { value: 'low' } })}
+          >
+            [LOW]
+          </button>
+          <button
+            className={`p-3 border font-mono text-xs transition-all ${
+              localPreferences.glitchIntensity === 'medium'
+                ? 'border-unsettling-cyan text-unsettling-cyan bg-void-elevated'
+                : 'border-static-whisper text-static-muted hover:border-static-ghost'
+            }`}
+            onClick={() => handleGlitchIntensityChange({ target: { value: 'medium' } })}
+          >
+            [MEDIUM]
+          </button>
+          <button
+            className={`p-3 border font-mono text-xs transition-all ${
+              localPreferences.glitchIntensity === 'high'
+                ? 'border-unsettling-cyan text-unsettling-cyan bg-void-elevated'
+                : 'border-static-whisper text-static-muted hover:border-static-ghost'
+            }`}
+            onClick={() => handleGlitchIntensityChange({ target: { value: 'high' } })}
+          >
+            [HIGH]
+          </button>
         </div>
-        <div className="font-mono text-xs text-static-white">
-          Current: <span className="text-unsettling-cyan">{getGlitchIntensityLabel(localPreferences.glitchIntensity)}</span>
+        <div className="font-mono text-xs text-static-ghost text-center">
+          <span className="text-static-muted">CURRENT:</span> <span className="text-unsettling-cyan">{getGlitchIntensityLabel(localPreferences.glitchIntensity).toUpperCase()}</span>
         </div>
       </div>
 

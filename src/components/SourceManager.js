@@ -9,9 +9,10 @@ const SourceManager = ({ sources, onAddSource, onRemoveSource }) => {
   const [showConfirmDelete, setShowConfirmDelete] = useState(null);
 
   const handleAddSourceClick = () => {
-    setShowAddSource(true);
+    // Trigger re-analysis flow by calling onAddSource with no ID
+    // This will redirect to the SourceConnector
     if (onAddSource) {
-      onAddSource();
+      onAddSource(null);
     }
   };
 

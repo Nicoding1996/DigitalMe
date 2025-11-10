@@ -348,6 +348,7 @@ function App() {
     // If no content provided or it's an event, export full conversation history
     if (isEvent || !content) {
       if (conversationHistory.length > 0) {
+        // Pass raw conversation data - formatting happens in ExportModal
         const formattedConversation = conversationHistory
           .map(msg => {
             const role = msg.role === 'user' ? 'YOU' : 'DIGITAL_ME';
@@ -411,6 +412,7 @@ function App() {
           <MirrorInterface 
             styleProfile={styleProfile}
             conversationHistory={conversationHistory}
+            preferences={preferences}
             onSubmit={handleSubmit}
             onExport={handleExportClick}
             onConversationUpdate={handleConversationUpdate}

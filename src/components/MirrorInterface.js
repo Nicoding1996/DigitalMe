@@ -9,7 +9,7 @@ import MessageHistory from './MessageHistory';
 import { generateId } from '../models';
 import { generateContent } from '../services/ContentGenerator';
 
-const MirrorInterface = ({ styleProfile, conversationHistory = [], onSubmit, onExport, onConversationUpdate }) => {
+const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, onSubmit, onExport, onConversationUpdate }) => {
   const [messages, setMessages] = useState(conversationHistory);
   const [currentResponse, setCurrentResponse] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -173,6 +173,7 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], onSubmit, onE
           isGenerating={isGenerating}
           messages={messages}
           onExport={onExport}
+          glitchIntensity={preferences?.glitchIntensity || 'medium'}
         />
       </div>
     </div>
@@ -204,7 +205,7 @@ const LeftPanel = ({ onSubmit, messages }) => {
   );
 };
 
-const RightPanel = ({ response, isGenerating, messages, onExport }) => {
+const RightPanel = ({ response, isGenerating, messages, onExport, glitchIntensity }) => {
   return (
     <div className="relative flex items-start justify-center p-8 md:p-12 overflow-y-auto scrollbar-minimal">
       <div className="w-full max-w-md pt-8">
@@ -226,6 +227,7 @@ const RightPanel = ({ response, isGenerating, messages, onExport }) => {
           contentType={response?.contentType}
           language={response?.language}
           isLoading={isGenerating}
+          glitchIntensity={glitchIntensity}
         />
         
         <div className="font-mono text-xs text-static-ghost text-center mt-6 animate-pulse-slow">

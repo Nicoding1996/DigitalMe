@@ -2,7 +2,7 @@
  * ExportModal Component
  * Black Mirror aesthetic - Data Export Terminal
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import CopyButton from './CopyButton';
 import DownloadButton from './DownloadButton';
 
