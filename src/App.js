@@ -14,6 +14,7 @@ import './App.css';
 
 const STORAGE_KEY = 'digitalme_profile';
 const SOURCES_KEY = 'digitalme_sources';
+const ANALYSIS_RESULTS_KEY = 'digitalme_analysis_results'; // Store raw analysis results
 const PREFERENCES_KEY = 'digitalme_preferences';
 const CONVERSATION_KEY = 'digitalme_conversation';
 const MAX_CONVERSATION_HISTORY = 50;
@@ -29,6 +30,7 @@ function App() {
   });
   const [analysisSummary, setAnalysisSummary] = useState(null);
   const [sources, setSources] = useState([]);
+  const [storedAnalysisResults, setStoredAnalysisResults] = useState([]); // Store raw analysis results
   const [preferences, setPreferences] = useState(generateDefaultPreferences());
   const [conversationHistory, setConversationHistory] = useState([]);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -38,7 +40,7 @@ function App() {
   const [analysisError, setAnalysisError] = useState(null);
   const [failedSources, setFailedSources] = useState([]);
 
-  // Load profile, sources, preferences, and conversation history from LocalStorage on mount
+  // Load profile, sources, analysis results, preferences, and conversation history from LocalStorage on mount
   useEffect(() => {
     const savedProfile = localStorage.getItem(STORAGE_KEY);
     if (savedProfile) {
@@ -60,6 +62,61 @@ function App() {
       } catch (error) {
         console.error('Failed to load saved sources:', error);
         localStorage.removeItem(SOURCES_KEY);
+      }
+    }
+
+    const savedAnalysisResults = localStorage.getItem(ANALYSIS_RESULTS_KEY);
+    if (savedAnalysisResults) {
+      try {
+        const analysisData = JSON.parse(savedAnalysisResults);
+        setStoredAnalysisResults(analysisData);
+      } catch (error) {
+        console.error('Failed to load saved analysis results:', error);
+        localStorage.removeItem(ANALYSIS_RESULTS_KEY);
+      }
+    } else if (savedProfile && savedSources) {
+      // Data migration: If user has profile but no stored analysis results,
+      // they're using the old system. We can't recover the original analysis results,
+      // but we can create placeholder results that preserve source types.
+      try {
+        const profile = JSON.parse(savedProfile);
+        const sourcesData = JSON.parse(savedSources);
+        
+        console.log('[Migration] Detected old profile format. Creating placeholder analysis results for', sourcesData.length, 'sources');
+        
+        // Create placeholder analysis results from existing profile
+        // We split the profile data evenly across all sources to maintain proper attribution
+        const placeholderResults = sourcesData.map((source) => {
+          // Calculate word count per source (split evenly)
+          const totalWords = profile.sampleCount?.textWords || profile.sampleCount?.emailWords || 0;
+          const wordsPerSource = Math.floor(totalWords / sourcesData.length);
+          
+          return {
+            type: source.type, // Preserve the actual source type (text, gmail, blog, etc.)
+            result: {
+              writingStyle: profile.writing,
+              profile: {
+                writing: profile.writing,
+                sampleCount: {
+                  ...profile.sampleCount,
+                  textWords: source.type === 'text' ? wordsPerSource : 0,
+                  emailWords: source.type === 'gmail' ? wordsPerSource : 0
+                }
+              },
+              metrics: {
+                wordCount: wordsPerSource,
+                totalWords: wordsPerSource
+              }
+            }
+          };
+        });
+        
+        setStoredAnalysisResults(placeholderResults);
+        localStorage.setItem(ANALYSIS_RESULTS_KEY, JSON.stringify(placeholderResults));
+        
+        console.log('[Migration] Created placeholder results:', placeholderResults.map(r => r.type));
+      } catch (error) {
+        console.error('[Migration] Failed to migrate old profile:', error);
       }
     }
 
@@ -232,30 +289,15 @@ function App() {
       let allAnalysisResults = analysisResults;
       let allSourcesData = sourcesData;
       
-      if (isAddingToExisting) {
-        console.log('[Analysis] Merging with existing sources:', sources.length);
+      if (isAddingToExisting && storedAnalysisResults.length > 0) {
+        console.log('[Analysis] Merging with existing sources:', storedAnalysisResults.length);
         
         // Merge new sources with existing ones
         allSourcesData = [...sources, ...sourcesData];
         
-        // Create a "virtual" analysis result from the existing profile
-        // This allows us to merge the existing profile data with new sources
-        const existingProfileAsSource = {
-          type: 'existing',
-          result: {
-            writingStyle: styleProfile.writing,
-            profile: {
-              writing: styleProfile.writing,
-              sampleCount: styleProfile.sampleCount
-            },
-            metrics: {
-              wordCount: styleProfile.sampleCount?.textWords || styleProfile.sampleCount?.emailWords || 0
-            }
-          }
-        };
-        
-        // Prepend existing profile to analysis results so it gets merged
-        allAnalysisResults = [existingProfileAsSource, ...analysisResults];
+        // Use stored analysis results instead of creating a virtual "existing" source
+        // This preserves the original source types (text, gmail, blog, etc.)
+        allAnalysisResults = [...storedAnalysisResults, ...analysisResults];
         
         console.log('[Analysis] Rebuilding profile with', allAnalysisResults.length, 'sources');
       }
@@ -268,10 +310,12 @@ function App() {
         // Save to LocalStorage
         localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
         localStorage.setItem(SOURCES_KEY, JSON.stringify(allSourcesData));
+        localStorage.setItem(ANALYSIS_RESULTS_KEY, JSON.stringify(allAnalysisResults));
         
-        // Set profile and sources state
+        // Set profile, sources, and analysis results state
         setStyleProfile(profile);
         setSources(allSourcesData);
+        setStoredAnalysisResults(allAnalysisResults);
         
         // Prepare summary
         setAnalysisSummary({
@@ -362,10 +406,17 @@ function App() {
       setOnboardingStep('connect');
       setIsSettingsOpen(false);
     } else {
-      // Remove source
+      // Remove source and corresponding analysis result
+      const sourceIndex = sources.findIndex(s => s.id === sourceId);
       const updatedSources = sources.filter(s => s.id !== sourceId);
+      const updatedAnalysisResults = storedAnalysisResults.filter((_, idx) => idx !== sourceIndex);
+      
       setSources(updatedSources);
+      setStoredAnalysisResults(updatedAnalysisResults);
       localStorage.setItem(SOURCES_KEY, JSON.stringify(updatedSources));
+      localStorage.setItem(ANALYSIS_RESULTS_KEY, JSON.stringify(updatedAnalysisResults));
+      
+      // TODO: Rebuild profile with remaining sources
     }
   };
 

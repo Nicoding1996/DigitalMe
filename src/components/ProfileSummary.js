@@ -11,7 +11,7 @@ const ProfileSummary = ({ styleProfile }) => {
     );
   }
 
-  const { coding, writing, confidence, sampleCount } = styleProfile;
+  const { coding, writing, confidence, sampleCount, sourceAttribution } = styleProfile;
 
   const getConfidenceLevel = (score) => {
     if (score >= 0.8) return 'high';
@@ -42,6 +42,30 @@ const ProfileSummary = ({ styleProfile }) => {
 
   const confidenceLevel = getConfidenceLevel(confidence);
   const completeness = getCompletenessPercentage();
+
+  // Helper to format source type for display
+  const formatSourceType = (type) => {
+    const typeMap = {
+      gmail: 'Gmail',
+      text: 'Text Sample',
+      blog: 'Blog',
+      github: 'GitHub',
+      existing: 'Previous Profile'
+    };
+    return typeMap[type] || type;
+  };
+
+  // Helper to get source icon
+  const getSourceIcon = (type) => {
+    const iconMap = {
+      gmail: '📧',
+      text: '📝',
+      blog: '✍️',
+      github: '💻',
+      existing: '🔄'
+    };
+    return iconMap[type] || '📄';
+  };
 
   return (
     <div className="space-y-6">
@@ -184,6 +208,160 @@ const ProfileSummary = ({ styleProfile }) => {
           </div>
         </div>
       </div>
+
+      {/* Source Attribution */}
+      {sourceAttribution && Object.keys(sourceAttribution).length > 0 && (
+        <div className="border border-static-whisper bg-void-surface">
+          <div className="px-4 py-2 bg-void-elevated border-b border-static-whisper font-mono text-xs text-static-ghost">
+            [SOURCE_ATTRIBUTION]
+          </div>
+          <div className="p-4 space-y-4 font-mono text-xs">
+            <div className="text-static-muted mb-3 leading-relaxed">
+              Your style profile is built from multiple data sources. Here's how each source contributed to your writing attributes:
+            </div>
+
+            {/* Tone Attribution */}
+            {sourceAttribution.tone && (
+              <div className="border-l-2 border-unsettling-cyan pl-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-static-white">Tone: <span className="text-unsettling-cyan">{sourceAttribution.tone.value}</span></span>
+                </div>
+                <div className="space-y-1">
+                  {sourceAttribution.tone.sources.map((source, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <span className="text-static-ghost">{getSourceIcon(source.type)}</span>
+                      <span className="text-static-muted flex-1">{formatSourceType(source.type)}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 h-1.5 bg-void-elevated">
+                          <div 
+                            className="h-full bg-unsettling-cyan"
+                            style={{ width: `${source.contribution}%` }}
+                          />
+                        </div>
+                        <span className="text-static-white w-8 text-right">{source.contribution}%</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Formality Attribution */}
+            {sourceAttribution.formality && (
+              <div className="border-l-2 border-system-active pl-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-static-white">Formality: <span className="text-system-active">{sourceAttribution.formality.value}</span></span>
+                </div>
+                <div className="space-y-1">
+                  {sourceAttribution.formality.sources.map((source, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <span className="text-static-ghost">{getSourceIcon(source.type)}</span>
+                      <span className="text-static-muted flex-1">{formatSourceType(source.type)}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 h-1.5 bg-void-elevated">
+                          <div 
+                            className="h-full bg-system-active"
+                            style={{ width: `${source.contribution}%` }}
+                          />
+                        </div>
+                        <span className="text-static-white w-8 text-right">{source.contribution}%</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Sentence Length Attribution */}
+            {sourceAttribution.sentenceLength && (
+              <div className="border-l-2 border-static-whisper pl-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-static-white">Sentence Length: <span className="text-static-white">{sourceAttribution.sentenceLength.value}</span></span>
+                </div>
+                <div className="space-y-1">
+                  {sourceAttribution.sentenceLength.sources.map((source, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <span className="text-static-ghost">{getSourceIcon(source.type)}</span>
+                      <span className="text-static-muted flex-1">{formatSourceType(source.type)}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 h-1.5 bg-void-elevated">
+                          <div 
+                            className="h-full bg-static-white"
+                            style={{ width: `${source.contribution}%` }}
+                          />
+                        </div>
+                        <span className="text-static-white w-8 text-right">{source.contribution}%</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Vocabulary Attribution */}
+            {sourceAttribution.vocabulary && sourceAttribution.vocabulary.sources && Object.keys(sourceAttribution.vocabulary.sources).length > 0 && (
+              <div className="border-l-2 border-system-warning pl-4">
+                <div className="text-static-white mb-2">Vocabulary Terms:</div>
+                <div className="space-y-3">
+                  {Object.entries(sourceAttribution.vocabulary.sources).map(([term, sources], idx) => (
+                    <div key={idx} className="bg-void-elevated p-2 rounded">
+                      <div className="text-system-warning mb-1.5">"{term}"</div>
+                      <div className="space-y-1">
+                        {sources.map((source, sIdx) => (
+                          <div key={sIdx} className="flex items-center gap-2 text-xs">
+                            <span className="text-static-ghost">{getSourceIcon(source.type)}</span>
+                            <span className="text-static-muted flex-1">{formatSourceType(source.type)}</span>
+                            <div className="flex items-center gap-2">
+                              <div className="w-12 h-1 bg-void-deep">
+                                <div 
+                                  className="h-full bg-system-warning"
+                                  style={{ width: `${source.contribution}%` }}
+                                />
+                              </div>
+                              <span className="text-static-white w-8 text-right">{source.contribution}%</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Avoidance Attribution */}
+            {sourceAttribution.avoidance && sourceAttribution.avoidance.value[0] !== 'none' && sourceAttribution.avoidance.sources && Object.keys(sourceAttribution.avoidance.sources).length > 0 && (
+              <div className="border-l-2 border-glitch-red pl-4">
+                <div className="text-static-white mb-2">Avoidance Terms:</div>
+                <div className="space-y-3">
+                  {Object.entries(sourceAttribution.avoidance.sources).map(([term, sources], idx) => (
+                    <div key={idx} className="bg-void-elevated p-2 rounded">
+                      <div className="text-glitch-red mb-1.5">"{term}"</div>
+                      <div className="space-y-1">
+                        {sources.map((source, sIdx) => (
+                          <div key={sIdx} className="flex items-center gap-2 text-xs">
+                            <span className="text-static-ghost">{getSourceIcon(source.type)}</span>
+                            <span className="text-static-muted flex-1">{formatSourceType(source.type)}</span>
+                            <div className="flex items-center gap-2">
+                              <div className="w-12 h-1 bg-void-deep">
+                                <div 
+                                  className="h-full bg-glitch-red"
+                                  style={{ width: `${source.contribution}%` }}
+                                />
+                              </div>
+                              <span className="text-static-white w-8 text-right">{source.contribution}%</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
