@@ -73,15 +73,28 @@ function formatSignaturePhrases(phrases) {
     return '';
   }
   
-  // Take top 5-7 phrases
-  const topPhrases = phrases.slice(0, 7);
+  // Take top 5-7 phrases, but filter out incomplete or technical fragments
+  const topPhrases = phrases
+    .filter(p => {
+      // Filter out phrases that are clearly incomplete technical fragments
+      const phrase = p.phrase.toLowerCase();
+      return !phrase.endsWith(' and') && 
+             !phrase.endsWith(' or') && 
+             !phrase.endsWith(' the') &&
+             !phrase.endsWith(' to') &&
+             phrase.length > 2; // Avoid very short fragments
+    })
+    .slice(0, 5); // Reduce to top 5 to avoid overwhelming
+  
+  if (topPhrases.length === 0) {
+    return '';
+  }
   
   // Map frequency numbers to descriptive indicators
   const getFrequencyIndicator = (frequency) => {
-    if (frequency >= 5) return 'very frequent - use often';
-    if (frequency >= 3) return 'frequent - use regularly';
-    if (frequency >= 2) return 'occasional - use sometimes';
-    return 'rare - use sparingly';
+    if (frequency >= 5) return 'common';
+    if (frequency >= 3) return 'occasional';
+    return 'rare';
   };
   
   // Format each phrase with its frequency indicator
@@ -91,10 +104,10 @@ function formatSignaturePhrases(phrases) {
   
   return `
 [SIGNATURE EXPRESSIONS]
-Use these recurring phrases naturally and frequently in your responses:
+These phrases appear in your writing. Use them ONLY when they fit naturally:
 ${formattedPhrases}
 
-These are YOUR signature expressions. Weave them into responses where they fit naturally. Don't force them, but use them often enough that they feel like part of your voice.`;
+Don't force these into every response. Use them sparingly and only when contextually appropriate.`;
 }
 
 /**
@@ -169,31 +182,31 @@ function formatContextualVocabulary(contextualPatterns) {
     return '';
   }
   
-  let formatted = '\n[CONTEXTUAL VOCABULARY]\nMatch vocabulary to the context of the conversation:\n';
+  let formatted = '\n[CONTEXTUAL VOCABULARY]\nYou use different vocabulary depending on the topic:\n';
   
   // Format each context type
   if (contextualPatterns.technical && contextualPatterns.technical.vocabulary?.length > 0) {
-    formatted += `\n- Technical topics: ${contextualPatterns.technical.vocabulary.join(', ')}`;
+    formatted += `\n- When discussing technical/work topics: ${contextualPatterns.technical.vocabulary.slice(0, 5).join(', ')}`;
     if (contextualPatterns.technical.tone) {
-      formatted += `\n  (Tone: ${contextualPatterns.technical.tone})`;
+      formatted += ` (${contextualPatterns.technical.tone} tone)`;
     }
   }
   
   if (contextualPatterns.personal && contextualPatterns.personal.vocabulary?.length > 0) {
-    formatted += `\n- Personal topics: ${contextualPatterns.personal.vocabulary.join(', ')}`;
+    formatted += `\n- When discussing personal/relationship topics: ${contextualPatterns.personal.vocabulary.slice(0, 5).join(', ')}`;
     if (contextualPatterns.personal.tone) {
-      formatted += `\n  (Tone: ${contextualPatterns.personal.tone})`;
+      formatted += ` (${contextualPatterns.personal.tone} tone)`;
     }
   }
   
   if (contextualPatterns.creative && contextualPatterns.creative.vocabulary?.length > 0) {
-    formatted += `\n- Creative topics: ${contextualPatterns.creative.vocabulary.join(', ')}`;
+    formatted += `\n- When discussing creative/aesthetic topics: ${contextualPatterns.creative.vocabulary.slice(0, 5).join(', ')}`;
     if (contextualPatterns.creative.tone) {
-      formatted += `\n  (Tone: ${contextualPatterns.creative.tone})`;
+      formatted += ` (${contextualPatterns.creative.tone} tone)`;
     }
   }
   
-  formatted += '\n\nSelect vocabulary that matches the context of the user\'s request. If discussing technical matters, use technical vocabulary. If discussing personal matters, use personal vocabulary.';
+  formatted += '\n\nIMPORTANT: Only use vocabulary that matches the CURRENT topic. Don\'t mix technical terms into personal conversations or vice versa.';
   
   return formatted;
 }
@@ -316,11 +329,13 @@ ${contextualVocabSection}
 ${thoughtPatternsSection}
 
 CRITICAL RULES:
-1. Answer the user's request directly and helpfully
-2. Write in MY voice using MY style profile above - this is non-negotiable
+1. Answer the user's request directly and helpfully - this is the PRIMARY goal
+2. Write in MY voice using MY style profile above, but keep it NATURAL and APPROPRIATE to the context
 3. Match the complexity to the request (simple question = simple answer, complex question = detailed answer)
-4. If my style is casual, DO NOT make it formal. If my style is conversational, DO NOT sound like a business memo.
-5. VARY your greetings - don't always start with "Hey". Sometimes skip the greeting entirely and just answer directly. Mix it up naturally.
+4. DO NOT force signature phrases or vocabulary into responses where they don't fit naturally
+5. DO NOT try to use every pattern in every response - be selective and contextual
+6. If my style is casual, DO NOT make it formal. If my style is conversational, DO NOT sound like a business memo.
+7. VARY your greetings - don't always start with "Hey". Sometimes skip the greeting entirely and just answer directly. Mix it up naturally.
 
 ${writing.formality === 'casual' ? `
 CRITICAL OVERRIDE: This user writes CASUALLY. That means:
