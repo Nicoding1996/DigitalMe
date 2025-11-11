@@ -37,6 +37,44 @@
  */
 
 /**
+ * @typedef {Object} PhrasePattern
+ * @property {string} phrase - The recurring phrase
+ * @property {number} frequency - Number of times phrase appears
+ * @property {string} category - Category: 'signature' | 'transition' | 'filler'
+ */
+
+/**
+ * @typedef {Object} ThoughtPatterns
+ * @property {number} flowScore - Thought flow score (0-100, 0=structured, 100=stream-of-consciousness)
+ * @property {number} parentheticalFrequency - Uses of parentheses/nested clauses per 1000 words
+ * @property {string} transitionStyle - Transition style: 'abrupt' | 'smooth' | 'mixed'
+ */
+
+/**
+ * @typedef {Object} PersonalityMarker
+ * @property {string} text - Original text snippet
+ * @property {string} type - Marker type: 'self-aware' | 'humor' | 'personal-context'
+ * @property {string} context - Brief description of the marker
+ */
+
+/**
+ * @typedef {Object} ContextualStyleVariation
+ * @property {string} formality - Formality level: 'casual' | 'balanced' | 'formal'
+ * @property {string} tone - Tone for this context
+ * @property {string[]} vocabulary - Vocabulary characteristics for this context
+ */
+
+/**
+ * @typedef {Object} AdvancedAnalysis
+ * @property {PhrasePattern[]} phrases - Recurring phrases and patterns
+ * @property {ThoughtPatterns} thoughtPatterns - Thought organization patterns
+ * @property {PersonalityMarker[]} personalityMarkers - Personality quirks and markers
+ * @property {Object.<string, ContextualStyleVariation>} contextualPatterns - Context-specific style variations
+ * @property {number} analyzedAt - Timestamp of analysis
+ * @property {string} version - Analysis version (e.g., '1.0')
+ */
+
+/**
  * @typedef {Object} StyleProfile
  * @property {string} id - Unique identifier
  * @property {string} userId - Associated user ID
@@ -47,6 +85,7 @@
  * @property {number} confidence - Confidence score (0-1)
  * @property {SampleCount} sampleCount - Sample counts for analysis
  * @property {SourceAttribution} [sourceAttribution] - Optional source attribution metadata
+ * @property {AdvancedAnalysis} [advanced] - Optional advanced analysis results
  */
 
 /**
@@ -141,6 +180,21 @@ export const generateMockWritingStyle = () => {
     sentenceLength: 'medium',
     vocabulary: ['clear', 'direct', 'relatable'],
     avoidance: ['corporate-jargon', 'overly-formal-language']
+  };
+};
+
+/**
+ * Generate empty advanced analysis structure
+ * @returns {AdvancedAnalysis}
+ */
+export const generateEmptyAdvancedAnalysis = () => {
+  return {
+    phrases: [],
+    thoughtPatterns: null,
+    personalityMarkers: [],
+    contextualPatterns: {},
+    analyzedAt: null,
+    version: null
   };
 };
 

@@ -1,7 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const { validateGenerateMiddleware } = require('./validation');
+const { validateGenerateMiddleware, validateAnalyzeAdvancedMiddleware } = require('./validation');
+const AdvancedStyleAnalyzer = require('./services/AdvancedStyleAnalyzer');
 
 /**
  * SECURITY CONSIDERATIONS:
@@ -63,13 +64,213 @@ if (config.isGmailEnabled()) {
 }
 
 /**
+ * Format signature phrases into natural language instructions for Gemini
+ * @param {Array} phrases - Array of phrase objects with phrase, frequency, and category
+ * @returns {string} Formatted string with top 5-7 phrases and usage guidance
+ */
+function formatSignaturePhrases(phrases) {
+  if (!phrases || phrases.length === 0) {
+    return '';
+  }
+  
+  // Take top 5-7 phrases
+  const topPhrases = phrases.slice(0, 7);
+  
+  // Map frequency numbers to descriptive indicators
+  const getFrequencyIndicator = (frequency) => {
+    if (frequency >= 5) return 'very frequent - use often';
+    if (frequency >= 3) return 'frequent - use regularly';
+    if (frequency >= 2) return 'occasional - use sometimes';
+    return 'rare - use sparingly';
+  };
+  
+  // Format each phrase with its frequency indicator
+  const formattedPhrases = topPhrases.map(p => 
+    `- "${p.phrase}" (${getFrequencyIndicator(p.frequency)})`
+  ).join('\n');
+  
+  return `
+[SIGNATURE EXPRESSIONS]
+Use these recurring phrases naturally and frequently in your responses:
+${formattedPhrases}
+
+These are YOUR signature expressions. Weave them into responses where they fit naturally. Don't force them, but use them often enough that they feel like part of your voice.`;
+}
+
+/**
+ * Format idiosyncrasies into replication instructions for Gemini
+ * @param {Array} idiosyncrasies - Array of idiosyncrasy objects with text, explanation, and category
+ * @returns {string} Formatted string with top 5 quirks and clear replication instructions
+ */
+function formatIdiosyncrasies(idiosyncrasies) {
+  if (!idiosyncrasies || idiosyncrasies.length === 0) {
+    return '';
+  }
+  
+  // Take top 5 idiosyncrasies
+  const topQuirks = idiosyncrasies.slice(0, 5);
+  
+  // Group by category for better organization
+  const byCategory = {
+    IDIOSYNCRASY: [],
+    HUMOR: [],
+    STRUCTURE: []
+  };
+  
+  topQuirks.forEach(quirk => {
+    const category = quirk.category || 'IDIOSYNCRASY';
+    if (byCategory[category]) {
+      byCategory[category].push(quirk);
+    } else {
+      byCategory.IDIOSYNCRASY.push(quirk);
+    }
+  });
+  
+  let formatted = '\n[UNIQUE QUIRKS]\nMirror these distinctive patterns in your writing:\n';
+  
+  // Format each category
+  Object.entries(byCategory).forEach(([category, quirks]) => {
+    if (quirks.length > 0) {
+      quirks.forEach(quirk => {
+        formatted += `\n- ${quirk.explanation}\n  Example: "${quirk.text}"\n`;
+      });
+    }
+  });
+  
+  // Add specific instructions for common quirk types
+  const hasCodeSwitching = topQuirks.some(q => 
+    q.explanation.toLowerCase().includes('code-switch') || 
+    q.explanation.toLowerCase().includes('mix') && q.explanation.toLowerCase().includes('language')
+  );
+  
+  const hasOnomatopoeia = topQuirks.some(q => 
+    q.explanation.toLowerCase().includes('onomatopoeia') ||
+    q.text.match(/huhu|hehe|haha|hmm|uhh|ahh/i)
+  );
+  
+  if (hasCodeSwitching) {
+    formatted += '\nWhen appropriate, mix languages naturally as shown in the examples above.';
+  }
+  
+  if (hasOnomatopoeia) {
+    formatted += '\nUse expressive sounds and onomatopoeia to convey emotion and personality.';
+  }
+  
+  return formatted;
+}
+
+/**
+ * Format contextual vocabulary into categorized lists with usage guidance
+ * @param {Object} contextualPatterns - Object with technical, personal, and creative vocabulary
+ * @returns {string} Formatted string organized by context type
+ */
+function formatContextualVocabulary(contextualPatterns) {
+  if (!contextualPatterns || Object.keys(contextualPatterns).length === 0) {
+    return '';
+  }
+  
+  let formatted = '\n[CONTEXTUAL VOCABULARY]\nMatch vocabulary to the context of the conversation:\n';
+  
+  // Format each context type
+  if (contextualPatterns.technical && contextualPatterns.technical.vocabulary?.length > 0) {
+    formatted += `\n- Technical topics: ${contextualPatterns.technical.vocabulary.join(', ')}`;
+    if (contextualPatterns.technical.tone) {
+      formatted += `\n  (Tone: ${contextualPatterns.technical.tone})`;
+    }
+  }
+  
+  if (contextualPatterns.personal && contextualPatterns.personal.vocabulary?.length > 0) {
+    formatted += `\n- Personal topics: ${contextualPatterns.personal.vocabulary.join(', ')}`;
+    if (contextualPatterns.personal.tone) {
+      formatted += `\n  (Tone: ${contextualPatterns.personal.tone})`;
+    }
+  }
+  
+  if (contextualPatterns.creative && contextualPatterns.creative.vocabulary?.length > 0) {
+    formatted += `\n- Creative topics: ${contextualPatterns.creative.vocabulary.join(', ')}`;
+    if (contextualPatterns.creative.tone) {
+      formatted += `\n  (Tone: ${contextualPatterns.creative.tone})`;
+    }
+  }
+  
+  formatted += '\n\nSelect vocabulary that matches the context of the user\'s request. If discussing technical matters, use technical vocabulary. If discussing personal matters, use personal vocabulary.';
+  
+  return formatted;
+}
+
+/**
+ * Format thought patterns into structural writing instructions for Gemini
+ * @param {Object} thoughtPatterns - Object with flowScore, parentheticalFrequency, and transitionStyle
+ * @returns {string} Formatted string with actionable writing instructions
+ */
+function formatThoughtPatterns(thoughtPatterns) {
+  if (!thoughtPatterns || Object.keys(thoughtPatterns).length === 0) {
+    return '';
+  }
+  
+  let formatted = '\n[THOUGHT STRUCTURE]\n';
+  
+  // Translate flowScore into actionable instructions
+  if (thoughtPatterns.flowScore !== undefined) {
+    if (thoughtPatterns.flowScore >= 80) {
+      formatted += '- Flow: Maintain smooth, connected prose. Ideas should flow naturally from one to the next.\n';
+    } else if (thoughtPatterns.flowScore >= 60) {
+      formatted += '- Flow: Balance between connected ideas and distinct points. Some flow, some separation.\n';
+    } else {
+      formatted += '- Flow: Keep ideas distinct and separate. Don\'t over-connect thoughts.\n';
+    }
+  }
+  
+  // Convert transitionStyle into specific guidance
+  if (thoughtPatterns.transitionStyle) {
+    const style = thoughtPatterns.transitionStyle.toLowerCase();
+    if (style === 'abrupt' || style === 'direct') {
+      formatted += '- Transitions: Use short, direct transitions. Jump between ideas quickly. Avoid elaborate connectors.\n';
+    } else if (style === 'smooth' || style === 'flowing') {
+      formatted += '- Transitions: Use smooth, flowing transitions. Connect ideas with clear bridges.\n';
+    } else if (style === 'mixed' || style === 'varied') {
+      formatted += '- Transitions: Vary your transition style. Sometimes abrupt, sometimes smooth.\n';
+    }
+  }
+  
+  // Handle parentheticalFrequency
+  if (thoughtPatterns.parentheticalFrequency !== undefined) {
+    if (thoughtPatterns.parentheticalFrequency >= 3) {
+      formatted += '- Parentheticals: Use parenthetical asides frequently (like this) to add extra thoughts and context.\n';
+    } else if (thoughtPatterns.parentheticalFrequency >= 1) {
+      formatted += '- Parentheticals: Occasionally use parenthetical asides when adding side notes.\n';
+    } else {
+      formatted += '- Parentheticals: Minimal use of parenthetical asides. Keep thoughts in the main flow.\n';
+    }
+  }
+  
+  return formatted;
+}
+
+/**
  * Build a dynamic meta-prompt that combines user request with their style profile
  * @param {string} userPrompt - The user's request
  * @param {Object} styleProfile - The user's complete style profile
  * @returns {string} The constructed meta-prompt for Gemini API
  */
 function buildMetaPrompt(userPrompt, styleProfile) {
-  const { writing, coding } = styleProfile;
+  const { writing, coding, advanced } = styleProfile;
+  
+  // Validate and log advanced data availability
+  const hasAdvanced = advanced && typeof advanced === 'object' && Object.keys(advanced).length > 0;
+  
+  if (!hasAdvanced) {
+    console.log('No advanced analysis data available, using basic profile only');
+  } else {
+    // Log which advanced components are available
+    const advancedComponents = {
+      phrases: advanced.phrases?.length || 0,
+      idiosyncrasies: advanced.idiosyncrasies?.length || 0,
+      hasContextual: !!advanced.contextualPatterns && Object.keys(advanced.contextualPatterns).length > 0,
+      hasThoughtPatterns: !!advanced.thoughtPatterns && Object.keys(advanced.thoughtPatterns).length > 0
+    };
+    console.log('Using advanced analysis:', advancedComponents);
+  }
   
   // Build style emphasis based on formality level
   const styleEmphasis = writing.formality === 'casual' || writing.formality === 'informal'
@@ -84,6 +285,23 @@ function buildMetaPrompt(userPrompt, styleProfile) {
     ? 'Maintain professional standards while being clear and direct.'
     : 'Keep it straightforward and genuine.';
   
+  // Format advanced analysis components if available
+  const signaturePhrasesSection = hasAdvanced && advanced.phrases?.length > 0
+    ? formatSignaturePhrases(advanced.phrases)
+    : '';
+  
+  const idiosyncrasiesSection = hasAdvanced && advanced.idiosyncrasies?.length > 0
+    ? formatIdiosyncrasies(advanced.idiosyncrasies)
+    : '';
+  
+  const contextualVocabSection = hasAdvanced && advanced.contextualPatterns
+    ? formatContextualVocabulary(advanced.contextualPatterns)
+    : '';
+  
+  const thoughtPatternsSection = hasAdvanced && advanced.thoughtPatterns
+    ? formatThoughtPatterns(advanced.thoughtPatterns)
+    : '';
+  
   return `You are my digital twin. You write EXACTLY like me. Not like an AI, not like a corporate bot - like ME.
 
 MY WRITING STYLE (follow this precisely):
@@ -92,12 +310,17 @@ MY WRITING STYLE (follow this precisely):
 - Sentence Length: ${writing.sentenceLength}
 - Vocabulary: ${writing.vocabulary.join(', ')}
 - NEVER use: ${writing.avoidance.join(', ')}
+${signaturePhrasesSection}
+${idiosyncrasiesSection}
+${contextualVocabSection}
+${thoughtPatternsSection}
 
 CRITICAL RULES:
 1. Answer the user's request directly and helpfully
 2. Write in MY voice using MY style profile above - this is non-negotiable
 3. Match the complexity to the request (simple question = simple answer, complex question = detailed answer)
 4. If my style is casual, DO NOT make it formal. If my style is conversational, DO NOT sound like a business memo.
+5. VARY your greetings - don't always start with "Hey". Sometimes skip the greeting entirely and just answer directly. Mix it up naturally.
 
 ${writing.formality === 'casual' ? `
 CRITICAL OVERRIDE: This user writes CASUALLY. That means:
@@ -121,6 +344,56 @@ ${userPrompt}
 
 Respond in MY voice, matching MY style exactly.`;
 }
+
+// API endpoint for advanced style analysis
+app.post('/api/analyze-advanced', validateAnalyzeAdvancedMiddleware, async (req, res) => {
+  try {
+    const { text, options = {} } = req.body;
+    
+    console.log(`Starting advanced analysis for ${text.length} characters`);
+    
+    // Initialize analyzer
+    const analyzer = new AdvancedStyleAnalyzer();
+    
+    // Perform analysis
+    const results = await analyzer.analyzeAdvanced(text, options);
+    
+    console.log('Advanced analysis completed successfully');
+    
+    // Check if we have partial results (some analyses succeeded)
+    const hasPartialResults = results && (
+      (results.phrases && results.phrases.length > 0) ||
+      (results.thoughtPatterns && results.thoughtPatterns.flowScore !== undefined) ||
+      (results.personalityMarkers && results.personalityMarkers.length > 0) ||
+      (results.contextualPatterns && Object.keys(results.contextualPatterns).length > 0)
+    );
+    
+    // Return structured JSON response with partial results flag
+    res.json({
+      success: true,
+      results,
+      partial: !hasPartialResults ? false : (
+        !results.phrases?.length ||
+        !results.thoughtPatterns?.flowScore ||
+        !results.personalityMarkers?.length ||
+        !Object.keys(results.contextualPatterns || {}).length
+      )
+    });
+    
+  } catch (error) {
+    // SECURITY: Log errors without exposing sensitive information
+    console.error('Advanced analysis error:', error.message);
+    console.error('Error stack:', error.stack);
+    
+    // Return error response with graceful degradation message
+    res.status(500).json({
+      success: false,
+      error: 'analysis_error',
+      message: 'Advanced analysis unavailable. Basic profile will be used.',
+      canContinue: true // Signal that basic profile can still be created
+    });
+  }
+});
 
 // API endpoint for generating AI responses
 // Validation middleware is applied here

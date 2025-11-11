@@ -39,6 +39,7 @@ function App() {
   const [exportContentType, setExportContentType] = useState('text');
   const [analysisError, setAnalysisError] = useState(null);
   const [failedSources, setFailedSources] = useState([]);
+  const [advancedAnalysisState, setAdvancedAnalysisState] = useState(null);
 
   // Load profile, sources, analysis results, preferences, and conversation history from LocalStorage on mount
   useEffect(() => {
@@ -146,10 +147,15 @@ function App() {
     setOnboardingStep('connect');
   };
 
-  const handleSourcesSubmit = async (submittedSources) => {
+  const handleSourcesSubmit = async (submittedSources, advancedAnalysisEnabled = true) => {
     setOnboardingStep('analyzing');
     setAnalysisError(null);
     setFailedSources([]);
+    // Always enable advanced analysis for authentic doppelgänger creation
+    setAdvancedAnalysisState({
+      enabled: true,
+      status: {}
+    });
     
     // Check if we're adding to existing sources or creating new profile
     const isAddingToExisting = sources && sources.length > 0 && styleProfile;
@@ -305,7 +311,123 @@ function App() {
       const profileResult = await buildStyleProfile(allAnalysisResults);
       
       if (profileResult.success) {
-        const profile = profileResult.profile;
+        let profile = profileResult.profile;
+        
+        // Run advanced analysis (always enabled for authentic doppelgänger)
+        try {
+          console.log('[Advanced Analysis] Starting advanced analysis...');
+          console.log('[Advanced Analysis] Analysis results:', allAnalysisResults);
+          
+          // Collect all text from sources for advanced analysis
+          const allText = allAnalysisResults
+            .map(result => {
+              if (result.type === 'text' && result.result?.text) {
+                console.log('[Advanced Analysis] Found text sample:', result.result.text.length, 'chars');
+                return result.result.text;
+              } else if (result.type === 'gmail' && result.result?.profile?.metadata?.emailTexts) {
+                console.log('[Advanced Analysis] Found Gmail texts:', result.result.profile.metadata.emailTexts.length, 'emails');
+                return result.result.profile.metadata.emailTexts.join('\n\n');
+              } else if (result.type === 'blog' && result.result?.text) {
+                console.log('[Advanced Analysis] Found blog text:', result.result.text.length, 'chars');
+                return result.result.text;
+              }
+              console.log('[Advanced Analysis] No text found for type:', result.type);
+              return '';
+            })
+            .filter(text => text)
+            .join('\n\n');
+          
+          console.log('[Advanced Analysis] Total text collected:', allText.length, 'chars');
+          
+          if (allText.length > 100) {
+            const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
+            
+            // Update status for each analysis type
+            const analysisTypes = ['phrases', 'thoughtFlow', 'quirks', 'contextual'];
+            
+            for (const type of analysisTypes) {
+              setAdvancedAnalysisState(prev => ({
+                ...prev,
+                status: { ...prev.status, [type]: 'running' }
+              }));
+            }
+            
+            const response = await fetch(`${backendUrl}/api/analyze-advanced`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ text: allText })
+            });
+            
+            if (response.ok) {
+              const data = await response.json();
+              console.log('[Advanced Analysis] Results received:', data);
+              
+              // Check if we have partial or complete results
+              if (data.success && data.results) {
+                // Merge advanced results into profile
+                profile = {
+                  ...profile,
+                  advanced: data.results
+                };
+                
+                // Mark analyses as complete or failed based on results
+                const hasResults = (arr) => Array.isArray(arr) && arr.length > 0;
+                const hasObject = (obj) => obj && typeof obj === 'object' && Object.keys(obj).length > 0;
+                
+                setAdvancedAnalysisState(prev => ({
+                  ...prev,
+                  status: {
+                    phrases: hasResults(data.results.phrases) ? 'complete' : 'failed',
+                    thoughtFlow: data.results.thoughtPatterns?.flowScore !== undefined ? 'complete' : 'failed',
+                    quirks: hasResults(data.results.personalityMarkers) ? 'complete' : 'failed',
+                    contextual: hasObject(data.results.contextualPatterns) ? 'complete' : 'failed'
+                  }
+                }));
+                
+                if (data.partial) {
+                  console.log('[Advanced Analysis] Partial results received - some analyses failed');
+                }
+              } else {
+                throw new Error('Invalid response format');
+              }
+            } else {
+              const errorData = await response.json().catch(() => ({}));
+              console.error('[Advanced Analysis] API error:', response.status, errorData);
+              
+              // If the error indicates we can continue, just mark as failed
+              if (errorData.canContinue) {
+                console.log('[Advanced Analysis] Continuing with basic profile');
+              }
+              
+              // Mark all as failed but continue with basic profile
+              setAdvancedAnalysisState(prev => ({
+                ...prev,
+                status: {
+                  phrases: 'failed',
+                  thoughtFlow: 'failed',
+                  quirks: 'failed',
+                  contextual: 'failed'
+                }
+              }));
+            }
+          } else {
+            console.log('[Advanced Analysis] Not enough text for advanced analysis');
+          }
+        } catch (advancedError) {
+          console.error('[Advanced Analysis] Error:', advancedError);
+          // Mark all as failed but continue with basic profile
+          setAdvancedAnalysisState(prev => ({
+            ...prev,
+            status: {
+              phrases: 'failed',
+              thoughtFlow: 'failed',
+              quirks: 'failed',
+              contextual: 'failed'
+            }
+          }));
+        }
         
         // Save to LocalStorage
         localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
@@ -458,6 +580,79 @@ function App() {
     setIsExportOpen(false);
   };
 
+  const handleReanalyzeAdvanced = async () => {
+    if (!storedAnalysisResults || storedAnalysisResults.length === 0) {
+      console.error('[Re-analyze] No stored analysis results available');
+      return;
+    }
+
+    try {
+      console.log('[Re-analyze] Starting advanced analysis on existing sources...');
+      
+      // Collect all text from stored analysis results
+      const allText = storedAnalysisResults
+        .map(result => {
+          if (result.type === 'text' && result.result?.text) {
+            return result.result.text;
+          } else if (result.type === 'gmail' && result.result?.profile?.metadata?.emailTexts) {
+            return result.result.profile.metadata.emailTexts.join('\n\n');
+          } else if (result.type === 'blog' && result.result?.text) {
+            return result.result.text;
+          }
+          return '';
+        })
+        .filter(text => text)
+        .join('\n\n');
+      
+      if (allText.length < 100) {
+        console.error('[Re-analyze] Not enough text for advanced analysis');
+        return;
+      }
+
+      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
+      
+      const response = await fetch(`${backendUrl}/api/analyze-advanced`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: allText })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('[Re-analyze] Advanced analysis complete:', data);
+        
+        if (data.success && data.results) {
+          // Merge advanced results into existing profile
+          const updatedProfile = {
+            ...styleProfile,
+            advanced: data.results
+          };
+          
+          // Save updated profile
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedProfile));
+          setStyleProfile(updatedProfile);
+          
+          if (data.partial) {
+            console.log('[Re-analyze] Partial results - some analyses failed but profile updated');
+          } else {
+            console.log('[Re-analyze] Profile updated with complete advanced analysis');
+          }
+        } else {
+          throw new Error('Invalid response format');
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('[Re-analyze] API error:', response.status, errorData.message);
+        throw new Error(errorData.message || 'Advanced analysis API request failed');
+      }
+    } catch (error) {
+      console.error('[Re-analyze] Error:', error);
+      throw error;
+    }
+  };
+
   return (
     <ErrorBoundary>
       <ConnectionStatus />
@@ -489,6 +684,7 @@ function App() {
             failedSources={failedSources}
             onComplete={handleAnalysisComplete}
             onRetry={handleRetryAnalysis}
+            advancedAnalysis={advancedAnalysisState}
           />
         )}
         
@@ -513,6 +709,7 @@ function App() {
           onUpdateSources={handleUpdateSources}
           onUpdatePreferences={handleUpdatePreferences}
           onClearHistory={handleClearHistory}
+          onReanalyzeAdvanced={handleReanalyzeAdvanced}
         />
 
         <ExportModal

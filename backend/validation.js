@@ -111,8 +111,99 @@ function validateGenerateMiddleware(req, res, next) {
   next();
 }
 
+/**
+ * Validates the request payload for the /api/analyze-advanced endpoint
+ * @param {Object} body - The request body to validate
+ * @returns {Object} - { valid: boolean, error?: { error: string, message: string } }
+ */
+function validateAnalyzeAdvancedRequest(body) {
+  // Check if body exists
+  if (!body || typeof body !== 'object') {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'Request body must be a valid JSON object'
+      }
+    };
+  }
+
+  // Check for presence of text field
+  if (!('text' in body)) {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'Missing required field: text'
+      }
+    };
+  }
+
+  // Ensure text is a string
+  if (typeof body.text !== 'string') {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'Field "text" must be a string'
+      }
+    };
+  }
+
+  // Ensure text is non-empty
+  if (body.text.trim().length === 0) {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'Field "text" cannot be empty'
+      }
+    };
+  }
+
+  // Validate maximum text length (50000 characters for analysis)
+  if (body.text.length > 50000) {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'Field "text" exceeds maximum length of 50000 characters'
+      }
+    };
+  }
+
+  // Options field is optional, but if present must be an object
+  if ('options' in body && (typeof body.options !== 'object' || body.options === null)) {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'Field "options" must be an object'
+      }
+    };
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Express middleware for validating /api/analyze-advanced requests
+ * Returns 400 status with error details if validation fails
+ */
+function validateAnalyzeAdvancedMiddleware(req, res, next) {
+  const validation = validateAnalyzeAdvancedRequest(req.body);
+  
+  if (!validation.valid) {
+    return res.status(400).json(validation.error);
+  }
+  
+  next();
+}
+
 module.exports = {
   validateGenerateRequest,
   validateGenerateMiddleware,
+  validateAnalyzeAdvancedRequest,
+  validateAnalyzeAdvancedMiddleware,
   MAX_PROMPT_LENGTH
 };

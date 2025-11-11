@@ -60,6 +60,9 @@ class GmailStyleAnalyzer {
       
       // Calculate total word count
       const totalWords = cleansedEmails.reduce((sum, email) => sum + email.wordCount, 0);
+      
+      // Store email texts for advanced analysis
+      const emailTexts = cleansedEmails.map(email => email.cleanedBody);
 
       return {
         success: true,
@@ -68,7 +71,8 @@ class GmailStyleAnalyzer {
           emailCount: cleansedEmails.length,
           wordCount: totalWords,
           avgEmailLength: Math.round(totalWords / cleansedEmails.length),
-          confidence
+          confidence,
+          emailTexts // Add email texts for advanced analysis
         }
       };
     } catch (error) {

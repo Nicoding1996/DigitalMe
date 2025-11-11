@@ -2,6 +2,8 @@
  * ProfileSummary Component
  * Black Mirror aesthetic - System Profile Data Display
  */
+import AdvancedPatternsView from './AdvancedPatternsView';
+
 const ProfileSummary = ({ styleProfile }) => {
   if (!styleProfile) {
     return (
@@ -359,6 +361,31 @@ const ProfileSummary = ({ styleProfile }) => {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Advanced Patterns Section */}
+      {styleProfile.advanced && (
+        styleProfile.advanced.phrases?.length > 0 ||
+        styleProfile.advanced.thoughtPatterns ||
+        styleProfile.advanced.personalityMarkers?.length > 0 ||
+        (styleProfile.advanced.contextualPatterns && Object.keys(styleProfile.advanced.contextualPatterns).length > 0)
+      ) && (
+        <div className="border border-unsettling-cyan bg-void-surface">
+          <div className="px-4 py-2 bg-void-elevated border-b border-unsettling-cyan font-mono text-xs text-unsettling-cyan">
+            [ADVANCED_PATTERNS]
+          </div>
+          <div className="p-4">
+            <div className="font-mono text-xs text-static-muted mb-4 leading-relaxed">
+              Deep analysis of your unique expressions, thought patterns, and personality quirks
+            </div>
+            <AdvancedPatternsView
+              phrases={styleProfile.advanced.phrases}
+              thoughtPatterns={styleProfile.advanced.thoughtPatterns}
+              personalityMarkers={styleProfile.advanced.personalityMarkers}
+              contextualPatterns={styleProfile.advanced.contextualPatterns}
+            />
           </div>
         </div>
       )}

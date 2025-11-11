@@ -8,6 +8,7 @@ import {
   generateId,
   generateMockCodingStyle,
   generateMockWritingStyle,
+  generateEmptyAdvancedAnalysis,
   mockGitHubRepos,
   mockBlogPosts
 } from '../models';
@@ -995,11 +996,26 @@ export const analyzeBlog = async (urls, onProgress = null) => {
   // Mock analysis results
   const writingStyle = generateMockWritingStyle();
   
+  // Generate mock blog text for advanced analysis
+  // In a real implementation, this would be the actual scraped blog content
+  const mockBlogText = `
+Understanding React Hooks has fundamentally changed how I approach component design. The shift from class components to functional components with hooks represents more than just a syntactic change - it's a paradigm shift in how we think about state and side effects.
+
+When I first started using hooks, I'll admit I was skeptical. The rules of hooks seemed arbitrary, and the mental model felt foreign. But after building several projects with them, I've come to appreciate the elegance of the composition model they enable.
+
+The key insight is that hooks let you extract stateful logic without changing your component hierarchy. This is huge. Before hooks, if you wanted to share logic between components, you had to resort to higher-order components or render props - both of which added layers of indirection that made your code harder to follow.
+
+Modern JavaScript patterns have evolved significantly over the past few years. Destructuring, spread operators, and optional chaining have become second nature. But it's not just about using the latest syntax - it's about understanding when and why to use these patterns.
+
+I tend to favor composition over inheritance, immutability over mutation, and explicit over implicit. These aren't just abstract principles - they lead to code that's easier to reason about, test, and maintain. When you can look at a function and understand exactly what it does without having to trace through a complex inheritance hierarchy, that's when you know you're on the right track.
+  `.trim();
+  
   return {
     success: true,
     urls,
     posts: mockBlogPosts,
     writingStyle,
+    text: mockBlogText, // Store text for advanced analysis
     metrics: {
       totalPosts: mockBlogPosts.length,
       totalWords: mockBlogPosts.reduce((sum, post) => sum + post.wordCount, 0),
@@ -1115,6 +1131,7 @@ export const analyzeTextSample = async (text, onProgress = null) => {
   return {
     success: true,
     writingStyle,
+    text, // Store original text for advanced analysis
     metrics: {
       wordCount,
       sentenceCount,
@@ -1150,6 +1167,83 @@ export const validateTextSample = (text, minWords = 100) => {
 };
 
 // ============================================================================
+// ADVANCED ANALYSIS VALIDATION AND MIGRATION
+// ============================================================================
+
+/**
+ * Validate advanced analysis structure
+ * @param {Object} advancedAnalysis - Advanced analysis object to validate
+ * @returns {boolean} True if valid, false otherwise
+ */
+export const isValidAdvancedAnalysis = (advancedAnalysis) => {
+  // Check if advancedAnalysis exists and is an object
+  if (!advancedAnalysis || typeof advancedAnalysis !== 'object') {
+    return false;
+  }
+
+  // Check for required fields
+  const hasRequiredFields = 
+    'phrases' in advancedAnalysis &&
+    'thoughtPatterns' in advancedAnalysis &&
+    'personalityMarkers' in advancedAnalysis &&
+    'contextualPatterns' in advancedAnalysis;
+
+  if (!hasRequiredFields) {
+    return false;
+  }
+
+  // Validate phrases array
+  if (!Array.isArray(advancedAnalysis.phrases)) {
+    return false;
+  }
+
+  // Validate personalityMarkers array
+  if (!Array.isArray(advancedAnalysis.personalityMarkers)) {
+    return false;
+  }
+
+  // Validate contextualPatterns object
+  if (typeof advancedAnalysis.contextualPatterns !== 'object') {
+    return false;
+  }
+
+  // thoughtPatterns can be null or an object
+  if (advancedAnalysis.thoughtPatterns !== null && typeof advancedAnalysis.thoughtPatterns !== 'object') {
+    return false;
+  }
+
+  return true;
+};
+
+/**
+ * Migrate profile to add empty advanced field if missing
+ * @param {Object} profile - Style profile to migrate
+ * @returns {Object} Migrated profile with advanced field
+ */
+export const migrateProfile = (profile) => {
+  // Check if profile exists
+  if (!profile || typeof profile !== 'object') {
+    console.warn('Cannot migrate invalid profile');
+    return profile;
+  }
+
+  // Check if advanced field already exists
+  if ('advanced' in profile) {
+    // Profile already has advanced field, no migration needed
+    return profile;
+  }
+
+  // Add empty advanced field for backward compatibility
+  const migratedProfile = {
+    ...profile,
+    advanced: generateEmptyAdvancedAnalysis()
+  };
+
+  console.log(`Migrated profile ${profile.id} to include advanced field`);
+  return migratedProfile;
+};
+
+// ============================================================================
 // STYLE PROFILE BUILDER
 // ============================================================================
 
@@ -1157,9 +1251,10 @@ export const validateTextSample = (text, minWords = 100) => {
  * Build unified style profile from multiple sources
  * @param {Object[]} sources - Array of analysis results from different sources
  * @param {string} userId - User ID
+ * @param {Object} [advancedAnalysis] - Optional advanced analysis results to merge
  * @returns {Promise<Object>} Complete style profile
  */
-export const buildStyleProfile = async (sources, userId = 'user-1') => {
+export const buildStyleProfile = async (sources, userId = 'user-1', advancedAnalysis = null) => {
   await delay(500);
 
   // Combine coding styles from GitHub sources
@@ -1240,6 +1335,11 @@ export const buildStyleProfile = async (sources, userId = 'user-1') => {
       emails: totalEmails // Add emails to sample count
     }
   };
+
+  // Merge advanced analysis results if provided
+  if (advancedAnalysis && isValidAdvancedAnalysis(advancedAnalysis)) {
+    profile.advanced = advancedAnalysis;
+  }
 
   return {
     success: true,

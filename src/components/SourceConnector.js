@@ -132,7 +132,8 @@ const SourceConnector = ({ onSourcesSubmit }) => {
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      onSourcesSubmit(sources);
+      // Always enable advanced analysis - it's core to creating an authentic doppelgänger
+      onSourcesSubmit(sources, true);
     }
   };
 

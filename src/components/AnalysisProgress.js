@@ -13,7 +13,8 @@ const AnalysisProgress = ({
   error, 
   failedSources = [], 
   onComplete, 
-  onRetry 
+  onRetry,
+  advancedAnalysis = null // { enabled: boolean, status: { phrases, thoughtFlow, quirks, contextual } }
 }) => {
   const [dots, setDots] = useState('');
 
@@ -121,6 +122,113 @@ const AnalysisProgress = ({
               </div>
             </div>
 
+            {/* Advanced Analysis Progress */}
+            {advancedAnalysis?.enabled && (
+              <div className="border border-unsettling-cyan bg-void-surface p-6 mb-8">
+                <div className="font-mono text-xs text-unsettling-cyan mb-4">
+                  [ADVANCED_ANALYSIS]
+                </div>
+                <div className="space-y-3">
+                  {/* Phrase Patterns */}
+                  <div className="flex items-center gap-3">
+                    <div className="w-4 h-4 flex items-center justify-center">
+                      {advancedAnalysis.status?.phrases === 'complete' && (
+                        <span className="text-system-active">✓</span>
+                      )}
+                      {advancedAnalysis.status?.phrases === 'running' && (
+                        <span className="text-unsettling-cyan animate-pulse">●</span>
+                      )}
+                      {advancedAnalysis.status?.phrases === 'failed' && (
+                        <span className="text-glitch-red">✗</span>
+                      )}
+                      {!advancedAnalysis.status?.phrases && (
+                        <span className="text-static-ghost">○</span>
+                      )}
+                    </div>
+                    <span className="font-mono text-xs text-static-white">
+                      Phrase Patterns
+                    </span>
+                  </div>
+
+                  {/* Thought Flow */}
+                  <div className="flex items-center gap-3">
+                    <div className="w-4 h-4 flex items-center justify-center">
+                      {advancedAnalysis.status?.thoughtFlow === 'complete' && (
+                        <span className="text-system-active">✓</span>
+                      )}
+                      {advancedAnalysis.status?.thoughtFlow === 'running' && (
+                        <span className="text-unsettling-cyan animate-pulse">●</span>
+                      )}
+                      {advancedAnalysis.status?.thoughtFlow === 'failed' && (
+                        <span className="text-glitch-red">✗</span>
+                      )}
+                      {!advancedAnalysis.status?.thoughtFlow && (
+                        <span className="text-static-ghost">○</span>
+                      )}
+                    </div>
+                    <span className="font-mono text-xs text-static-white">
+                      Thought Flow
+                    </span>
+                  </div>
+
+                  {/* Personality Quirks */}
+                  <div className="flex items-center gap-3">
+                    <div className="w-4 h-4 flex items-center justify-center">
+                      {advancedAnalysis.status?.quirks === 'complete' && (
+                        <span className="text-system-active">✓</span>
+                      )}
+                      {advancedAnalysis.status?.quirks === 'running' && (
+                        <span className="text-unsettling-cyan animate-pulse">●</span>
+                      )}
+                      {advancedAnalysis.status?.quirks === 'failed' && (
+                        <span className="text-glitch-red">✗</span>
+                      )}
+                      {!advancedAnalysis.status?.quirks && (
+                        <span className="text-static-ghost">○</span>
+                      )}
+                    </div>
+                    <span className="font-mono text-xs text-static-white">
+                      Personality Quirks
+                    </span>
+                  </div>
+
+                  {/* Contextual Patterns */}
+                  <div className="flex items-center gap-3">
+                    <div className="w-4 h-4 flex items-center justify-center">
+                      {advancedAnalysis.status?.contextual === 'complete' && (
+                        <span className="text-system-active">✓</span>
+                      )}
+                      {advancedAnalysis.status?.contextual === 'running' && (
+                        <span className="text-unsettling-cyan animate-pulse">●</span>
+                      )}
+                      {advancedAnalysis.status?.contextual === 'failed' && (
+                        <span className="text-glitch-red">✗</span>
+                      )}
+                      {!advancedAnalysis.status?.contextual && (
+                        <span className="text-static-ghost">○</span>
+                      )}
+                    </div>
+                    <span className="font-mono text-xs text-static-white">
+                      Contextual Patterns
+                    </span>
+                  </div>
+                </div>
+
+                {/* Partial failure message */}
+                {advancedAnalysis.status && 
+                 Object.values(advancedAnalysis.status).some(s => s === 'failed') && (
+                  <div className="mt-4 pt-4 border-t border-static-whisper">
+                    <div className="font-mono text-xs text-system-warning mb-2">
+                      [!] Advanced analysis unavailable
+                    </div>
+                    <div className="font-mono text-xs text-static-muted">
+                      Some advanced pattern analyses failed. Your basic profile is still being created and will work normally.
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Visual Indicator */}
             <div className="flex justify-center gap-2">
               {[...Array(5)].map((_, i) => (
@@ -201,6 +309,22 @@ const AnalysisProgress = ({
                       </div>
                     )}
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Advanced Analysis Failure Notice */}
+            {advancedAnalysis?.enabled && advancedAnalysis.status && 
+             Object.values(advancedAnalysis.status).every(s => s === 'failed') && (
+              <div className="border border-system-warning bg-void-surface p-6 mb-8">
+                <div className="font-mono text-xs text-system-warning mb-3">
+                  [!] [ADVANCED_ANALYSIS_UNAVAILABLE]
+                </div>
+                <div className="font-mono text-xs text-static-white mb-4 leading-relaxed">
+                  Advanced pattern analysis could not be completed. Your basic style profile has been created successfully and is fully functional.
+                </div>
+                <div className="font-mono text-xs text-static-muted">
+                  You can retry advanced analysis later from Settings → Re-analyze with Advanced Patterns
                 </div>
               </div>
             )}

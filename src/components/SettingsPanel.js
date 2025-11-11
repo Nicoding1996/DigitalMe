@@ -7,8 +7,12 @@ import ProfileSummary from './ProfileSummary';
 import SourceManager from './SourceManager';
 import StyleControls from './StyleControls';
 
-const SettingsPanel = ({ isOpen, onClose, styleProfile, sources, preferences, conversationHistory = [], onUpdateSources, onUpdatePreferences, onClearHistory }) => {
+const SettingsPanel = ({ isOpen, onClose, styleProfile, sources, preferences, conversationHistory = [], onUpdateSources, onUpdatePreferences, onClearHistory, onReanalyzeAdvanced }) => {
   const [activeTab, setActiveTab] = useState('profile');
+  const [showAdvancedConfirm, setShowAdvancedConfirm] = useState(false);
+  const [isReanalyzing, setIsReanalyzing] = useState(false);
+  const [reanalyzeError, setReanalyzeError] = useState(null);
+  const [reanalyzeSuccess, setReanalyzeSuccess] = useState(false);
 
   if (!isOpen) return null;
 
@@ -17,6 +21,36 @@ const SettingsPanel = ({ isOpen, onClose, styleProfile, sources, preferences, co
       onClose();
     }
   };
+
+  const handleReanalyzeAdvanced = async () => {
+    setIsReanalyzing(true);
+    setShowAdvancedConfirm(false);
+    setReanalyzeError(null);
+    setReanalyzeSuccess(false);
+    
+    try {
+      if (onReanalyzeAdvanced) {
+        await onReanalyzeAdvanced();
+        setReanalyzeSuccess(true);
+        // Clear success message after 5 seconds
+        setTimeout(() => setReanalyzeSuccess(false), 5000);
+      }
+    } catch (error) {
+      console.error('Failed to re-analyze with advanced:', error);
+      setReanalyzeError(error.message || 'Advanced analysis failed. Please try again later.');
+      // Clear error message after 10 seconds
+      setTimeout(() => setReanalyzeError(null), 10000);
+    } finally {
+      setIsReanalyzing(false);
+    }
+  };
+
+  const hasAdvancedAnalysis = styleProfile?.advanced && (
+    styleProfile.advanced.phrases?.length > 0 ||
+    styleProfile.advanced.thoughtPatterns ||
+    styleProfile.advanced.personalityMarkers?.length > 0 ||
+    (styleProfile.advanced.contextualPatterns && Object.keys(styleProfile.advanced.contextualPatterns).length > 0)
+  );
 
   return (
     <div 
@@ -92,6 +126,56 @@ const SettingsPanel = ({ isOpen, onClose, styleProfile, sources, preferences, co
                 <div className="font-mono text-xs text-static-ghost mb-4">
                   [PROFILE_MANAGEMENT]
                 </div>
+                
+                {/* Advanced Analysis Section */}
+                <div className="mb-6 p-4 bg-void-elevated border border-unsettling-cyan">
+                  <div className="font-mono text-xs text-unsettling-cyan mb-2">
+                    [ADVANCED_ANALYSIS]
+                  </div>
+                  <p className="font-mono text-xs text-static-muted mb-4 leading-relaxed">
+                    {hasAdvancedAnalysis 
+                      ? 'Re-run deep pattern analysis to update your signature phrases, thought patterns, and personality quirks with the latest data.'
+                      : 'Deep pattern analysis captures your unique expressions and quirks for a more authentic doppelgänger. Run it now on your existing sources.'}
+                  </p>
+                  
+                  {/* Success Message */}
+                  {reanalyzeSuccess && (
+                    <div className="mb-4 p-3 bg-void-surface border border-system-active">
+                      <div className="font-mono text-xs text-system-active">
+                        [SUCCESS] Advanced analysis complete! Your profile has been updated.
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Error Message */}
+                  {reanalyzeError && (
+                    <div className="mb-4 p-3 bg-void-surface border border-glitch-red">
+                      <div className="font-mono text-xs text-glitch-red mb-2">
+                        [ERROR] Advanced analysis unavailable
+                      </div>
+                      <div className="font-mono text-xs text-static-muted mb-2">
+                        {reanalyzeError}
+                      </div>
+                      <div className="font-mono text-xs text-static-ghost">
+                        Your basic profile is still available. You can try again later.
+                      </div>
+                    </div>
+                  )}
+                  
+                  <button 
+                    className="px-6 py-3 bg-void-surface border border-unsettling-cyan text-unsettling-cyan font-mono text-xs hover:bg-unsettling-cyan hover:text-void-deep transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                    onClick={() => setShowAdvancedConfirm(true)}
+                    disabled={isReanalyzing || !sources || sources.length === 0}
+                  >
+                    {isReanalyzing ? '[ANALYZING...]' : hasAdvancedAnalysis ? '[REFRESH_PATTERNS]' : '[ANALYZE_PATTERNS]'}
+                  </button>
+                  {(!sources || sources.length === 0) && (
+                    <div className="font-mono text-xs text-static-ghost mt-2">
+                      No sources available for analysis
+                    </div>
+                  )}
+                </div>
+
                 <p className="font-mono text-xs text-static-muted mb-4 leading-relaxed">
                   Reset your profile to re-analyze your writing style with updated algorithms.
                 </p>
@@ -153,6 +237,54 @@ const SettingsPanel = ({ isOpen, onClose, styleProfile, sources, preferences, co
           )}
         </div>
       </div>
+
+      {/* Advanced Analysis Confirmation Dialog */}
+      {showAdvancedConfirm && (
+        <div 
+          className="absolute inset-0 bg-overlay-darker backdrop-blur-sm flex items-center justify-center p-4 z-10"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowAdvancedConfirm(false);
+            }
+          }}
+        >
+          <div className="w-full max-w-md bg-void-deep border border-unsettling-cyan">
+            <div className="px-6 py-4 bg-void-elevated border-b border-unsettling-cyan">
+              <div className="font-mono text-sm text-unsettling-cyan">
+                [DEEP_PATTERN_ANALYSIS]
+              </div>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="font-mono text-xs text-static-white leading-relaxed">
+                Deep pattern analysis will examine your existing sources to identify:
+              </div>
+              <div className="font-mono text-xs text-static-muted space-y-2 border-l-2 border-unsettling-cyan pl-4">
+                <div><span className="text-unsettling-cyan">&gt;</span> Signature phrases and recurring expressions</div>
+                <div><span className="text-unsettling-cyan">&gt;</span> Thought flow and idea organization patterns</div>
+                <div><span className="text-unsettling-cyan">&gt;</span> Personality quirks and self-aware comments</div>
+                <div><span className="text-unsettling-cyan">&gt;</span> Contextual style variations by topic</div>
+              </div>
+              <div className="font-mono text-xs text-static-ghost pt-4 border-t border-static-whisper">
+                <span className="text-system-warning">[PRIVACY]</span> Personal information is anonymized before analysis.
+              </div>
+              <div className="flex gap-3 pt-4">
+                <button
+                  className="flex-1 px-4 py-3 bg-void-surface border border-static-whisper text-static-white font-mono text-xs hover:border-static-white transition-all"
+                  onClick={() => setShowAdvancedConfirm(false)}
+                >
+                  [CANCEL]
+                </button>
+                <button
+                  className="flex-1 px-4 py-3 bg-unsettling-cyan border border-unsettling-cyan text-void-deep font-mono text-xs hover:bg-transparent hover:text-unsettling-cyan transition-all"
+                  onClick={handleReanalyzeAdvanced}
+                >
+                  [PROCEED]
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
