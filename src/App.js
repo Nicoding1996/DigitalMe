@@ -670,7 +670,19 @@ function App() {
         )}
         
         {onboardingStep === 'connect' && (
-          <SourceConnector onSourcesSubmit={handleSourcesSubmit} />
+          <SourceConnector 
+            onSourcesSubmit={handleSourcesSubmit}
+            onCancel={() => {
+              // If we have a profile, go back to complete state (settings)
+              // Otherwise go back to welcome
+              if (styleProfile) {
+                setOnboardingStep('complete');
+                setIsSettingsOpen(true);
+              } else {
+                setOnboardingStep('welcome');
+              }
+            }}
+          />
         )}
         
         {onboardingStep === 'analyzing' && (

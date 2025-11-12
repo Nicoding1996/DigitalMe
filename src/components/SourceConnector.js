@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { validateGitHubUsername, validateBlogUrl, validateTextSample } from '../services/StyleAnalyzer';
 import GmailConnectButton from './GmailConnectButton';
 
-const SourceConnector = ({ onSourcesSubmit }) => {
+const SourceConnector = ({ onSourcesSubmit, onCancel }) => {
   const [activeTab, setActiveTab] = useState('text');
   const [githubUsername, setGithubUsername] = useState('');
   const [blogUrls, setBlogUrls] = useState('');
@@ -149,9 +149,20 @@ const SourceConnector = ({ onSourcesSubmit }) => {
       <div className="relative z-10 w-full max-w-3xl mx-auto fade-in">
         {/* Header */}
         <div className="mb-12">
-          <h2 className="text-3xl font-display font-bold text-static-white mb-4 tracking-tight">
-            [ACQUIRE_SOURCE_DATA]
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-3xl font-display font-bold text-static-white tracking-tight">
+              [ACQUIRE_SOURCE_DATA]
+            </h2>
+            {onCancel && (
+              <button
+                onClick={onCancel}
+                className="px-4 py-2 font-mono text-xs text-static-muted hover:text-static-white border border-static-whisper hover:border-static-ghost transition-all"
+                aria-label="Go back"
+              >
+                ← BACK
+              </button>
+            )}
+          </div>
           <p className="font-mono text-xs text-static-muted leading-relaxed mb-3">
             &gt; Choose a source to analyze your unique style and build your digital doppelgänger
           </p>
