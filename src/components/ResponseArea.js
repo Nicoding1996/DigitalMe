@@ -70,7 +70,7 @@ const ResponseArea = ({ content, contentType = 'text', language = null, isLoadin
       
       {/* Content */}
       <div className="p-4 font-mono text-sm text-static-white leading-relaxed min-h-[160px]">
-        <GlitchEffect intensity={glitchIntensity} trigger={triggerGlitch}>
+        <GlitchEffect intensity={glitchIntensity} trigger={triggerGlitch} autoGlitch={true}>
           {contentType === 'code' ? (
             <CodeBlock code={content} language={language} />
           ) : (

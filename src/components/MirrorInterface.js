@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from 'react';
 import InputArea from './InputArea';
 import ResponseArea from './ResponseArea';
 import MessageHistory from './MessageHistory';
+import GlitchEffect from './GlitchEffect';
 import { generateId } from '../models';
 import { generateContent } from '../services/ContentGenerator';
 import MessageCollector from '../services/MessageCollector';
@@ -366,6 +367,34 @@ const LeftPanel = ({ onSubmit, messages, currentCmdNumber }) => {
 };
 
 const RightPanel = ({ response, isGenerating, messages, glitchIntensity }) => {
+  const [shouldGlitch, setShouldGlitch] = useState(false);
+
+  // Random glitch effect every 15-25 seconds
+  useEffect(() => {
+    const triggerRandomGlitch = () => {
+      setShouldGlitch(true);
+      setTimeout(() => setShouldGlitch(false), 50); // Reset after brief moment
+      
+      // Schedule next glitch
+      const nextGlitch = 15000 + Math.random() * 10000; // 15-25 seconds
+      setTimeout(triggerRandomGlitch, nextGlitch);
+    };
+
+    // Start the glitch cycle
+    const initialDelay = 10000 + Math.random() * 5000; // 10-15 seconds initial delay
+    const timer = setTimeout(triggerRandomGlitch, initialDelay);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Also glitch when AI starts generating
+  useEffect(() => {
+    if (isGenerating) {
+      setShouldGlitch(true);
+      setTimeout(() => setShouldGlitch(false), 50);
+    }
+  }, [isGenerating]);
+
   return (
     <div className="relative flex items-start justify-center p-8 md:p-12 overflow-y-auto scrollbar-mirrored">
       <div className="w-full max-w-md pt-8">
@@ -374,9 +403,11 @@ const RightPanel = ({ response, isGenerating, messages, glitchIntensity }) => {
           <div className="font-mono text-xs text-static-ghost mb-4">
             [TERMINAL_AI.exe]
           </div>
-          <h1 className="text-3xl font-display font-bold text-static-white mb-2 tracking-tight">
-            Doppelgänger
-          </h1>
+          <GlitchEffect trigger={shouldGlitch} intensity="low" autoGlitch={true}>
+            <h1 className="text-3xl font-display font-bold text-static-white mb-2 tracking-tight">
+              Doppelgänger
+            </h1>
+          </GlitchEffect>
           <p className="text-xs text-static-muted font-mono">
             &gt; REFLECTING_INPUT...
           </p>

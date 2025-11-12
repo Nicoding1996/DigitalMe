@@ -1,0 +1,209 @@
+/**
+ * Black Mirror Glitch Effect
+ * Brief, random digital corruption - "did that just happen?"
+ */
+
+.glitch-container {
+  position: relative;
+  display: inline-block;
+}
+
+.glitch-content {
+  position: relative;
+  z-index: 1;
+  transition: none;
+}
+
+.glitch-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+}
+
+/* Only show layers when actively glitching */
+.glitch-active .glitch-layer {
+  opacity: 1;
+}
+
+/* RGB Split Effect - Red Channel */
+.glitch-layer-1 {
+  color: #ff0033;
+  mix-blend-mode: screen;
+}
+
+/* RGB Split Effect - Cyan Channel */
+.glitch-layer-2 {
+  color: #00d9ff;
+  mix-blend-mode: screen;
+}
+
+/* Glitch Type 1: RGB Split */
+.glitch-type-1 .glitch-layer-1 {
+  animation: glitch-split-1 0.15s steps(2, end);
+}
+
+.glitch-type-1 .glitch-layer-2 {
+  animation: glitch-split-2 0.15s steps(2, end);
+}
+
+/* Glitch Type 2: Horizontal Slice */
+.glitch-type-2 .glitch-layer-1 {
+  animation: glitch-slice-1 0.2s steps(3, end);
+}
+
+.glitch-type-2 .glitch-layer-2 {
+  animation: glitch-slice-2 0.2s steps(3, end);
+}
+
+.glitch-type-2 .glitch-content {
+  animation: glitch-distort 0.2s steps(3, end);
+}
+
+/* Glitch Type 3: Corruption */
+.glitch-type-3 .glitch-layer-1 {
+  animation: glitch-corrupt-1 0.1s steps(4, end);
+}
+
+.glitch-type-3 .glitch-layer-2 {
+  animation: glitch-corrupt-2 0.1s steps(4, end);
+}
+
+.glitch-type-3 .glitch-content {
+  animation: glitch-shake 0.1s steps(4, end);
+}
+
+/* === GLITCH TYPE 1: RGB SPLIT === */
+@keyframes glitch-split-1 {
+  0% {
+    transform: translate(0);
+  }
+  50% {
+    transform: translate(-4px, 0);
+  }
+  100% {
+    transform: translate(-2px, 0);
+  }
+}
+
+@keyframes glitch-split-2 {
+  0% {
+    transform: translate(0);
+  }
+  50% {
+    transform: translate(4px, 0);
+  }
+  100% {
+    transform: translate(2px, 0);
+  }
+}
+
+/* === GLITCH TYPE 2: HORIZONTAL SLICE === */
+@keyframes glitch-slice-1 {
+  0% {
+    transform: translate(0);
+    clip-path: inset(0 0 0 0);
+  }
+  33% {
+    transform: translate(-6px, 0);
+    clip-path: inset(40% 0 55% 0);
+  }
+  66% {
+    transform: translate(4px, 0);
+    clip-path: inset(20% 0 75% 0);
+  }
+  100% {
+    transform: translate(0);
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes glitch-slice-2 {
+  0% {
+    transform: translate(0);
+    clip-path: inset(0 0 0 0);
+  }
+  33% {
+    transform: translate(6px, 0);
+    clip-path: inset(60% 0 35% 0);
+  }
+  66% {
+    transform: translate(-4px, 0);
+    clip-path: inset(10% 0 85% 0);
+  }
+  100% {
+    transform: translate(0);
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes glitch-distort {
+  0% {
+    transform: skew(0deg);
+  }
+  50% {
+    transform: skew(2deg);
+  }
+  100% {
+    transform: skew(0deg);
+  }
+}
+
+/* === GLITCH TYPE 3: CORRUPTION === */
+@keyframes glitch-corrupt-1 {
+  0% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(-3px, 2px);
+  }
+  50% {
+    transform: translate(5px, -3px);
+  }
+  75% {
+    transform: translate(-2px, -1px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes glitch-corrupt-2 {
+  0% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(3px, -2px);
+  }
+  50% {
+    transform: translate(-5px, 3px);
+  }
+  75% {
+    transform: translate(2px, 1px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes glitch-shake {
+  0% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(-1px, 1px);
+  }
+  50% {
+    transform: translate(1px, -1px);
+  }
+  75% {
+    transform: translate(-1px, -1px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}

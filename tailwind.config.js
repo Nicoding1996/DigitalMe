@@ -117,11 +117,14 @@ module.exports = {
       animation: {
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'flicker': 'flicker 2s linear infinite',
-        'glitch': 'glitch 3s infinite',
+        'glitch': 'glitch 0.5s infinite',
+        'glitch-text': 'glitchText 0.3s infinite',
+        'rgb-split': 'rgbSplit 0.4s infinite',
         'scan': 'scan 8s linear infinite',
         'fade-in': 'fadeIn 0.5s ease-out',
         'slide-up': 'slideUp 0.4s ease-out',
         'scroll-pulse': 'scrollPulse 2s ease-in-out infinite',
+        'distort': 'distort 0.3s infinite',
       },
       
       keyframes: {
@@ -137,11 +140,50 @@ module.exports = {
           '49.01%': { opacity: '1' },
         },
         glitch: {
-          '0%, 100%': { transform: 'translate(0)' },
-          '20%': { transform: 'translate(-2px, 2px)' },
-          '40%': { transform: 'translate(-2px, -2px)' },
-          '60%': { transform: 'translate(2px, 2px)' },
-          '80%': { transform: 'translate(2px, -2px)' },
+          '0%': { transform: 'translate(0)', filter: 'hue-rotate(0deg)' },
+          '10%': { transform: 'translate(-5px, 3px)', filter: 'hue-rotate(90deg)' },
+          '20%': { transform: 'translate(5px, -4px)', filter: 'hue-rotate(180deg)' },
+          '30%': { transform: 'translate(-3px, -5px)', filter: 'hue-rotate(270deg)' },
+          '40%': { transform: 'translate(4px, 5px)', filter: 'hue-rotate(0deg)' },
+          '50%': { transform: 'translate(-6px, 2px)', filter: 'hue-rotate(90deg)' },
+          '60%': { transform: 'translate(6px, -3px)', filter: 'hue-rotate(180deg)' },
+          '70%': { transform: 'translate(-4px, 4px)', filter: 'hue-rotate(270deg)' },
+          '80%': { transform: 'translate(3px, -6px)', filter: 'hue-rotate(0deg)' },
+          '90%': { transform: 'translate(-5px, 6px)', filter: 'hue-rotate(90deg)' },
+          '100%': { transform: 'translate(0)', filter: 'hue-rotate(0deg)' },
+        },
+        glitchText: {
+          '0%': { 
+            transform: 'translate(0)',
+            textShadow: '2px 0 #ff0033, -2px 0 #00d9ff'
+          },
+          '25%': { 
+            transform: 'translate(-3px, 2px)',
+            textShadow: '-3px 0 #ff0033, 3px 0 #00d9ff'
+          },
+          '50%': { 
+            transform: 'translate(3px, -2px)',
+            textShadow: '3px 0 #ff0033, -3px 0 #00d9ff'
+          },
+          '75%': { 
+            transform: 'translate(-2px, -3px)',
+            textShadow: '-2px 0 #ff0033, 2px 0 #00d9ff'
+          },
+          '100%': { 
+            transform: 'translate(0)',
+            textShadow: '2px 0 #ff0033, -2px 0 #00d9ff'
+          },
+        },
+        rgbSplit: {
+          '0%, 100%': { 
+            textShadow: '0 0 transparent'
+          },
+          '33%': { 
+            textShadow: '-4px 0 #ff0033, 4px 0 #00d9ff, 0 0 #00ff88'
+          },
+          '66%': { 
+            textShadow: '4px 0 #ff0033, -4px 0 #00d9ff, 0 0 #00ff88'
+          },
         },
         scan: {
           '0%': { transform: 'translateY(-100%)' },
@@ -158,6 +200,20 @@ module.exports = {
         scrollPulse: {
           '0%, 100%': { opacity: '0' },
           '50%': { opacity: '1' },
+        },
+        distort: {
+          '0%, 100%': { 
+            transform: 'scaleX(1) scaleY(1) skew(0deg)',
+          },
+          '25%': { 
+            transform: 'scaleX(0.98) scaleY(1.02) skew(-1deg)',
+          },
+          '50%': { 
+            transform: 'scaleX(1.02) scaleY(0.98) skew(1deg)',
+          },
+          '75%': { 
+            transform: 'scaleX(0.99) scaleY(1.01) skew(-0.5deg)',
+          },
         },
       },
       
