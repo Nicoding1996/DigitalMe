@@ -131,6 +131,7 @@
  * @property {string|null} language - Programming language (for code)
  * @property {number} timestamp - Message timestamp
  * @property {'positive'|'negative'|null} feedback - User feedback
+ * @property {number} [cmdNumber] - Command number for grouping related messages
  */
 
 /**

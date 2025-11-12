@@ -94,6 +94,54 @@ function validateGenerateRequest(body) {
     };
   }
 
+  // conversationHistory is optional, but if present must be an array
+  if ('conversationHistory' in body) {
+    if (!Array.isArray(body.conversationHistory)) {
+      return {
+        valid: false,
+        error: {
+          error: 'validation_error',
+          message: 'Field "conversationHistory" must be an array'
+        }
+      };
+    }
+
+    // Validate each message in history
+    for (let i = 0; i < body.conversationHistory.length; i++) {
+      const msg = body.conversationHistory[i];
+      
+      if (!msg || typeof msg !== 'object') {
+        return {
+          valid: false,
+          error: {
+            error: 'validation_error',
+            message: `Message at index ${i} must be an object`
+          }
+        };
+      }
+
+      if (!msg.role || (msg.role !== 'user' && msg.role !== 'model')) {
+        return {
+          valid: false,
+          error: {
+            error: 'validation_error',
+            message: `Message at index ${i} must have role "user" or "model"`
+          }
+        };
+      }
+
+      if (!msg.content || typeof msg.content !== 'string') {
+        return {
+          valid: false,
+          error: {
+            error: 'validation_error',
+            message: `Message at index ${i} must have string content`
+          }
+        };
+      }
+    }
+  }
+
   return { valid: true };
 }
 

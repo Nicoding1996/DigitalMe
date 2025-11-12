@@ -63,6 +63,9 @@ const LogEntry = ({ message, index, onExport }) => {
     ? message.content.substring(0, 80) + '...'
     : message.content;
   
+  // Use cmdNumber from message, fallback to 1 for old messages
+  const cmdNumber = message.cmdNumber || 1;
+  
   return (
     <div className="group hover:bg-void-elevated transition-colors duration-200">
       {/* Entry header - log line */}
@@ -71,7 +74,7 @@ const LogEntry = ({ message, index, onExport }) => {
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <span className="text-static-ghost w-16">
-          [{index.toString().padStart(3, '0')}]
+          [CMD_{cmdNumber.toString().padStart(2, '0')}]
         </span>
         <span className="text-unsettling-cyan w-20">
           {formatTime(message.timestamp)}

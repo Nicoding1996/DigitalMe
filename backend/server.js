@@ -261,13 +261,77 @@ function formatThoughtPatterns(thoughtPatterns) {
 }
 
 /**
+ * Detect if user prompt is a refinement instruction
+ * @param {string} prompt - User's request
+ * @returns {Object} { isRefinement: boolean, type: string|null }
+ */
+function detectRefinementInstruction(prompt) {
+  const lowerPrompt = prompt.toLowerCase().trim();
+  
+  // Length/complexity refinements
+  const lengthPatterns = [
+    { pattern: /\b(make it |can you make it |make this |make that )?shorter\b/, type: 'shorter' },
+    { pattern: /\b(make it |can you make it |make this |make that )?longer\b/, type: 'longer' },
+    { pattern: /\b(more|add) detail(s|ed)?\b/, type: 'more_detail' },
+    { pattern: /\b(simplif(y|ied)|simpler|make it simple)\b/, type: 'simpler' },
+    { pattern: /\b(more|make it more) concise\b/, type: 'shorter' }
+  ];
+  
+  // Tone/style refinements
+  const tonePatterns = [
+    { pattern: /\b(make it |sound )?more (fun|funny|playful|casual)\b/, type: 'more_fun' },
+    { pattern: /\b(make it |sound )?more formal\b/, type: 'more_formal' },
+    { pattern: /\b(make it |sound )?more (serious|professional)\b/, type: 'more_serious' },
+    { pattern: /\b(make it |sound )?more casual\b/, type: 'more_casual' },
+    { pattern: /\b(lighten it up|make it lighter)\b/, type: 'lighter' }
+  ];
+  
+  // Structure refinements
+  const structurePatterns = [
+    { pattern: /\b(use |add |include )?bullet points\b/, type: 'bullet_points' },
+    { pattern: /\b(as a |write it as a )?paragraph(s)?\b/, type: 'paragraph' },
+    { pattern: /\b(give me |show me )?steps\b/, type: 'steps' },
+    { pattern: /\bexplain like (i'm|im) (5|five)\b/i, type: 'eli5' }
+  ];
+  
+  // Content refinements
+  const contentPatterns = [
+    { pattern: /\b(add|include|give me) example(s)?\b/, type: 'add_examples' },
+    { pattern: /\b(remove|without|skip) (the )?(technical )?jargon\b/, type: 'remove_jargon' },
+    { pattern: /\bfocus on\b/, type: 'focus' }
+  ];
+  
+  // Check all patterns
+  const allPatterns = [...lengthPatterns, ...tonePatterns, ...structurePatterns, ...contentPatterns];
+  
+  for (const { pattern, type } of allPatterns) {
+    if (pattern.test(lowerPrompt)) {
+      return { isRefinement: true, type };
+    }
+  }
+  
+  return { isRefinement: false, type: null };
+}
+
+/**
  * Build a dynamic meta-prompt that combines user request with their style profile
  * @param {string} userPrompt - The user's request
  * @param {Object} styleProfile - The user's complete style profile
+ * @param {Array} conversationHistory - Previous messages for context (already filtered by CMD)
  * @returns {string} The constructed meta-prompt for Gemini API
  */
-function buildMetaPrompt(userPrompt, styleProfile) {
+function buildMetaPrompt(userPrompt, styleProfile, conversationHistory = []) {
   const { writing, coding, advanced } = styleProfile;
+  
+  // Detect if this is a refinement instruction
+  const refinement = detectRefinementInstruction(userPrompt);
+  
+  // Format conversation history if provided
+  const conversationContext = conversationHistory.length > 0
+    ? `\n\nCONVERSATION HISTORY (for context):\n${conversationHistory.map(msg => 
+        `${msg.role === 'user' ? 'USER' : 'YOU'}: ${msg.content}`
+      ).join('\n\n')}\n`
+    : '';
   
   // Validate and log advanced data availability
   const hasAdvanced = advanced && typeof advanced === 'object' && Object.keys(advanced).length > 0;
@@ -315,6 +379,44 @@ function buildMetaPrompt(userPrompt, styleProfile) {
     ? formatThoughtPatterns(advanced.thoughtPatterns)
     : '';
   
+  // Build refinement override instructions if detected
+  let refinementOverride = '';
+  if (refinement.isRefinement && conversationHistory.length > 0) {
+    refinementOverride = `\n\n[REFINEMENT REQUEST DETECTED]
+The user is asking you to REFINE your previous response. This is a revision request, not a new question.
+
+Refinement type: ${refinement.type}
+
+CRITICAL INSTRUCTIONS:
+- Look at your previous response in the conversation history above
+- Apply the requested change to that SAME content
+- Generate a NEW, REVISED version of that response
+- DO NOT reference the previous version as if it was already sent
+- DO NOT say things like "here's a shorter version" or "let me revise that"
+- Just provide the refined content directly
+
+`;
+
+    // Add specific guidance based on refinement type
+    if (refinement.type === 'shorter') {
+      refinementOverride += `- REDUCE word count significantly\n- Cut unnecessary details\n- Keep only essential information\n- OVERRIDE the "long sentences" style preference for this response\n`;
+    } else if (refinement.type === 'longer' || refinement.type === 'more_detail') {
+      refinementOverride += `- ADD more detail and explanation\n- Expand on key points\n- Include examples if relevant\n`;
+    } else if (refinement.type === 'simpler') {
+      refinementOverride += `- Use simpler language\n- Break down complex concepts\n- Avoid technical jargon\n- Use shorter sentences\n`;
+    } else if (refinement.type === 'more_fun' || refinement.type === 'lighter') {
+      refinementOverride += `- Use a more playful, fun tone\n- Add humor if appropriate\n- Be more casual and relaxed\n- OVERRIDE the formality setting for this response\n`;
+    } else if (refinement.type === 'more_formal' || refinement.type === 'more_serious') {
+      refinementOverride += `- Use more formal language\n- Be more professional\n- Remove casual expressions\n- OVERRIDE the casual style setting for this response\n`;
+    } else if (refinement.type === 'more_casual') {
+      refinementOverride += `- Use more casual language\n- Be more relaxed and conversational\n- OVERRIDE the formal style setting for this response\n`;
+    } else if (refinement.type === 'bullet_points') {
+      refinementOverride += `- Reformat as bullet points\n- Keep the same information\n- Make it scannable\n`;
+    } else if (refinement.type === 'paragraph') {
+      refinementOverride += `- Reformat as flowing paragraphs\n- Connect ideas smoothly\n- Remove bullet points\n`;
+    }
+  }
+  
   return `You are my digital twin. You write EXACTLY like me. Not like an AI, not like a corporate bot - like ME.
 
 MY WRITING STYLE (follow this precisely):
@@ -356,8 +458,16 @@ CODING STYLE (when writing code):
 
 USER REQUEST:
 ${userPrompt}
-
-Respond in MY voice, matching MY style exactly.`;
+${conversationContext}
+${refinementOverride}
+${conversationHistory.length > 0 && !refinement.isRefinement ? `
+IMPORTANT CONTEXT RULES:
+- The conversation history above shows previous messages in this SAME conversation
+- Use this context to provide relevant, coherent responses
+- Build on previous topics naturally when appropriate
+- Maintain conversational continuity
+` : ''}
+Respond in MY voice, matching MY style exactly${refinement.isRefinement ? ', but PRIORITIZE the refinement instruction above over default style settings' : ''}.`;
 }
 
 // API endpoint for advanced style analysis
@@ -549,7 +659,7 @@ app.post('/api/analyze-blog', async (req, res) => {
 // Validation middleware is applied here
 app.post('/api/generate', validateGenerateMiddleware, async (req, res) => {
   try {
-    const { prompt, styleProfile } = req.body;
+    const { prompt, styleProfile, conversationHistory = [] } = req.body;
     
     // Initialize Google Generative AI client with API key from configuration
     const genAI = new GoogleGenerativeAI(config.GEMINI_API_KEY);
@@ -562,8 +672,8 @@ app.post('/api/generate', validateGenerateMiddleware, async (req, res) => {
       sentenceLength: styleProfile.writing.sentenceLength
     }));
     
-    // Construct dynamic meta-prompt with user's personal style profile
-    const metaPrompt = buildMetaPrompt(prompt, styleProfile);
+    // Construct dynamic meta-prompt with user's personal style profile and conversation history
+    const metaPrompt = buildMetaPrompt(prompt, styleProfile, conversationHistory);
     
     const enhancedPrompt = metaPrompt;
     

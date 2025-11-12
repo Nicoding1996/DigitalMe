@@ -13,10 +13,19 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, 
   const [messages, setMessages] = useState(conversationHistory);
   const [currentResponse, setCurrentResponse] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [currentCmdNumber, setCurrentCmdNumber] = useState(1);
 
   // Sync messages with conversationHistory prop (e.g., when history is cleared)
   useEffect(() => {
     setMessages(conversationHistory);
+    // Reset or restore command number based on conversation history
+    if (conversationHistory.length === 0) {
+      setCurrentCmdNumber(1);
+    } else {
+      // Find the highest cmdNumber in the conversation history
+      const maxCmdNumber = Math.max(...conversationHistory.map(msg => msg.cmdNumber || 1));
+      setCurrentCmdNumber(maxCmdNumber);
+    }
   }, [conversationHistory]);
 
   const updateMessages = (newMessages) => {
@@ -26,7 +35,15 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, 
     }
   };
 
-  const handleSubmit = async (input) => {
+  const handleSubmit = async (input, isNewCommand = false) => {
+    // Determine the command number for this message
+    const cmdNumber = isNewCommand ? currentCmdNumber + 1 : currentCmdNumber;
+    
+    // Increment command number if this is a new command
+    if (isNewCommand) {
+      setCurrentCmdNumber(cmdNumber);
+    }
+    
     // Add user message
     const userMessage = {
       id: generateId(),
@@ -36,7 +53,8 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, 
       contentType: 'text',
       language: null,
       timestamp: Date.now(),
-      feedback: null
+      feedback: null,
+      cmdNumber: cmdNumber
     };
     
     const messagesWithUser = [...messages, userMessage];
@@ -44,9 +62,13 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, 
     setIsGenerating(true);
     setCurrentResponse(null);
     
-    // Generate AI response using ContentGenerator service
+    // Filter conversation history to only include messages from current CMD
+    // Use messagesWithUser to include the current user message in context
+    const currentCmdContext = messagesWithUser.filter(msg => msg.cmdNumber === cmdNumber);
+    
+    // Generate AI response using ContentGenerator service with scoped context
     try {
-      const result = await generateContent(input, styleProfile, messages);
+      const result = await generateContent(input, styleProfile, currentCmdContext);
       
       if (result.success) {
         const aiMessage = {
@@ -57,7 +79,8 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, 
           contentType: result.contentType,
           language: result.language,
           timestamp: Date.now(),
-          feedback: null
+          feedback: null,
+          cmdNumber: cmdNumber
         };
         
         const messagesWithAI = [...messagesWithUser, aiMessage];
@@ -77,7 +100,8 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, 
           contentType: 'text',
           language: null,
           timestamp: Date.now(),
-          feedback: null
+          feedback: null,
+          cmdNumber: cmdNumber
         };
         
         const messagesWithError = [...messagesWithUser, errorMessage];
@@ -99,7 +123,8 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, 
         contentType: 'text',
         language: null,
         timestamp: Date.now(),
-        feedback: null
+        feedback: null,
+        cmdNumber: cmdNumber
       };
       
       const messagesWithError = [...messagesWithUser, errorMessage];
@@ -144,6 +169,7 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, 
         <LeftPanel 
           onSubmit={handleSubmit}
           messages={messages}
+          currentCmdNumber={currentCmdNumber}
         />
         
         {/* THE CHASM - Dimensional void between human and AI */}
@@ -180,7 +206,7 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, 
   );
 };
 
-const LeftPanel = ({ onSubmit, messages }) => {
+const LeftPanel = ({ onSubmit, messages, currentCmdNumber }) => {
   return (
     <div className="relative flex items-start justify-center p-8 md:p-12 overflow-y-auto scrollbar-minimal">
       <div className="w-full max-w-md pt-8">
@@ -197,7 +223,11 @@ const LeftPanel = ({ onSubmit, messages }) => {
           </p>
         </div>
         
-        <InputArea onSubmit={onSubmit} />
+        <InputArea 
+          onSubmit={onSubmit} 
+          messageCount={messages.filter(m => m.role === 'user').length}
+          currentCmdNumber={currentCmdNumber}
+        />
         
         <MessageHistory messages={messages} role="user" />
       </div>

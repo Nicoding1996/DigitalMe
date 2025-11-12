@@ -43,3 +43,45 @@ The backend's `buildMetaPrompt()` function constructs a dynamic meta-prompt that
 - The response should feel like a reflection of the user's own thought process
 - If the style is casual, avoid formal business language
 - If the style is conversational, sound like a real person, not an AI assistant
+
+---
+
+## Conversational Intelligence
+
+The AI maintains conversation context and responds intelligently to refinement requests, making it a true interactive mirror rather than a static style copier.
+
+**Conversation History:**
+- The system passes recent conversation history (last 10 messages) to provide context
+- Enables natural follow-up questions and iterative refinement
+- Maintains conversational continuity across multiple exchanges
+
+**Refinement Detection:**
+- Automatically detects when users ask to refine previous responses
+- Examples: "make it shorter", "more formal", "add examples", "simplify this"
+- Treats refinement requests as edits to previous responses, not new questions
+
+**Instruction Priority:**
+- Explicit refinement instructions temporarily override style profile defaults
+- If you say "make it shorter", the AI will reduce length even if your style profile says "long sentences"
+- If you say "make it formal", the AI will use formal language even if your style is casual
+- After the refinement, the AI returns to your default style for new questions
+
+**Supported Refinement Instructions:**
+
+*Length/Complexity:*
+- "make it shorter" / "make it longer"
+- "more detail" / "simplify this"
+- "make it more concise"
+
+*Tone/Style:*
+- "make it more fun" / "make it formal"
+- "make it casual" / "be more serious"
+- "lighten it up"
+
+*Structure:*
+- "use bullet points" / "write as paragraphs"
+- "give me steps" / "explain like I'm 5"
+
+*Content:*
+- "add examples" / "remove jargon"
+- "focus on [specific topic]"

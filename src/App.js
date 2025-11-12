@@ -135,7 +135,12 @@ function App() {
     if (savedConversation) {
       try {
         const conversationData = JSON.parse(savedConversation);
-        setConversationHistory(conversationData);
+        // Migrate old messages without cmdNumber (assign all to CMD 1)
+        const migratedData = conversationData.map(msg => ({
+          ...msg,
+          cmdNumber: msg.cmdNumber || 1
+        }));
+        setConversationHistory(migratedData);
       } catch (error) {
         console.error('Failed to load saved conversation:', error);
         localStorage.removeItem(CONVERSATION_KEY);

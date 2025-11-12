@@ -161,8 +161,8 @@ The practical benefit is improved application performance and user experience, p
  */
 export const generateText = async (prompt, styleProfile, context = []) => {
   try {
-    // Call the real Kiro AI agent with style-aware prompt
-    const aiResponse = await callKiroAgent(prompt, styleProfile);
+    // Call the real Kiro AI agent with style-aware prompt and conversation history
+    const aiResponse = await callKiroAgent(prompt, styleProfile, context);
     
     return {
       success: true,
@@ -338,12 +338,25 @@ const mockCodeResponses = {
  * Call Kiro AI agent with style-aware prompt
  * @param {string} userMessage - User's request
  * @param {Object} styleProfile - User's style profile
+ * @param {Array} conversationHistory - Previous messages for context
  * @returns {Promise<string>} AI response
  */
-const callKiroAgent = async (userMessage, styleProfile) => {
-  // Call the backend proxy service with both prompt and styleProfile
-  // The backend will construct the meta-prompt dynamically
-  console.log('Calling backend with user message and style profile');
+const callKiroAgent = async (userMessage, styleProfile, conversationHistory = []) => {
+  // Call the backend proxy service with prompt, styleProfile, and conversation history
+  // The backend will construct the meta-prompt dynamically with full context
+  console.log('Calling backend with user message, style profile, and conversation history');
+  
+  // Format conversation history for backend (exclude the current user message that was just added)
+  // Backend expects: [{ role: 'user'|'model', content: string }]
+  const formattedHistory = conversationHistory
+    .slice(0, -1) // Exclude the last message (current user input)
+    .slice(-10) // Only send last 10 messages for context (5 exchanges)
+    .map(msg => ({
+      role: msg.role === 'user' ? 'user' : 'model',
+      content: msg.content
+    }));
+  
+  console.log('Formatted history:', formattedHistory.length, 'messages');
   
   const response = await fetch('http://localhost:3001/api/generate', {
     method: 'POST',
@@ -352,7 +365,8 @@ const callKiroAgent = async (userMessage, styleProfile) => {
     },
     body: JSON.stringify({ 
       prompt: userMessage,
-      styleProfile: styleProfile
+      styleProfile: styleProfile,
+      conversationHistory: formattedHistory
     })
   });
 
@@ -406,8 +420,8 @@ export const generateCode = async (prompt, styleProfile, context = []) => {
   const language = detectLanguage(prompt);
   
   try {
-    // Call the real Kiro AI agent with style-aware prompt
-    const aiResponse = await callKiroAgent(prompt, styleProfile);
+    // Call the real Kiro AI agent with style-aware prompt and conversation history
+    const aiResponse = await callKiroAgent(prompt, styleProfile, context);
     
     return {
       success: true,

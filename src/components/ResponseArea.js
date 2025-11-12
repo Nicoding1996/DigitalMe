@@ -74,7 +74,7 @@ const ResponseArea = ({ content, contentType = 'text', language = null, isLoadin
           {contentType === 'code' ? (
             <CodeBlock code={content} language={language} />
           ) : (
-            <div className="whitespace-pre-wrap break-words">
+            <div className="whitespace-pre-wrap break-words" style={{ overflowWrap: 'anywhere' }}>
               {content}
             </div>
           )}
