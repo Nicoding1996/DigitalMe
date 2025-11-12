@@ -164,4 +164,33 @@
   .scrollbar-minimal::-webkit-scrollbar-thumb:hover {
     background: rgba(0, 217, 255, 0.4);
   }
+  
+  /* Mirrored scrollbar for right panel - Black Mirror aesthetic */
+  .scrollbar-mirrored {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 217, 255, 0.2) transparent;
+    direction: rtl; /* Right-to-left to flip scrollbar to left side */
+  }
+  
+  .scrollbar-mirrored > * {
+    direction: ltr; /* Reset content direction to normal */
+  }
+  
+  .scrollbar-mirrored::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  
+  .scrollbar-mirrored::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollbar-mirrored::-webkit-scrollbar-thumb {
+    background: rgba(0, 217, 255, 0.2);
+    border-radius: 0;
+  }
+  
+  .scrollbar-mirrored::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 217, 255, 0.4);
+  }
 }

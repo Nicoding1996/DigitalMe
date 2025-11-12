@@ -367,7 +367,7 @@ const LeftPanel = ({ onSubmit, messages, currentCmdNumber }) => {
 
 const RightPanel = ({ response, isGenerating, messages, glitchIntensity }) => {
   return (
-    <div className="relative flex items-start justify-center p-8 md:p-12 overflow-y-auto scrollbar-minimal">
+    <div className="relative flex items-start justify-center p-8 md:p-12 overflow-y-auto scrollbar-mirrored">
       <div className="w-full max-w-md pt-8">
         {/* Panel header - terminal style */}
         <div className="mb-8">
