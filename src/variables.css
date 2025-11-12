@@ -9,9 +9,9 @@
   --accent-secondary: #ff0080;
   --accent-purple: #8b5cf6;
   --accent-purple-light: #a78bfa;
-  --text-primary: #e0e0e0;
-  --text-secondary: #808080;
-  --text-muted: #555555;
+  --text-primary: #f0f0f0;
+  --text-secondary: #b8b8b8;
+  --text-muted: #808080;
   --border: #333333;
   --border-light: #2a2a2a;
   --error: #ff3333;
@@ -86,7 +86,7 @@
   --panel-padding-mobile: 40px;
   
   /* Opacity Levels */
-  --opacity-disabled: 0.4;
+  --opacity-disabled: 0.5;
   --opacity-hover: 0.8;
   --opacity-overlay: 0.9;
 }

@@ -187,7 +187,7 @@ const SettingsPanel = ({ isOpen, onClose, styleProfile, preferences, conversatio
                   )}
                   
                   <button 
-                    className="px-6 py-3 bg-void-surface border border-unsettling-cyan text-unsettling-cyan font-mono text-xs hover:bg-unsettling-cyan hover:text-void-deep transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="px-6 py-3 bg-void-surface border border-unsettling-cyan text-unsettling-cyan font-mono text-xs hover:bg-unsettling-cyan hover:text-void-deep transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => setShowAdvancedConfirm(true)}
                     disabled={isReanalyzing}
                   >

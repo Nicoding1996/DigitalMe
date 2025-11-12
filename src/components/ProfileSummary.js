@@ -197,22 +197,22 @@ const ProfileSummary = ({ styleProfile }) => {
           [ANALYZED_CONTENT]
         </div>
         <div className="grid grid-cols-4 gap-0">
-          <div className={`p-4 border-r border-static-whisper ${sampleCount.repositories === 0 ? 'opacity-40' : ''}`}>
+          <div className={`p-4 border-r border-static-whisper ${sampleCount.repositories === 0 ? 'opacity-50' : ''}`}>
             <div className="font-mono text-xs text-static-ghost mb-2 text-center">⎇</div>
             <div className="font-mono text-xs text-static-muted mb-1 text-center">Repositories</div>
             <div className="font-mono text-2xl text-static-white text-center">{sampleCount.repositories}</div>
           </div>
-          <div className={`p-4 border-r border-static-whisper ${sampleCount.articles === 0 ? 'opacity-40' : ''}`}>
+          <div className={`p-4 border-r border-static-whisper ${sampleCount.articles === 0 ? 'opacity-50' : ''}`}>
             <div className="font-mono text-xs text-static-ghost mb-2 text-center">📝</div>
             <div className="font-mono text-xs text-static-muted mb-1 text-center">Articles</div>
             <div className="font-mono text-2xl text-static-white text-center">{sampleCount.articles}</div>
           </div>
-          <div className={`p-4 border-r border-static-whisper ${sampleCount.textWords === 0 ? 'opacity-40' : ''}`}>
+          <div className={`p-4 border-r border-static-whisper ${sampleCount.textWords === 0 ? 'opacity-50' : ''}`}>
             <div className="font-mono text-xs text-static-ghost mb-2 text-center">✍️</div>
             <div className="font-mono text-xs text-static-muted mb-1 text-center">Text Words</div>
             <div className="font-mono text-2xl text-static-white text-center">{sampleCount.textWords.toLocaleString()}</div>
           </div>
-          <div className={`p-4 ${(sampleCount.conversationWords || 0) === 0 ? 'opacity-40' : ''}`}>
+          <div className={`p-4 ${(sampleCount.conversationWords || 0) === 0 ? 'opacity-50' : ''}`}>
             <div className="font-mono text-xs text-static-ghost mb-2 text-center">💬</div>
             <div className="font-mono text-xs text-static-muted mb-1 text-center">Conversations</div>
             <div className="font-mono text-2xl text-static-white text-center">{(sampleCount.conversationWords || 0).toLocaleString()}</div>

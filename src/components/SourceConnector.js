@@ -333,7 +333,7 @@ const SourceConnector = ({ onSourcesSubmit, onCancel }) => {
             className={`w-full px-8 py-3 font-mono text-sm tracking-wider transition-all ${
               hasAnySources
                 ? 'bg-void-surface border border-static-whisper text-static-white hover:border-unsettling-cyan hover:text-unsettling-cyan'
-                : 'bg-void-surface border border-static-whisper text-static-ghost opacity-40 cursor-not-allowed'
+                : 'bg-void-surface border border-static-whisper text-static-muted opacity-60 cursor-not-allowed'
             }`}
           >
             <div className="flex items-center justify-between">

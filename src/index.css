@@ -165,15 +165,10 @@
     background: rgba(0, 217, 255, 0.4);
   }
   
-  /* Mirrored scrollbar for right panel - Black Mirror aesthetic */
+  /* Mirrored scrollbar for right panel - Matches left side */
   .scrollbar-mirrored {
     scrollbar-width: thin;
     scrollbar-color: rgba(0, 217, 255, 0.2) transparent;
-    direction: rtl; /* Right-to-left to flip scrollbar to left side */
-  }
-  
-  .scrollbar-mirrored > * {
-    direction: ltr; /* Reset content direction to normal */
   }
   
   .scrollbar-mirrored::-webkit-scrollbar {

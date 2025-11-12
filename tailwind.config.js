@@ -13,11 +13,11 @@ module.exports = {
         'void-surface': '#0a0a0a',
         'void-elevated': '#0f0f0f',
         
-        // Static - Cold, lifeless grays
-        'static-white': '#e8e8e8',
-        'static-dim': '#a0a0a0',
-        'static-muted': '#606060',
-        'static-ghost': '#2a2a2a',
+        // Static - Cold, lifeless grays (improved contrast)
+        'static-white': '#f0f0f0',      // Brighter for main text
+        'static-dim': '#b8b8b8',        // Lighter for secondary text
+        'static-muted': '#808080',      // More readable for tertiary text
+        'static-ghost': '#4a4a4a',      // Lighter for labels/hints
         'static-whisper': '#1a1a1a',
         
         // Glitch - Error states, warnings
