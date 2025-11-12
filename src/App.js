@@ -444,7 +444,7 @@ function App() {
           repositories: profile.sampleCount.repositories,
           codeLines: profile.sampleCount.codeLines,
           articles: profile.sampleCount.articles,
-          wordCount: profile.sampleCount.textWords,
+          wordCount: (profile.sampleCount.textWords || 0) + (profile.sampleCount.emailWords || 0),
           confidence: profile.confidence,
           failedSources: failed.length
         });

@@ -167,7 +167,7 @@ const SourceConnector = ({ onSourcesSubmit, onCancel }) => {
             &gt; Choose a source to analyze your unique style and build your digital doppelgänger
           </p>
           <p className="font-mono text-xs text-static-ghost leading-relaxed">
-            <span className="text-unsettling-cyan">&gt;</span> [SYSTEM_NOTE] Additional data sources increase profile accuracy. Sources can be added post-initialization via [CONFIG]
+            <span className="text-unsettling-cyan">&gt;</span> [SYSTEM_NOTE] More content increases profile accuracy. Aim for 3,000+ words for optimal results. Sources can be added post-initialization via [CONFIG]
           </p>
         </div>
 

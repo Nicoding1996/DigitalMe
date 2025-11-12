@@ -78,16 +78,18 @@ const ProfileSummary = ({ styleProfile }) => {
             [!] [OPTIMIZATION_PROTOCOL_AVAILABLE]
           </div>
           <div className="font-mono text-xs text-static-white mb-3 leading-relaxed">
-            Profile accuracy suboptimal. Recommended data source augmentation:
+            {confidence < 0.55 && 'Profile accuracy insufficient. Add more content for reliable analysis:'}
+            {confidence >= 0.55 && confidence < 0.70 && 'Profile accuracy moderate. Add more content for improved results:'}
+            {confidence >= 0.70 && 'Profile accuracy good. Add more content for optimal results:'}
           </div>
           <div className="font-mono text-xs text-static-muted space-y-1 border-l-2 border-static-whisper pl-4">
-            {sampleCount.textWords === 0 && <div><span className="text-unsettling-cyan">&gt;</span> TEXT_SAMPLES (emails, articles, messages)</div>}
-            {sampleCount.codeLines === 0 && <div><span className="text-unsettling-cyan">&gt;</span> GITHUB_REPOSITORY (coding patterns)</div>}
-            {sampleCount.articles === 0 && <div><span className="text-unsettling-cyan">&gt;</span> BLOG_CONTENT (published writing)</div>}
-            {sampleCount.textWords < 1000 && sampleCount.textWords > 0 && <div><span className="text-unsettling-cyan">&gt;</span> ADDITIONAL_TEXT (current: {sampleCount.textWords} words)</div>}
+            {confidence < 0.55 && <div><span className="text-unsettling-cyan">&gt;</span> TARGET: 500+ words minimum</div>}
+            {confidence >= 0.55 && confidence < 0.70 && <div><span className="text-unsettling-cyan">&gt;</span> TARGET: 1,500+ words for reliable profile</div>}
+            {confidence >= 0.70 && confidence < 0.80 && <div><span className="text-unsettling-cyan">&gt;</span> TARGET: 3,000+ words for 80%+ confidence</div>}
+            <div><span className="text-unsettling-cyan">&gt;</span> CURRENT: {(sampleCount.textWords || 0) + (sampleCount.emailWords || 0)} words analyzed</div>
           </div>
           <div className="font-mono text-xs text-static-ghost mt-3 pt-3 border-t border-static-whisper">
-            <span className="text-static-muted">OPTIMAL_THRESHOLD:</span> <span className="text-system-active">80%+</span>
+            <span className="text-static-muted">OPTIMAL_THRESHOLD:</span> <span className="text-system-active">80%+ (3,000+ words)</span>
           </div>
         </div>
       )}

@@ -333,16 +333,20 @@ const AnalysisProgress = ({
             {summary && summary.confidence < 0.8 && (
               <div className="border border-system-warning bg-void-surface p-6 mb-8">
                 <div className="font-mono text-xs text-system-warning mb-3">
-                  [!] [SYSTEM_RECOMMENDATION: ACCURACY_OPTIMIZATION]
+                  {summary.confidence < 0.55 && '[!] [SYSTEM_WARNING: LOW_CONFIDENCE]'}
+                  {summary.confidence >= 0.55 && summary.confidence < 0.70 && '[!] [SYSTEM_RECOMMENDATION: MODERATE_CONFIDENCE]'}
+                  {summary.confidence >= 0.70 && '[!] [SYSTEM_RECOMMENDATION: ACCURACY_OPTIMIZATION]'}
                 </div>
                 <div className="font-mono text-xs text-static-white mb-4 leading-relaxed">
-                  Profile initialization complete. Additional data sources recommended for enhanced accuracy. 
-                  Access [SYSTEM_CONFIGURATION.exe] to append: GMAIL, GITHUB, or TEXT_SAMPLES.
+                  {summary.confidence < 0.55 && 'Insufficient data for reliable style analysis. Add more content (minimum 500 words recommended).'}
+                  {summary.confidence >= 0.55 && summary.confidence < 0.70 && 'Profile usable but limited. Add more content for improved accuracy (1,500+ words recommended).'}
+                  {summary.confidence >= 0.70 && 'Profile initialization complete. Additional content recommended for optimal results (3,000+ words for 80%+ confidence).'}
                 </div>
                 <div className="font-mono text-xs text-static-ghost">
                   <span className="text-static-muted">CURRENT_CONFIDENCE:</span> {(summary.confidence * 100).toFixed(0)}% 
                   <span className="text-static-muted mx-2">→</span> 
                   <span className="text-static-muted">OPTIMAL_THRESHOLD:</span> <span className="text-system-active">80%+</span>
+                  <span className="text-static-muted ml-4">({summary.wordCount || 0} words analyzed)</span>
                 </div>
               </div>
             )}

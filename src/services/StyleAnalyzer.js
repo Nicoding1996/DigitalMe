@@ -58,10 +58,11 @@ const simulateProgress = async (onProgress, steps) => {
 export const calculateSourceWeight = (source) => {
   // Quality weight mapping based on source type
   const qualityWeights = {
-    gmail: 1.0,     // Natural, unedited writing
+    gmail: 1.0,     // Natural, unedited writing (gold standard)
     existing: 0.9,  // Previously analyzed profile (high quality, already validated)
-    text: 0.8,      // User-provided samples
-    blog: 0.6       // Polished, edited content
+    text: 0.85,     // User-provided samples (benefit of doubt for authenticity)
+    blog: 0.65,     // Polished, edited content (still personal voice)
+    github: 0.7     // Technical but authentic (commit messages, comments)
   };
 
   // Get quality weight, default to 0.5 for invalid types
@@ -856,9 +857,80 @@ export const mergeWritingStyles = (sources) => {
 // ============================================================================
 
 /**
- * Calculate confidence score for merged profile based on source diversity and data quantity
+ * Detect spam/duplication within a single text source
+ * Checks for repeated sentences that indicate copy-paste behavior
+ * @param {string} text - Text to analyze
+ * @returns {boolean} True if spam detected (< 30% unique sentences)
+ */
+const detectSpam = (text) => {
+  if (!text || typeof text !== 'string' || text.length < 100) {
+    return false; // Too short to analyze
+  }
+
+  // Split into sentences
+  const sentences = text
+    .split(/[.!?]+/)
+    .map(s => s.trim().toLowerCase())
+    .filter(s => s.length > 10); // Ignore very short sentences
+
+  if (sentences.length < 5) {
+    return false; // Too few sentences to detect spam
+  }
+
+  // Count unique sentences
+  const uniqueSentences = new Set(sentences);
+  const uniqueRatio = uniqueSentences.size / sentences.length;
+
+  // If less than 30% unique sentences = likely spam/copy-paste
+  return uniqueRatio < 0.3;
+};
+
+/**
+ * Calculate vocabulary diversity across all sources
+ * Measures unique words vs total words to detect extremely low variety
+ * Note: Natural repetition across sources (style patterns) is expected and good
+ * @param {Array<Object>} sources - All sources with text data
+ * @returns {number} Diversity ratio (0.0 - 1.0)
+ */
+const calculateVocabularyDiversity = (sources) => {
+  const allWords = new Set();
+  let totalWords = 0;
+
+  sources.forEach(source => {
+    let text = '';
+
+    // Extract text from different source types
+    if (source.type === 'text' && source.result?.text) {
+      text = source.result.text;
+    } else if (source.type === 'gmail' && source.result?.profile?.metadata?.emailTexts) {
+      text = source.result.profile.metadata.emailTexts.join(' ');
+    } else if (source.type === 'blog' && source.result?.text) {
+      text = source.result.text;
+    }
+
+    if (text) {
+      // Extract words (ignore punctuation, short words)
+      const words = text
+        .toLowerCase()
+        .replace(/[^\w\s]/g, '') // Remove punctuation
+        .split(/\s+/)
+        .filter(w => w.length > 3); // Ignore very short words (the, and, etc.)
+
+      words.forEach(w => allWords.add(w));
+      totalWords += words.length;
+    }
+  });
+
+  // Return diversity ratio (unique words / total words)
+  return totalWords > 0 ? allWords.size / totalWords : 0;
+};
+
+/**
+ * Calculate confidence score for merged profile based on total word count and quality indicators
+ * Uses research-based thresholds for linguistic style analysis accuracy
+ * Includes spam detection and vocabulary diversity checks
  * @param {Array<Object>} sources - All sources with metadata
- * @returns {number} Confidence score (0.0 - 0.95)
+ * @returns {number} Confidence score (0.20 - 0.95)
  */
 export const calculateMergedConfidence = (sources) => {
   // Handle edge case: no sources
@@ -866,52 +938,111 @@ export const calculateMergedConfidence = (sources) => {
     return 0.30;
   }
 
-  // Base confidence: 0.5 for single source
-  let confidence = 0.5;
-
-  // Add 0.15 per additional source (max 4 sources)
-  const additionalSources = Math.min(sources.length - 1, 3); // Max 3 additional (4 total)
-  confidence += additionalSources * 0.15;
-
-  // Calculate total word count across all sources
+  // Calculate total word count and check for spam
   let totalWordCount = 0;
+  let hasSpam = false;
 
   sources.forEach(source => {
     let wordCount = 0;
+    let text = '';
 
-    // Extract word count based on source type
+    // Extract word count and text based on source type
     if (source.type === 'gmail') {
-      // Gmail stores in profile.sampleCount.emailWords or metadata.wordCount
-      wordCount = source.result?.profile?.sampleCount?.emailWords ?? source.result?.metadata?.wordCount ?? source.result?.metrics?.wordCount ?? 0;
+      wordCount = source.result?.profile?.sampleCount?.emailWords ?? 
+                  source.result?.metadata?.wordCount ?? 
+                  source.result?.metrics?.wordCount ?? 0;
+      text = source.result?.profile?.metadata?.emailTexts?.join(' ') || '';
     } else if (source.type === 'existing') {
-      // Existing profile stores in profile.sampleCount (textWords or emailWords)
-      wordCount = source.result?.profile?.sampleCount?.textWords ?? source.result?.profile?.sampleCount?.emailWords ?? source.result?.metrics?.wordCount ?? 0;
+      wordCount = source.result?.profile?.sampleCount?.textWords ?? 
+                  source.result?.profile?.sampleCount?.emailWords ?? 
+                  source.result?.metrics?.wordCount ?? 0;
+      // Existing profiles don't have raw text
     } else if (source.type === 'text') {
-      // Text samples store in metrics.wordCount
       wordCount = source.result?.metrics?.wordCount ?? 0;
+      text = source.result?.text || '';
     } else if (source.type === 'blog') {
-      // Blog stores in metrics.totalWords
       wordCount = source.result?.metrics?.totalWords ?? 0;
+      text = source.result?.text || '';
+    } else if (source.type === 'github') {
+      wordCount = source.result?.metrics?.wordCount ?? 0;
+      // GitHub text not used for spam detection
+    }
+
+    // Check for spam within this source
+    if (text && detectSpam(text)) {
+      hasSpam = true;
+      console.warn(`[Quality Check] Spam detected in ${source.type} source`);
     }
 
     totalWordCount += wordCount;
   });
 
-  // Add 0.05 bonus if total exceeds 1000 words
-  if (totalWordCount > 1000) {
-    confidence += 0.05;
+  // Base confidence from word count (logarithmic curve based on NLP research)
+  // 500 words: minimum for basic style detection
+  // 1,500 words: reliable tone and vocabulary patterns
+  // 3,000 words: strong style profile with quirks
+  // 5,000+ words: highly accurate personality markers
+  let baseConfidence;
+  if (totalWordCount < 100) {
+    baseConfidence = 0.20; // Insufficient data
+  } else if (totalWordCount < 500) {
+    baseConfidence = 0.35; // Basic patterns only
+  } else if (totalWordCount < 1500) {
+    baseConfidence = 0.55; // Minimum viable - tone detectable
+  } else if (totalWordCount < 3000) {
+    baseConfidence = 0.70; // Good - reliable style profile
+  } else if (totalWordCount < 5000) {
+    baseConfidence = 0.80; // Strong - quirks and patterns clear
+  } else if (totalWordCount < 10000) {
+    baseConfidence = 0.88; // Excellent - high accuracy
+  } else {
+    baseConfidence = 0.92; // Optimal - personality markers strong
   }
 
-  // Add 0.05 bonus if total exceeds 2000 words
-  if (totalWordCount > 2000) {
-    confidence += 0.05;
+  // QUALITY PENALTY 1: Spam detection (copy-paste within single source)
+  if (hasSpam) {
+    baseConfidence *= 0.5; // 50% penalty for detected spam
+    console.warn('[Quality Check] Applying 50% penalty for spam detection');
   }
 
-  // Cap maximum confidence at 0.95
-  confidence = Math.min(0.95, confidence);
+  // QUALITY PENALTY 2: Extremely low vocabulary diversity
+  // Only penalize VERY low diversity (< 0.15) to catch extreme cases
+  // Natural repetition across sources (style patterns) is expected and good
+  const diversity = calculateVocabularyDiversity(sources);
+  if (diversity < 0.15 && totalWordCount > 500) {
+    baseConfidence *= 0.7; // 30% penalty for extremely low diversity
+    console.warn(`[Quality Check] Applying 30% penalty for low diversity (${(diversity * 100).toFixed(1)}%)`);
+  }
+
+  // Quality bonuses (max +8% total)
+  let bonuses = 0;
+  
+  // Diverse contexts: multiple source types provide varied writing contexts
+  // This is GOOD - repeated phrases across sources = consistent style patterns
+  const sourceTypes = new Set(sources.map(s => s.type));
+  if (sourceTypes.size >= 2) {
+    bonuses += 0.03; // +3% for source diversity
+  }
+  
+  // Consistent patterns: multiple sources allow cross-validation
+  // This is GOOD - validates that patterns are genuine, not one-off
+  if (sources.length >= 2) {
+    bonuses += 0.03; // +3% for pattern consistency
+  }
+  
+  // Advanced analysis successful: deeper linguistic analysis completed
+  const hasAdvanced = sources.some(s => 
+    s.result?.profile?.advanced || s.result?.advanced
+  );
+  if (hasAdvanced) {
+    bonuses += 0.02; // +2% for advanced analysis
+  }
+
+  // Final confidence (capped at 95% - perfect replication is impossible)
+  const finalConfidence = Math.min(0.95, baseConfidence + bonuses);
 
   // Round result to 2 decimal places
-  return parseFloat(confidence.toFixed(2));
+  return parseFloat(finalConfidence.toFixed(2));
 };
 
 // ============================================================================
