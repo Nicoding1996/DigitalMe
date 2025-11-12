@@ -5,6 +5,7 @@
 import { useState, useEffect } from 'react';
 import LoadingIndicator from './LoadingIndicator';
 import GlitchEffect from './GlitchEffect';
+import CopyButton from './CopyButton';
 
 const ResponseArea = ({ content, contentType = 'text', language = null, isLoading = false, glitchIntensity = 'medium' }) => {
   const [triggerGlitch, setTriggerGlitch] = useState(false);
@@ -64,6 +65,7 @@ const ResponseArea = ({ content, contentType = 'text', language = null, isLoadin
         <span className="text-static-ghost">[TRANSMISSION_RECEIVED]</span>
         <span className="text-unsettling-cyan animate-pulse">●</span>
         <span className="text-static-ghost ml-auto">{formatTime(Date.now())}</span>
+        <CopyButton content={content} compact={true} />
       </div>
       
       {/* Content */}

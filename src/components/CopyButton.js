@@ -4,7 +4,7 @@
  */
 import { useState } from 'react';
 
-const CopyButton = ({ content, onCopySuccess }) => {
+const CopyButton = ({ content, onCopySuccess, compact = false }) => {
   const [copyStatus, setCopyStatus] = useState('idle');
 
   const handleCopy = async () => {
@@ -29,9 +29,12 @@ const CopyButton = ({ content, onCopySuccess }) => {
     }
   };
 
+  const baseClasses = "bg-void-surface border border-static-whisper text-static-white font-mono hover:border-unsettling-cyan hover:text-unsettling-cyan transition-all disabled:opacity-30 disabled:cursor-not-allowed";
+  const sizeClasses = compact ? "px-3 py-1 text-xs" : "px-6 py-2 text-xs";
+
   return (
     <button 
-      className="px-6 py-2 bg-void-surface border border-static-whisper text-static-white font-mono text-xs hover:border-unsettling-cyan hover:text-unsettling-cyan transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+      className={`${baseClasses} ${sizeClasses}`}
       onClick={handleCopy}
       disabled={!content || copyStatus !== 'idle'}
     >

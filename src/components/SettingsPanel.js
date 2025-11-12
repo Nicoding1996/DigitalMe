@@ -10,6 +10,7 @@ import StyleControls from './StyleControls';
 const SettingsPanel = ({ isOpen, onClose, styleProfile, sources, preferences, conversationHistory = [], onUpdateSources, onUpdatePreferences, onClearHistory, onReanalyzeAdvanced }) => {
   const [activeTab, setActiveTab] = useState('profile');
   const [showAdvancedConfirm, setShowAdvancedConfirm] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [isReanalyzing, setIsReanalyzing] = useState(false);
   const [reanalyzeError, setReanalyzeError] = useState(null);
   const [reanalyzeSuccess, setReanalyzeSuccess] = useState(false);
@@ -181,13 +182,7 @@ const SettingsPanel = ({ isOpen, onClose, styleProfile, sources, preferences, co
                 </p>
                 <button 
                   className="px-6 py-3 bg-void-surface border border-glitch-red text-glitch-red font-mono text-xs hover:bg-glitch-red hover:text-void-deep transition-all"
-                  onClick={() => {
-                    if (window.confirm('[CONFIRM] This will clear your profile and require re-analysis. Continue?')) {
-                      localStorage.removeItem('digitalme_profile');
-                      localStorage.removeItem('digitalme_sources');
-                      window.location.reload();
-                    }
-                  }}
+                  onClick={() => setShowResetConfirm(true)}
                 >
                   [RESET_PROFILE]
                 </button>
@@ -279,6 +274,61 @@ const SettingsPanel = ({ isOpen, onClose, styleProfile, sources, preferences, co
                   onClick={handleReanalyzeAdvanced}
                 >
                   [PROCEED]
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Profile Confirmation Dialog */}
+      {showResetConfirm && (
+        <div 
+          className="absolute inset-0 bg-overlay-darker backdrop-blur-sm flex items-center justify-center p-4 z-10"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowResetConfirm(false);
+            }
+          }}
+        >
+          <div className="w-full max-w-md bg-void-deep border border-glitch-red">
+            <div className="px-6 py-4 bg-void-elevated border-b border-glitch-red">
+              <div className="font-mono text-sm text-glitch-red">
+                [SYSTEM_RESET_WARNING]
+              </div>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="font-mono text-xs text-static-white leading-relaxed">
+                This action will permanently delete:
+              </div>
+              <div className="font-mono text-xs text-static-muted space-y-2 border-l-2 border-glitch-red pl-4">
+                <div><span className="text-glitch-red">&gt;</span> Your complete style profile</div>
+                <div><span className="text-glitch-red">&gt;</span> All connected data sources</div>
+                <div><span className="text-glitch-red">&gt;</span> Advanced pattern analysis results</div>
+                <div><span className="text-glitch-red">&gt;</span> Conversation history and preferences</div>
+              </div>
+              <div className="font-mono text-xs text-static-white pt-4 border-t border-static-whisper">
+                You will need to reconnect sources and re-analyze your writing style from scratch.
+              </div>
+              <div className="font-mono text-xs text-system-warning bg-void-elevated border border-system-warning p-3">
+                <span className="text-system-warning">[WARNING]</span> This action cannot be undone.
+              </div>
+              <div className="flex gap-3 pt-4">
+                <button
+                  className="flex-1 px-4 py-3 bg-void-surface border border-static-whisper text-static-white font-mono text-xs hover:border-static-white transition-all"
+                  onClick={() => setShowResetConfirm(false)}
+                >
+                  [CANCEL]
+                </button>
+                <button
+                  className="flex-1 px-4 py-3 bg-glitch-red border border-glitch-red text-void-deep font-mono text-xs hover:bg-transparent hover:text-glitch-red transition-all"
+                  onClick={() => {
+                    localStorage.removeItem('digitalme_profile');
+                    localStorage.removeItem('digitalme_sources');
+                    window.location.reload();
+                  }}
+                >
+                  [CONFIRM_RESET]
                 </button>
               </div>
             </div>
