@@ -1111,53 +1111,65 @@ export const validateGitHubUsername = (username) => {
  * @returns {Promise<Object>} Analysis results
  */
 export const analyzeBlog = async (urls, onProgress = null) => {
-  const steps = [
-    'Fetching blog content...',
-    'Parsing articles...',
-    'Analyzing writing patterns...',
-    'Extracting vocabulary...',
-    'Building writing profile...'
-  ];
-
-  await simulateProgress(onProgress, steps);
-
-  // Simulate network delay
-  await delay(1200);
-
-  // Mock analysis results
-  const writingStyle = generateMockWritingStyle();
+  const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
   
-  // Generate mock blog text for advanced analysis
-  // In a real implementation, this would be the actual scraped blog content
-  const mockBlogText = `
-Understanding React Hooks has fundamentally changed how I approach component design. The shift from class components to functional components with hooks represents more than just a syntactic change - it's a paradigm shift in how we think about state and side effects.
-
-When I first started using hooks, I'll admit I was skeptical. The rules of hooks seemed arbitrary, and the mental model felt foreign. But after building several projects with them, I've come to appreciate the elegance of the composition model they enable.
-
-The key insight is that hooks let you extract stateful logic without changing your component hierarchy. This is huge. Before hooks, if you wanted to share logic between components, you had to resort to higher-order components or render props - both of which added layers of indirection that made your code harder to follow.
-
-Modern JavaScript patterns have evolved significantly over the past few years. Destructuring, spread operators, and optional chaining have become second nature. But it's not just about using the latest syntax - it's about understanding when and why to use these patterns.
-
-I tend to favor composition over inheritance, immutability over mutation, and explicit over implicit. These aren't just abstract principles - they lead to code that's easier to reason about, test, and maintain. When you can look at a function and understand exactly what it does without having to trace through a complex inheritance hierarchy, that's when you know you're on the right track.
-  `.trim();
-  
-  return {
-    success: true,
-    urls,
-    posts: mockBlogPosts,
-    writingStyle,
-    text: mockBlogText, // Store text for advanced analysis
-    metrics: {
-      totalPosts: mockBlogPosts.length,
-      totalWords: mockBlogPosts.reduce((sum, post) => sum + post.wordCount, 0),
-      avgWordsPerPost: Math.round(
-        mockBlogPosts.reduce((sum, post) => sum + post.wordCount, 0) / mockBlogPosts.length
-      ),
-      vocabularySize: 1847,
-      readingLevel: 'Advanced'
-    },
-    analyzedAt: Date.now()
-  };
+  try {
+    // Show progress
+    if (onProgress) {
+      onProgress({ message: 'Fetching blog content...', progress: 20 });
+    }
+    
+    // Call backend API
+    const response = await fetch(`${backendUrl}/api/analyze-blog`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ urls })
+    });
+    
+    if (onProgress) {
+      onProgress({ message: 'Analyzing writing patterns...', progress: 60 });
+    }
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      return {
+        success: false,
+        error: {
+          message: data.message || 'Failed to analyze blog content',
+          failed: data.failed || []
+        }
+      };
+    }
+    
+    if (onProgress) {
+      onProgress({ message: 'Building writing profile...', progress: 90 });
+    }
+    
+    // Return in expected format
+    return {
+      success: true,
+      writingStyle: data.profile.writing,
+      text: data.text, // For advanced analysis
+      metrics: {
+        totalWords: data.metadata.totalWords,
+        totalPosts: data.metadata.articlesAnalyzed,
+        avgWordsPerPost: data.metadata.avgWordsPerArticle
+      },
+      analyzedAt: Date.now()
+    };
+    
+  } catch (error) {
+    console.error('[Blog Analysis] Error:', error);
+    return {
+      success: false,
+      error: {
+        message: error.message || 'Network error occurred while analyzing blog'
+      }
+    };
+  }
 };
 
 /**

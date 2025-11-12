@@ -200,10 +200,127 @@ function validateAnalyzeAdvancedMiddleware(req, res, next) {
   next();
 }
 
+/**
+ * Validates the request payload for the /api/analyze-blog endpoint
+ * @param {Object} body - The request body to validate
+ * @returns {Object} - { valid: boolean, error?: { error: string, message: string } }
+ */
+function validateAnalyzeBlogRequest(body) {
+  // Check if body exists
+  if (!body || typeof body !== 'object') {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'Request body must be a valid JSON object'
+      }
+    };
+  }
+
+  // Check for presence of urls field
+  if (!('urls' in body)) {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'Missing required field: urls'
+      }
+    };
+  }
+
+  // Ensure urls is an array
+  if (!Array.isArray(body.urls)) {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'Field "urls" must be an array'
+      }
+    };
+  }
+
+  // Ensure at least one URL
+  if (body.urls.length === 0) {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'At least one URL is required'
+      }
+    };
+  }
+
+  // Limit maximum URLs
+  if (body.urls.length > 10) {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'Maximum 10 URLs allowed'
+      }
+    };
+  }
+
+  // Validate each URL
+  for (let i = 0; i < body.urls.length; i++) {
+    const url = body.urls[i];
+    
+    if (typeof url !== 'string') {
+      return {
+        valid: false,
+        error: {
+          error: 'validation_error',
+          message: `URL at index ${i} must be a string`
+        }
+      };
+    }
+
+    // Basic URL validation
+    try {
+      const urlObj = new URL(url);
+      if (urlObj.protocol !== 'http:' && urlObj.protocol !== 'https:') {
+        return {
+          valid: false,
+          error: {
+            error: 'validation_error',
+            message: `URL at index ${i} must use HTTP or HTTPS protocol`
+          }
+        };
+      }
+    } catch (error) {
+      return {
+        valid: false,
+        error: {
+          error: 'validation_error',
+          message: `Invalid URL format at index ${i}`
+        }
+      };
+    }
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Express middleware for validating /api/analyze-blog requests
+ * Returns 400 status with error details if validation fails
+ */
+function validateAnalyzeBlogMiddleware(req, res, next) {
+  const validation = validateAnalyzeBlogRequest(req.body);
+  
+  if (!validation.valid) {
+    return res.status(400).json(validation.error);
+  }
+  
+  next();
+}
+
 module.exports = {
   validateGenerateRequest,
   validateGenerateMiddleware,
   validateAnalyzeAdvancedRequest,
   validateAnalyzeAdvancedMiddleware,
+  validateAnalyzeBlogRequest,
+  validateAnalyzeBlogMiddleware,
   MAX_PROMPT_LENGTH
 };

@@ -60,6 +60,32 @@ Updated the confidence calculation system to be **word-count based** instead of 
 3. **Research-Based**: Thresholds align with NLP best practices for style analysis
 4. **Flexible**: Works with any combination of sources - quality over quantity
 
+## Source Quality Weights
+
+When merging multiple sources, each source type has a quality weight:
+
+| Source Type | Quality Weight | Rationale |
+|-------------|----------------|-----------|
+| Gmail | 1.0 | Natural, unedited writing (gold standard) |
+| Existing Profile | 0.9 | Previously validated profile |
+| Text | 0.85 | User-provided samples (authentic) |
+| GitHub | 0.7 | Technical but authentic (commit messages) |
+| Blog | 0.65 | Polished, edited content |
+
+## Quality Checks
+
+**Spam Detection (50% penalty):**
+- Detects copy-paste within single source
+- Triggers if < 30% unique sentences
+
+**Low Diversity (30% penalty):**
+- Detects extremely limited vocabulary
+- Triggers if < 15% unique words (500+ word minimum)
+
+**Pattern Recognition (REWARDED):**
+- Same phrases across different sources = +3% bonus
+- Validates consistent style, not spam
+
 ## Example Scenarios
 
 | Scenario | Word Count | Sources | Old Confidence | New Confidence |
@@ -68,6 +94,7 @@ Updated the confidence calculation system to be **word-count based** instead of 
 | 500 Gmail emails | 10,000+ | 1 (gmail) | 60% | 92-95% ✅✅ |
 | 100 words each from 4 sources | 400 | 4 (all) | 95% | 35-38% ⚠️ |
 | 1500 words text + 1500 Gmail | 3000 | 2 (mixed) | 75% | 76-79% ✅ |
+| 200 words × 10 (spam) | 2000 | 1 (text) | 70% | 24% ⚠️ (spam detected) |
 
 ## Testing Recommendations
 

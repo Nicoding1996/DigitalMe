@@ -410,6 +410,73 @@ app.post('/api/analyze-advanced', validateAnalyzeAdvancedMiddleware, async (req,
   }
 });
 
+// API endpoint for blog analysis
+app.post('/api/analyze-blog', async (req, res) => {
+  try {
+    const { urls } = req.body;
+    
+    // Validate request
+    const { validateAnalyzeBlogRequest } = require('./validation');
+    const validation = validateAnalyzeBlogRequest(req.body);
+    
+    if (!validation.valid) {
+      return res.status(400).json(validation.error);
+    }
+    
+    console.log(`[Blog Analysis] Starting analysis for ${urls.length} URL(s)`);
+    
+    // Initialize services
+    const BlogScrapingService = require('./services/BlogScrapingService');
+    const BlogStyleAnalyzer = require('./services/BlogStyleAnalyzer');
+    
+    const scraper = new BlogScrapingService();
+    const analyzer = new BlogStyleAnalyzer();
+    
+    // Scrape blog URLs
+    const scrapeResult = await scraper.scrapeMultipleUrls(urls);
+    
+    // Check if we got any content
+    if (!scrapeResult.success || scrapeResult.totalWords < 100) {
+      return res.status(400).json({
+        success: false,
+        error: 'scraping_error',
+        message: 'Unable to extract sufficient content from provided URLs',
+        failed: scrapeResult.failed
+      });
+    }
+    
+    // Analyze the scraped content
+    const analysisResult = await analyzer.analyzeArticles(
+      scrapeResult.combinedContent,
+      scrapeResult.totalWords
+    );
+    
+    console.log(`[Blog Analysis] Complete: ${scrapeResult.articlesAnalyzed} articles, ${scrapeResult.totalWords} words`);
+    
+    // Return success response
+    res.json({
+      success: true,
+      profile: analysisResult.profile,
+      text: analysisResult.text,
+      metadata: {
+        articlesAnalyzed: scrapeResult.articlesAnalyzed,
+        totalWords: scrapeResult.totalWords,
+        avgWordsPerArticle: Math.round(scrapeResult.totalWords / scrapeResult.articlesAnalyzed),
+        failed: scrapeResult.failed.length
+      }
+    });
+    
+  } catch (error) {
+    console.error('[Blog Analysis] Error:', error.message);
+    
+    res.status(500).json({
+      success: false,
+      error: 'analysis_error',
+      message: 'Failed to analyze blog content: ' + error.message
+    });
+  }
+});
+
 // API endpoint for generating AI responses
 // Validation middleware is applied here
 app.post('/api/generate', validateGenerateMiddleware, async (req, res) => {
