@@ -94,23 +94,36 @@ A split-screen interface where you input messages on the left, and your AI doppe
 - Mimics your sentence structure
 - Incorporates your signature phrases
 
+### 6. Living Profile (Real-Time Learning) ✨ NEW!
+
+**Continuous Improvement:**
+- Learns from your conversations
+- Collects messages automatically (10+ words)
+- Batch refinement (10 messages OR 5 minutes)
+- Confidence-weighted updates
+- User-controlled toggle
+- Delta reports show changes
+- Session persistence
+
 ---
 
 ## 🏗️ Technical Architecture
 
 ### Backend (Node.js/Express)
-- 9 specialized services
-- 6 API endpoints
+- 10 specialized services (+ ProfileRefinerService)
+- 7 API endpoints (+ /api/profile/refine)
 - Rate limiting
 - Input validation
 - Error handling
 - Security best practices
 
 ### Frontend (React + TailwindCSS)
-- 18 components
+- 20 components (+ RefinementNotification, DeltaReportModal)
+- 4 services (+ MessageCollector, ProfileRefinerClient)
 - Black Mirror aesthetic
 - Real-time analysis
 - Multi-source management
+- Living profile learning
 - Error boundaries
 - Responsive design
 
@@ -129,6 +142,7 @@ A split-screen interface where you input messages on the left, and your AI doppe
 - **95%** maximum confidence
 - **4** quality weight tiers
 - **8** analysis dimensions
+- **Real-time** profile learning ✨
 - **100%** test coverage
 
 ---
@@ -165,6 +179,13 @@ Every analysis uses real API calls:
 - Thought flow patterns
 - Personality quirks
 - Contextual adaptation
+
+### 6. Living Profile Learning
+- Learns from conversations
+- Incremental refinement
+- Confidence-weighted merging
+- User-controlled toggle
+- Delta change reports
 
 ---
 
@@ -290,6 +311,7 @@ npm start
 - ✅ Quality detection working
 - ✅ Advanced analysis functional
 - ✅ Word-count-based confidence
+- ✅ Living profile learning ✨
 - ✅ Error handling complete
 - ✅ Security best practices
 - ✅ Documentation complete

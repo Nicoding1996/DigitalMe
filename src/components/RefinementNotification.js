@@ -21,10 +21,10 @@ const RefinementNotification = ({ visible, deltaReport, onDismiss, onViewDetails
       // Trigger animation
       setIsAnimating(true);
       
-      // Auto-dismiss after 5 seconds (Requirement 3.5)
+      // Auto-dismiss after 8 seconds (Requirement 3.5)
       const timer = setTimeout(() => {
         handleDismiss();
-      }, 5000);
+      }, 8000);
 
       return () => clearTimeout(timer);
     } else {
@@ -122,7 +122,7 @@ const RefinementNotification = ({ visible, deltaReport, onDismiss, onViewDetails
             className={`h-full ${isError ? 'bg-glitch-red' : 'bg-unsettling-cyan'} transition-all`}
             style={{
               width: isAnimating ? '0%' : '100%',
-              transition: isAnimating ? 'width 5s linear' : 'none'
+              transition: isAnimating ? 'width 8s linear' : 'none'
             }}
           />
         </div>

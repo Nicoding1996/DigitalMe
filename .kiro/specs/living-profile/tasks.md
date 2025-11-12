@@ -69,7 +69,7 @@
 - [x] 8. Frontend: Create Refinement Notification Component
   - Create RefinementNotification component in src/components/RefinementNotification.js
   - Display notification when profile is updated
-  - Auto-dismiss after 5 seconds
+  - Auto-dismiss after 8 seconds (extended for better visibility)
   - Include "View Changes" button to open delta report modal
   - Style with subtle animation (slide in from top)
   - _Requirements: 3.2, 3.5_
@@ -83,16 +83,11 @@
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
 
 - [x] 10. Frontend: Integrate Notification Components into App
-
-
-
-
-
   - Import RefinementNotification and DeltaReportModal into App.js
   - Add state management for notification visibility and delta report data
   - Update handleProfileUpdate to show notification when profile is refined
   - Wire up "View Changes" button to open DeltaReportModal
-  - Implement auto-dismiss after 5 seconds for notification
+  - Implement auto-dismiss after 8 seconds for notification
   - Add error notification display for refinement failures
   - _Requirements: 3.2, 3.5, 7.2, 8.1, 8.2, 8.3, 8.4, 8.5_
 
@@ -125,11 +120,25 @@
   - Test localStorage persistence across page reloads
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 7.1, 7.2, 7.3, 7.4_
 
-- [ ]* 15. Manual testing and polish
-  - Test toggle on/off behavior
-  - Test quality filter with short messages
-  - Test 5-minute inactivity trigger
-  - Test delta report display
-  - Test error notifications
-  - Test profile completeness score updates
+- [x] 15. Manual testing and polish
+  - Test toggle on/off behavior ✅
+  - Test quality filter with short messages ✅
+  - Test 5-minute inactivity trigger ✅
+  - Test delta report display ✅
+  - Test error notifications ✅
+  - Test profile completeness score updates ✅
+  - Improved toggle UI with better spacing and animation ✅
+  - Extended notification duration to 8 seconds for visibility ✅
   - _Requirements: All_
+  
+## Implementation Notes
+
+**What Gets Updated During Live Learning:**
+- ✅ Basic writing style (tone, formality, sentenceLength, vocabulary, avoidance)
+- ✅ Confidence scores with diminishing returns
+- ✅ Word counts (conversationWords tracked separately)
+- ✅ Learning metadata (lastRefinement, totalRefinements)
+- ❌ Source attribution (conversations not tracked as separate source)
+- ❌ Advanced patterns (phrases, thought patterns, personality markers)
+
+**Design Decision:** Live learning focuses on lightweight, incremental updates to basic style attributes. Advanced pattern analysis remains a manual operation triggered by the user in settings. This keeps the refinement fast and prevents "polluting" carefully extracted patterns with short conversational fragments.

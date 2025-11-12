@@ -41,6 +41,29 @@
 
 ## 🎯 Core Systems
 
+### ✅ Living Profile (Real-Time Learning)
+**Status:** Fully Implemented ✨ NEW!
+
+**Features:**
+- Message collection from conversations (10+ words, quality filtered)
+- Batch triggers (10 messages OR 5 minutes inactivity)
+- Confidence-weighted pattern merging
+- Incremental profile refinement
+- User-controlled toggle (enable/disable)
+- Delta report showing changes
+- Auto-dismiss notifications (8 seconds)
+- Session persistence (localStorage)
+
+**What Gets Updated:**
+- Basic writing style (tone, formality, sentenceLength, vocabulary, avoidance)
+- Confidence scores with diminishing returns
+- Word counts (conversationWords tracked separately)
+- Learning metadata (lastRefinement, totalRefinements)
+
+**What Stays Manual:**
+- Source attribution (conversations not tracked as separate source)
+- Advanced patterns (phrases, thought patterns, personality markers)
+
 ### ✅ Word-Count-Based Confidence System
 **Status:** Fully Implemented
 
@@ -113,6 +136,7 @@
 - `AdvancedStyleAnalyzer.js` - Advanced patterns
 - `AnalysisSessionService.js` - Session management
 - `EmailCleansingService.js` - Email cleaning
+- `ProfileRefinerService.js` - Profile refinement ✨ NEW!
 
 **API Endpoints:**
 - `POST /api/generate` - AI response generation
@@ -121,6 +145,7 @@
 - `POST /api/analyze-github` - GitHub analysis
 - `POST /api/auth/gmail/url` - Gmail OAuth
 - `POST /api/gmail/analyze` - Gmail analysis
+- `POST /api/profile/refine` - Profile refinement ✨ NEW!
 
 **Middleware:**
 - Rate limiting (prevent abuse)
@@ -139,10 +164,14 @@
 - `ProfileSummary.js` - Style profile display
 - `SettingsPanel.js` - Configuration
 - `ExportModal.js` - Data export
+- `RefinementNotification.js` - Profile update notifications ✨ NEW!
+- `DeltaReportModal.js` - Change details modal ✨ NEW!
 
 **Services:**
 - `StyleAnalyzer.js` - All source analysis
 - `ContentGenerator.js` - AI generation
+- `MessageCollector.js` - Conversation message collection ✨ NEW!
+- `ProfileRefinerClient.js` - Profile refinement client ✨ NEW!
 
 ---
 
@@ -242,6 +271,7 @@
 - ✅ Spam detection active
 - ✅ Error handling complete
 - ✅ Rate limiting implemented
+- ✅ Living Profile real-time learning ✨ NEW!
 
 ---
 
