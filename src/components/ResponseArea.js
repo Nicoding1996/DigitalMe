@@ -93,7 +93,7 @@ const CodeBlock = ({ code, language }) => {
         </div>
       )}
       <pre className="p-4 overflow-x-auto scrollbar-minimal">
-        <code className="text-static-white text-xs font-mono leading-relaxed">
+        <code className="text-static-white text-xs font-mono leading-relaxed whitespace-pre">
           {code}
         </code>
       </pre>

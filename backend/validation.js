@@ -443,6 +443,157 @@ function validateAnalyzeGitHubMiddleware(req, res, next) {
   next();
 }
 
+/**
+ * Validates the request payload for the /api/profile/refine endpoint
+ * @param {Object} body - The request body to validate
+ * @returns {Object} - { valid: boolean, error?: { error: string, message: string } }
+ */
+function validateProfileRefineRequest(body) {
+  // Check if body exists
+  if (!body || typeof body !== 'object') {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'Request body must be a valid JSON object'
+      }
+    };
+  }
+
+  // Check for presence of currentProfile field
+  if (!('currentProfile' in body)) {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'Missing required field: currentProfile'
+      }
+    };
+  }
+
+  // Ensure currentProfile is an object
+  if (typeof body.currentProfile !== 'object' || body.currentProfile === null) {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'Field "currentProfile" must be an object'
+      }
+    };
+  }
+
+  // Validate currentProfile structure (must have writing section)
+  if (!body.currentProfile.writing || typeof body.currentProfile.writing !== 'object') {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'Field "currentProfile.writing" is required and must be an object'
+      }
+    };
+  }
+
+  // Check for presence of newMessages field
+  if (!('newMessages' in body)) {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'Missing required field: newMessages'
+      }
+    };
+  }
+
+  // Ensure newMessages is an array
+  if (!Array.isArray(body.newMessages)) {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'Field "newMessages" must be an array'
+      }
+    };
+  }
+
+  // Ensure at least one message
+  if (body.newMessages.length === 0) {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'Field "newMessages" must contain at least one message'
+      }
+    };
+  }
+
+  // Limit maximum messages per batch
+  if (body.newMessages.length > 50) {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'Maximum 50 messages allowed per refinement batch'
+      }
+    };
+  }
+
+  // Validate each message
+  let totalLength = 0;
+  for (let i = 0; i < body.newMessages.length; i++) {
+    const message = body.newMessages[i];
+    
+    if (typeof message !== 'string') {
+      return {
+        valid: false,
+        error: {
+          error: 'validation_error',
+          message: `Message at index ${i} must be a string`
+        }
+      };
+    }
+
+    // Validate individual message length
+    if (message.length > 5000) {
+      return {
+        valid: false,
+        error: {
+          error: 'validation_error',
+          message: `Message at index ${i} exceeds maximum length of 5000 characters`
+        }
+      };
+    }
+
+    totalLength += message.length;
+  }
+
+  // Validate total text length (prevent abuse)
+  if (totalLength > 50000) {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'Total message length exceeds maximum of 50000 characters'
+      }
+    };
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Express middleware for validating /api/profile/refine requests
+ * Returns 400 status with error details if validation fails
+ */
+function validateProfileRefineMiddleware(req, res, next) {
+  const validation = validateProfileRefineRequest(req.body);
+  
+  if (!validation.valid) {
+    return res.status(400).json(validation.error);
+  }
+  
+  next();
+}
+
 module.exports = {
   validateGenerateRequest,
   validateGenerateMiddleware,
@@ -452,5 +603,7 @@ module.exports = {
   validateAnalyzeBlogMiddleware,
   validateAnalyzeGitHubRequest,
   validateAnalyzeGitHubMiddleware,
+  validateProfileRefineRequest,
+  validateProfileRefineMiddleware,
   MAX_PROMPT_LENGTH
 };

@@ -2,9 +2,13 @@
  * ProfileSummary Component
  * Black Mirror aesthetic - System Profile Data Display
  */
+import { useState, useEffect } from 'react';
 import AdvancedPatternsView from './AdvancedPatternsView';
 
 const ProfileSummary = ({ styleProfile }) => {
+  const [animatedCompleteness, setAnimatedCompleteness] = useState(0);
+  const [animatedWordsAnalyzed, setAnimatedWordsAnalyzed] = useState(0);
+
   if (!styleProfile) {
     return (
       <div className="p-6 border border-static-whisper bg-void-surface text-center">
@@ -26,24 +30,87 @@ const ProfileSummary = ({ styleProfile }) => {
     const hasText = sampleCount.textWords > 0;
     const hasRepos = sampleCount.repositories > 0;
     const hasArticles = sampleCount.articles > 0;
+    const hasConversations = (sampleCount.conversationWords || 0) > 0;
     
     // Count active data sources
-    const activeSources = [hasCode, hasText, hasRepos, hasArticles].filter(Boolean).length;
+    const activeSources = [hasCode, hasText, hasRepos, hasArticles, hasConversations].filter(Boolean).length;
     
-    // Base percentage from active sources (25% each)
-    let percentage = activeSources * 25;
+    // Base percentage from active sources (20% each for 5 sources)
+    let percentage = activeSources * 20;
+    
+    // Total words including conversations
+    const totalWords = sampleCount.textWords + (sampleCount.emailWords || 0) + (sampleCount.conversationWords || 0);
     
     // Bonus for data quantity
-    if (sampleCount.textWords >= 500) percentage += 5;
-    if (sampleCount.textWords >= 1000) percentage += 5;
+    if (totalWords >= 500) percentage += 5;
+    if (totalWords >= 1000) percentage += 5;
     if (sampleCount.codeLines >= 1000) percentage += 5;
     if (sampleCount.repositories >= 3) percentage += 5;
     
     return Math.min(100, percentage);
   };
 
+  const getTotalWordsAnalyzed = () => {
+    return sampleCount.textWords + (sampleCount.emailWords || 0) + (sampleCount.conversationWords || 0);
+  };
+
   const confidenceLevel = getConfidenceLevel(confidence);
   const completeness = getCompletenessPercentage();
+  const totalWordsAnalyzed = getTotalWordsAnalyzed();
+
+  // Animate completeness score changes
+  useEffect(() => {
+    const duration = 1000; // 1 second
+    const startTime = Date.now();
+    const startValue = animatedCompleteness;
+    const endValue = completeness;
+
+    const animate = () => {
+      const now = Date.now();
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Easing function for smooth animation
+      const easeOutQuad = (t) => t * (2 - t);
+      const easedProgress = easeOutQuad(progress);
+
+      const currentValue = startValue + (endValue - startValue) * easedProgress;
+      setAnimatedCompleteness(Math.round(currentValue));
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    animate();
+  }, [completeness]);
+
+  // Animate words analyzed changes
+  useEffect(() => {
+    const duration = 1000; // 1 second
+    const startTime = Date.now();
+    const startValue = animatedWordsAnalyzed;
+    const endValue = totalWordsAnalyzed;
+
+    const animate = () => {
+      const now = Date.now();
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Easing function for smooth animation
+      const easeOutQuad = (t) => t * (2 - t);
+      const easedProgress = easeOutQuad(progress);
+
+      const currentValue = startValue + (endValue - startValue) * easedProgress;
+      setAnimatedWordsAnalyzed(Math.round(currentValue));
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    animate();
+  }, [totalWordsAnalyzed]);
 
   // Helper to format source type for display
   const formatSourceType = (type) => {
@@ -86,7 +153,10 @@ const ProfileSummary = ({ styleProfile }) => {
             {confidence < 0.55 && <div><span className="text-unsettling-cyan">&gt;</span> TARGET: 500+ words minimum</div>}
             {confidence >= 0.55 && confidence < 0.70 && <div><span className="text-unsettling-cyan">&gt;</span> TARGET: 1,500+ words for reliable profile</div>}
             {confidence >= 0.70 && confidence < 0.80 && <div><span className="text-unsettling-cyan">&gt;</span> TARGET: 3,000+ words for 80%+ confidence</div>}
-            <div><span className="text-unsettling-cyan">&gt;</span> CURRENT: {(sampleCount.textWords || 0) + (sampleCount.emailWords || 0)} words analyzed</div>
+            <div><span className="text-unsettling-cyan">&gt;</span> CURRENT: {totalWordsAnalyzed} words analyzed</div>
+            {sampleCount.conversationWords > 0 && (
+              <div className="text-system-active"><span className="text-unsettling-cyan">&gt;</span> Including {sampleCount.conversationWords} words from conversations</div>
+            )}
           </div>
           <div className="font-mono text-xs text-static-ghost mt-3 pt-3 border-t border-static-whisper">
             <span className="text-static-muted">OPTIMAL_THRESHOLD:</span> <span className="text-system-active">80%+ (3,000+ words)</span>
@@ -95,7 +165,7 @@ const ProfileSummary = ({ styleProfile }) => {
       )}
 
       {/* Metrics */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <div className="border border-static-whisper bg-void-surface p-4">
           <div className="font-mono text-xs text-static-ghost mb-2">CONFIDENCE_SCORE</div>
           <div className="font-mono text-3xl text-unsettling-cyan mb-2">
@@ -103,7 +173,7 @@ const ProfileSummary = ({ styleProfile }) => {
           </div>
           <div className="h-1 bg-void-elevated">
             <div 
-              className="h-full bg-unsettling-cyan"
+              className="h-full bg-unsettling-cyan transition-all duration-1000"
               style={{ width: `${confidence * 100}%` }}
             />
           </div>
@@ -112,13 +182,27 @@ const ProfileSummary = ({ styleProfile }) => {
         <div className="border border-static-whisper bg-void-surface p-4">
           <div className="font-mono text-xs text-static-ghost mb-2">PROFILE_COMPLETENESS</div>
           <div className="font-mono text-3xl text-system-active mb-2">
-            {completeness}%
+            {animatedCompleteness}%
           </div>
           <div className="h-1 bg-void-elevated">
             <div 
-              className="h-full bg-system-active"
-              style={{ width: `${completeness}%` }}
+              className="h-full bg-system-active transition-all duration-1000"
+              style={{ width: `${animatedCompleteness}%` }}
             />
+          </div>
+        </div>
+
+        <div className="border border-static-whisper bg-void-surface p-4">
+          <div className="font-mono text-xs text-static-ghost mb-2">WORDS_ANALYZED</div>
+          <div className="font-mono text-3xl text-static-white mb-2">
+            {animatedWordsAnalyzed.toLocaleString()}
+          </div>
+          <div className="font-mono text-xs text-static-muted mt-1">
+            {sampleCount.conversationWords > 0 && (
+              <span className="text-unsettling-cyan">
+                +{sampleCount.conversationWords.toLocaleString()} from conversations
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -128,7 +212,7 @@ const ProfileSummary = ({ styleProfile }) => {
         <div className="px-4 py-2 bg-void-elevated border-b border-static-whisper font-mono text-xs text-static-ghost">
           [ANALYZED_CONTENT]
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y divide-static-whisper">
+        <div className="grid grid-cols-2 md:grid-cols-5 divide-x divide-y divide-static-whisper">
           <div className={`p-4 ${sampleCount.repositories === 0 ? 'opacity-40' : ''}`}>
             <div className="font-mono text-xs text-static-ghost mb-1">📦 Repositories</div>
             <div className="font-mono text-xl text-static-white">{sampleCount.repositories}</div>
@@ -142,8 +226,12 @@ const ProfileSummary = ({ styleProfile }) => {
             <div className="font-mono text-xl text-static-white">{sampleCount.articles}</div>
           </div>
           <div className={`p-4 ${sampleCount.textWords === 0 ? 'opacity-40' : ''}`}>
-            <div className="font-mono text-xs text-static-ghost mb-1">✍️ Words</div>
+            <div className="font-mono text-xs text-static-ghost mb-1">✍️ Text Words</div>
             <div className="font-mono text-xl text-static-white">{sampleCount.textWords.toLocaleString()}</div>
+          </div>
+          <div className={`p-4 ${(sampleCount.conversationWords || 0) === 0 ? 'opacity-40' : ''}`}>
+            <div className="font-mono text-xs text-static-ghost mb-1">💬 Conversation Words</div>
+            <div className="font-mono text-xl text-static-white">{(sampleCount.conversationWords || 0).toLocaleString()}</div>
           </div>
         </div>
       </div>

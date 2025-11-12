@@ -63,6 +63,11 @@ if (config.isGmailEnabled()) {
   console.log('Gmail integration disabled (missing configuration)');
 }
 
+// Profile refinement routes (Living Profile feature)
+const profileRefineRouter = require('./routes/profileRefine');
+app.use('/api/profile', profileRefineRouter);
+console.log('Profile refinement endpoint enabled');
+
 /**
  * Format signature phrases into natural language instructions for Gemini
  * @param {Array} phrases - Array of phrase objects with phrase, frequency, and category

@@ -34,6 +34,7 @@
  * @property {number} articles - Number of articles analyzed
  * @property {number} emails - Number of emails analyzed
  * @property {number} emailWords - Total words from analyzed emails
+ * @property {number} [conversationWords] - Total words from conversations (Living Profile)
  */
 
 /**
@@ -75,6 +76,23 @@
  */
 
 /**
+ * @typedef {Object} AttributeConfidence
+ * @property {number} tone - Confidence score for tone (0-1)
+ * @property {number} formality - Confidence score for formality (0-1)
+ * @property {number} sentenceLength - Confidence score for sentence length (0-1)
+ * @property {number} vocabulary - Confidence score for vocabulary (0-1)
+ * @property {number} avoidance - Confidence score for avoidance (0-1)
+ */
+
+/**
+ * @typedef {Object} LearningMetadata
+ * @property {boolean} enabled - Whether real-time learning is enabled
+ * @property {number|null} lastRefinement - Timestamp of last refinement
+ * @property {number} totalRefinements - Total number of refinements performed
+ * @property {number} wordsFromConversations - Total words analyzed from conversations
+ */
+
+/**
  * @typedef {Object} StyleProfile
  * @property {string} id - Unique identifier
  * @property {string} userId - Associated user ID
@@ -86,6 +104,8 @@
  * @property {SampleCount} sampleCount - Sample counts for analysis
  * @property {SourceAttribution} [sourceAttribution] - Optional source attribution metadata
  * @property {AdvancedAnalysis} [advanced] - Optional advanced analysis results
+ * @property {AttributeConfidence} [attributeConfidence] - Attribute-level confidence scores for Living Profile
+ * @property {LearningMetadata} [learningMetadata] - Learning metadata for Living Profile
  */
 
 /**
@@ -205,6 +225,7 @@ export const generateEmptyAdvancedAnalysis = () => {
  * @returns {StyleProfile}
  */
 export const generateMockStyleProfile = (userId = 'user-1') => {
+  const confidence = 0.85;
   return {
     id: generateId(),
     userId,
@@ -212,14 +233,28 @@ export const generateMockStyleProfile = (userId = 'user-1') => {
     lastUpdated: Date.now(),
     coding: generateMockCodingStyle(),
     writing: generateMockWritingStyle(),
-    confidence: 0.85,
+    confidence,
     sampleCount: {
       codeLines: 15420,
       textWords: 8750,
       repositories: 12,
       articles: 8,
       emails: 0,
-      emailWords: 0
+      emailWords: 0,
+      conversationWords: 0
+    },
+    attributeConfidence: {
+      tone: confidence,
+      formality: confidence,
+      sentenceLength: confidence,
+      vocabulary: confidence,
+      avoidance: confidence
+    },
+    learningMetadata: {
+      enabled: true,
+      lastRefinement: null,
+      totalRefinements: 0,
+      wordsFromConversations: 0
     }
   };
 };
@@ -317,6 +352,58 @@ export const generateDefaultPreferences = () => {
     exportFormat: 'markdown',
     notifications: true
   };
+};
+
+/**
+ * Migrate existing profile to include Living Profile fields
+ * Requirements: 10.1, 10.2, 10.5
+ * @param {StyleProfile} profile - Existing profile to migrate
+ * @returns {StyleProfile} Migrated profile with new fields
+ */
+export const migrateProfileForLivingProfile = (profile) => {
+  if (!profile) return profile;
+  
+  let needsMigration = false;
+  const migratedProfile = { ...profile };
+  
+  // Add attributeConfidence if missing (Requirement 10.1)
+  if (!migratedProfile.attributeConfidence) {
+    needsMigration = true;
+    const baseConfidence = migratedProfile.confidence || 0.5;
+    migratedProfile.attributeConfidence = {
+      tone: baseConfidence,
+      formality: baseConfidence,
+      sentenceLength: baseConfidence,
+      vocabulary: baseConfidence,
+      avoidance: baseConfidence
+    };
+    console.log('[Migration] Added attributeConfidence field');
+  }
+  
+  // Add learningMetadata if missing (Requirement 10.2)
+  if (!migratedProfile.learningMetadata) {
+    needsMigration = true;
+    migratedProfile.learningMetadata = {
+      enabled: true, // Default to enabled
+      lastRefinement: null,
+      totalRefinements: 0,
+      wordsFromConversations: 0
+    };
+    console.log('[Migration] Added learningMetadata field');
+  }
+  
+  // Add conversationWords to sampleCount if missing (Requirement 10.5)
+  if (migratedProfile.sampleCount && migratedProfile.sampleCount.conversationWords === undefined) {
+    needsMigration = true;
+    migratedProfile.sampleCount.conversationWords = 0;
+    console.log('[Migration] Added conversationWords to sampleCount');
+  }
+  
+  if (needsMigration) {
+    console.log('[Migration] Profile migrated successfully');
+  }
+  
+  return migratedProfile;
 };
 
 /**

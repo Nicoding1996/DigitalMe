@@ -7,19 +7,40 @@ import ProfileSummary from './ProfileSummary';
 import SourceManager from './SourceManager';
 import StyleControls from './StyleControls';
 
-const SettingsPanel = ({ isOpen, onClose, styleProfile, sources, preferences, conversationHistory = [], onUpdateSources, onUpdatePreferences, onClearHistory, onReanalyzeAdvanced }) => {
+const SettingsPanel = ({ isOpen, onClose, styleProfile, sources, preferences, conversationHistory = [], onUpdateSources, onUpdatePreferences, onClearHistory, onReanalyzeAdvanced, onLearningToggle }) => {
   const [activeTab, setActiveTab] = useState('profile');
   const [showAdvancedConfirm, setShowAdvancedConfirm] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [isReanalyzing, setIsReanalyzing] = useState(false);
   const [reanalyzeError, setReanalyzeError] = useState(null);
   const [reanalyzeSuccess, setReanalyzeSuccess] = useState(false);
+  const [learningEnabled, setLearningEnabled] = useState(() => {
+    // Load toggle state from localStorage on mount (Requirement 2.1, 10.1)
+    const stored = localStorage.getItem('learningEnabled');
+    return stored !== 'false'; // Default to true if not set
+  });
 
   if (!isOpen) return null;
 
   const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) {
       onClose();
+    }
+  };
+
+  /**
+   * Handle learning toggle change
+   * Requirements: 2.1, 2.2, 2.3, 2.4, 2.5
+   */
+  const handleLearningToggle = (enabled) => {
+    setLearningEnabled(enabled);
+    
+    // Persist toggle state in localStorage (Requirement 2.5)
+    localStorage.setItem('learningEnabled', enabled.toString());
+    
+    // Notify parent component to update MessageCollector (Requirements 2.2, 2.3, 2.4)
+    if (onLearningToggle) {
+      onLearningToggle(enabled);
     }
   };
 
@@ -212,6 +233,68 @@ const SettingsPanel = ({ isOpen, onClose, styleProfile, sources, preferences, co
                 preferences={preferences}
                 onUpdatePreferences={onUpdatePreferences}
               />
+              
+              {/* Learning Toggle Section */}
+              <div className="mt-8 pt-6 border-t border-static-whisper">
+                <div className="font-mono text-xs text-static-ghost mb-4">
+                  [REAL_TIME_LEARNING]
+                </div>
+                <div className="p-5 bg-void-elevated border border-unsettling-cyan">
+                  <div className="flex items-start justify-between gap-4 mb-4">
+                    <div className="flex-1">
+                      <div className="font-mono text-xs text-unsettling-cyan mb-2">
+                        [ADAPTIVE_PROFILE]
+                      </div>
+                      <p className="font-mono text-xs text-static-muted leading-relaxed">
+                        Allow DigitalMe to learn from your conversations and continuously refine your style profile. 
+                        Messages are analyzed in batches to improve personalization over time.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <label className="flex items-center gap-3 cursor-pointer group py-2">
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={learningEnabled}
+                        onChange={(e) => handleLearningToggle(e.target.checked)}
+                        className="sr-only"
+                      />
+                      <div className={`w-14 h-7 border transition-all duration-200 ${
+                        learningEnabled 
+                          ? 'bg-unsettling-cyan border-unsettling-cyan' 
+                          : 'bg-void-surface border-static-whisper'
+                      }`}>
+                        <div className={`w-5 h-5 bg-void-deep transition-all duration-200 ease-out ${
+                          learningEnabled ? 'translate-x-8' : 'translate-x-1'
+                        } mt-1`} />
+                      </div>
+                    </div>
+                    <span className="font-mono text-xs text-static-white group-hover:text-unsettling-cyan transition-colors">
+                      Enable Real-Time Learning
+                    </span>
+                  </label>
+                  
+                  <div className="mt-4 pt-4 border-t border-static-whisper">
+                    <div className="flex items-center gap-3 font-mono text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                          learningEnabled ? 'bg-system-active' : 'bg-static-whisper'
+                        }`} />
+                        <span className="text-static-ghost">Status:</span>
+                        <span className={learningEnabled ? 'text-system-active' : 'text-static-muted'}>
+                          {learningEnabled ? 'ACTIVE' : 'DISABLED'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="mt-2 font-mono text-xs text-static-muted pl-5">
+                      {learningEnabled 
+                        ? '→ Collecting messages for batch analysis' 
+                        : '→ Learning paused, no data collected'}
+                    </div>
+                  </div>
+                </div>
+              </div>
               
               <div className="mt-8 pt-6 border-t border-static-whisper">
                 <div className="font-mono text-xs text-static-ghost mb-4">

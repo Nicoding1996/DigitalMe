@@ -2,18 +2,82 @@
  * MirrorInterface Component
  * Black Mirror aesthetic - The Chasm between human and AI
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import InputArea from './InputArea';
 import ResponseArea from './ResponseArea';
 import MessageHistory from './MessageHistory';
 import { generateId } from '../models';
 import { generateContent } from '../services/ContentGenerator';
+import MessageCollector from '../services/MessageCollector';
+import ProfileRefinerClient from '../services/ProfileRefinerClient';
 
-const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, onSubmit, onExport, onConversationUpdate }) => {
+const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, onSubmit, onExport, onConversationUpdate, onProfileUpdate }) => {
   const [messages, setMessages] = useState(conversationHistory);
   const [currentResponse, setCurrentResponse] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentCmdNumber, setCurrentCmdNumber] = useState(1);
+  
+  // Initialize MessageCollector and ProfileRefinerClient
+  const messageCollectorRef = useRef(null);
+  const profileRefinerClientRef = useRef(null);
+  
+  // Initialize services on mount
+  useEffect(() => {
+    // Get learning toggle state from localStorage (default: true)
+    const learningEnabled = localStorage.getItem('learningEnabled') !== 'false';
+    
+    // Initialize MessageCollector
+    messageCollectorRef.current = new MessageCollector(learningEnabled);
+    
+    // Initialize ProfileRefinerClient
+    profileRefinerClientRef.current = new ProfileRefinerClient();
+    
+    console.log('Living Profile services initialized:', { learningEnabled });
+  }, []);
+
+  // Listen for learning toggle changes (Requirement 2.2, 2.3, 2.4)
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'learningEnabled' && messageCollectorRef.current) {
+        const newValue = e.newValue !== 'false';
+        console.log('Learning toggle changed via storage event:', newValue);
+        messageCollectorRef.current.setLearningEnabled(newValue);
+      }
+    };
+
+    // Listen for storage events (changes from other tabs/windows)
+    window.addEventListener('storage', handleStorageChange);
+
+    // Also check for changes periodically (for same-tab changes)
+    const checkInterval = setInterval(() => {
+      if (messageCollectorRef.current) {
+        const currentEnabled = messageCollectorRef.current.isLearningEnabled();
+        const storedEnabled = localStorage.getItem('learningEnabled') !== 'false';
+        
+        if (currentEnabled !== storedEnabled) {
+          console.log('Learning toggle changed (same tab):', storedEnabled);
+          messageCollectorRef.current.setLearningEnabled(storedEnabled);
+        }
+      }
+    }, 1000); // Check every second
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(checkInterval);
+    };
+  }, []);
+
+  // Periodic check for inactivity-based batch sending (Requirement 1.4)
+  useEffect(() => {
+    const checkInterval = setInterval(() => {
+      if (messageCollectorRef.current && messageCollectorRef.current.shouldSendBatch()) {
+        console.log('Inactivity threshold reached, sending batch');
+        handleProfileRefinement();
+      }
+    }, 60000); // Check every minute
+
+    return () => clearInterval(checkInterval);
+  }, [styleProfile]); // Re-create interval if styleProfile changes
 
   // Sync messages with conversationHistory prop (e.g., when history is cleared)
   useEffect(() => {
@@ -32,6 +96,63 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, 
     setMessages(newMessages);
     if (onConversationUpdate) {
       onConversationUpdate(newMessages);
+    }
+  };
+
+  /**
+   * Handle profile refinement when batch is ready
+   * Requirements: 1.5, 7.1, 7.2, 7.3, 7.4
+   */
+  const handleProfileRefinement = async () => {
+    if (!messageCollectorRef.current || !profileRefinerClientRef.current) {
+      console.warn('Living Profile services not initialized');
+      return;
+    }
+
+    // Get batch and clear collector
+    const batch = messageCollectorRef.current.getBatch();
+    
+    if (batch.length === 0) {
+      console.log('No messages to refine');
+      return;
+    }
+
+    console.log(`Refining profile with ${batch.length} messages`);
+
+    try {
+      // Send refinement request (Requirement 1.5)
+      const result = await profileRefinerClientRef.current.refineProfile(
+        styleProfile,
+        batch
+      );
+
+      if (result.success) {
+        console.log('Profile refinement successful:', result.deltaReport);
+        
+        // Notify parent component of profile update (Requirement 1.5)
+        if (onProfileUpdate) {
+          onProfileUpdate(result.updatedProfile, result.deltaReport);
+        }
+        
+        // Note: ProfileRefinerClient already saves to localStorage (Requirement 1.5)
+      } else {
+        // Handle refinement failure (Requirement 7.1, 7.2)
+        console.error('Profile refinement failed:', result.error);
+        
+        // Profile remains unchanged (Requirement 7.1)
+        // Error notification will be handled by parent component
+        if (onProfileUpdate) {
+          onProfileUpdate(null, null, result.error);
+        }
+      }
+    } catch (error) {
+      // Handle unexpected errors (Requirement 7.4)
+      console.error('Unexpected error during profile refinement:', error);
+      
+      // Discard batch and log error (Requirement 7.4)
+      if (onProfileUpdate) {
+        onProfileUpdate(null, null, 'Unable to update profile. Your current profile is unchanged.');
+      }
     }
   };
 
@@ -61,6 +182,16 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, 
     updateMessages(messagesWithUser);
     setIsGenerating(true);
     setCurrentResponse(null);
+    
+    // Living Profile: Add message to collector (Requirement 1.1)
+    if (messageCollectorRef.current) {
+      messageCollectorRef.current.addMessage(input);
+      
+      // Check if batch should be sent (Requirements 1.3, 1.4)
+      if (messageCollectorRef.current.shouldSendBatch()) {
+        handleProfileRefinement();
+      }
+    }
     
     // Filter conversation history to only include messages from current CMD
     // Use messagesWithUser to include the current user message in context

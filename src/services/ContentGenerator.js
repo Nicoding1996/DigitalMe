@@ -23,14 +23,33 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
  * @returns {boolean} True if code-related
  */
 const isCodeRequest = (prompt) => {
-  const codeKeywords = [
-    'function', 'component', 'code', 'implement', 'create',
-    'write', 'build', 'hook', 'class', 'method', 'api',
-    'algorithm', 'script', 'program'
+  const lowerPrompt = prompt.toLowerCase();
+  
+  // Strong code indicators - these alone are enough
+  const strongCodeKeywords = [
+    'function', 'component', 'code', 'implement', 
+    'hook', 'class', 'method', 'api',
+    'algorithm', 'script', 'program', 'debug',
+    'refactor', 'syntax', 'compile'
   ];
   
-  const lowerPrompt = prompt.toLowerCase();
-  return codeKeywords.some(keyword => lowerPrompt.includes(keyword));
+  if (strongCodeKeywords.some(keyword => lowerPrompt.includes(keyword))) {
+    return true;
+  }
+  
+  // Weak indicators - need programming context
+  const weakCodeKeywords = ['write', 'create', 'build', 'make'];
+  const programmingContext = [
+    'react', 'javascript', 'python', 'java', 'css', 'html',
+    'node', 'express', 'vue', 'angular', 'typescript',
+    'app', 'website', 'backend', 'frontend', 'database'
+  ];
+  
+  // Only treat as code if weak keyword + programming context
+  const hasWeakKeyword = weakCodeKeywords.some(keyword => lowerPrompt.includes(keyword));
+  const hasProgrammingContext = programmingContext.some(context => lowerPrompt.includes(context));
+  
+  return hasWeakKeyword && hasProgrammingContext;
 };
 
 /**

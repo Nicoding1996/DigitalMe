@@ -8,8 +8,10 @@ import SettingsPanel from './components/SettingsPanel';
 import ExportModal from './components/ExportModal';
 import ErrorBoundary from './components/ErrorBoundary';
 import ConnectionStatus from './components/ConnectionStatus';
+import RefinementNotification from './components/RefinementNotification';
+import DeltaReportModal from './components/DeltaReportModal';
 import { analyzeGitHub, analyzeBlog, analyzeTextSample, buildStyleProfile } from './services/StyleAnalyzer';
-import { generateMockSource, generateDefaultPreferences } from './models';
+import { generateMockSource, generateDefaultPreferences, migrateProfileForLivingProfile } from './models';
 import './App.css';
 
 const STORAGE_KEY = 'digitalme_profile';
@@ -40,6 +42,12 @@ function App() {
   const [analysisError, setAnalysisError] = useState(null);
   const [failedSources, setFailedSources] = useState([]);
   const [advancedAnalysisState, setAdvancedAnalysisState] = useState(null);
+  
+  // Living Profile notification state (Requirements: 3.2, 3.5, 8.1)
+  const [showRefinementNotification, setShowRefinementNotification] = useState(false);
+  const [showDeltaReportModal, setShowDeltaReportModal] = useState(false);
+  const [currentDeltaReport, setCurrentDeltaReport] = useState(null);
+  const [refinementError, setRefinementError] = useState(null);
 
   // Load profile, sources, analysis results, preferences, and conversation history from LocalStorage on mount
   useEffect(() => {
@@ -47,7 +55,16 @@ function App() {
     if (savedProfile) {
       try {
         const profile = JSON.parse(savedProfile);
-        setStyleProfile(profile);
+        
+        // Run migration for Living Profile fields (Requirements: 10.1, 10.2, 10.5)
+        const migratedProfile = migrateProfileForLivingProfile(profile);
+        
+        // Save migrated profile back to localStorage if changes were made
+        if (migratedProfile !== profile) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(migratedProfile));
+        }
+        
+        setStyleProfile(migratedProfile);
         setOnboardingStep('complete');
       } catch (error) {
         console.error('Failed to load saved profile:', error);
@@ -516,6 +533,79 @@ function App() {
     localStorage.removeItem(CONVERSATION_KEY);
   };
 
+  /**
+   * Handle profile updates from Living Profile refinement
+   * Requirements: 1.5, 7.1, 7.2, 3.2, 3.5
+   */
+  const handleProfileUpdate = (updatedProfile, deltaReport, error) => {
+    if (error) {
+      // Handle refinement failure (Requirement 7.2)
+      console.error('Profile refinement error:', error);
+      
+      // Show error notification
+      setRefinementError(error);
+      setShowRefinementNotification(true);
+      
+      // Auto-dismiss error notification after 5 seconds
+      setTimeout(() => {
+        setRefinementError(null);
+        setShowRefinementNotification(false);
+      }, 5000);
+      
+      return;
+    }
+
+    if (updatedProfile) {
+      // Update profile state and localStorage (Requirement 1.5)
+      setStyleProfile(updatedProfile);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedProfile));
+      
+      console.log('Profile updated via Living Profile:', deltaReport);
+      
+      // Show success notification with delta report (Requirements: 3.2, 3.5)
+      setCurrentDeltaReport(deltaReport);
+      setShowRefinementNotification(true);
+    }
+  };
+
+  /**
+   * Handle learning toggle changes from SettingsPanel
+   * Requirements: 2.2, 2.3, 2.4
+   */
+  const handleLearningToggle = (enabled) => {
+    console.log('Learning toggle changed:', enabled);
+    // The toggle state is already persisted in localStorage by SettingsPanel
+    // MirrorInterface will pick up the change on next mount or we can trigger a re-render
+    // For now, just log the change - MirrorInterface reads from localStorage on mount
+  };
+
+  /**
+   * Handle notification dismiss
+   * Requirements: 3.5
+   */
+  const handleNotificationDismiss = () => {
+    setShowRefinementNotification(false);
+    setRefinementError(null);
+  };
+
+  /**
+   * Handle "View Changes" button click
+   * Requirements: 8.1, 8.3
+   */
+  const handleViewChanges = () => {
+    setShowRefinementNotification(false);
+    setShowDeltaReportModal(true);
+  };
+
+  /**
+   * Handle delta report modal close
+   * Requirements: 8.5
+   */
+  const handleDeltaReportClose = () => {
+    setShowDeltaReportModal(false);
+    setCurrentDeltaReport(null);
+  };
+
   const handleSubmit = (input) => {
     console.log('User submitted:', input);
   };
@@ -716,6 +806,7 @@ function App() {
             onSubmit={handleSubmit}
             onExport={handleExportClick}
             onConversationUpdate={handleConversationUpdate}
+            onProfileUpdate={handleProfileUpdate}
           />
         )}
 
@@ -730,6 +821,7 @@ function App() {
           onUpdatePreferences={handleUpdatePreferences}
           onClearHistory={handleClearHistory}
           onReanalyzeAdvanced={handleReanalyzeAdvanced}
+          onLearningToggle={handleLearningToggle}
         />
 
         <ExportModal
@@ -738,6 +830,33 @@ function App() {
           content={exportContent}
           contentType={exportContentType}
         />
+
+        {/* Living Profile Notifications (Requirements: 3.2, 3.5, 7.2, 8.1-8.5) */}
+        {refinementError ? (
+          // Error notification (Requirement 7.2)
+          <RefinementNotification
+            visible={showRefinementNotification}
+            deltaReport={null}
+            onDismiss={handleNotificationDismiss}
+            onViewDetails={null}
+          />
+        ) : (
+          // Success notification (Requirements: 3.2, 3.5)
+          <RefinementNotification
+            visible={showRefinementNotification}
+            deltaReport={currentDeltaReport}
+            onDismiss={handleNotificationDismiss}
+            onViewDetails={handleViewChanges}
+          />
+        )}
+
+        {/* Delta Report Modal (Requirements: 8.1-8.5) */}
+        {showDeltaReportModal && currentDeltaReport && (
+          <DeltaReportModal
+            deltaReport={currentDeltaReport}
+            onClose={handleDeltaReportClose}
+          />
+        )}
       </div>
     </ErrorBoundary>
   );
