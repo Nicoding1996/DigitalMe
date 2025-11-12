@@ -349,7 +349,7 @@ const LeftPanel = ({ onSubmit, messages, currentCmdNumber }) => {
             Human
           </h1>
           <p className="text-xs text-static-muted font-mono">
-            &gt; Speak into the void...
+            &gt; Speak to your reflection...
           </p>
         </div>
         

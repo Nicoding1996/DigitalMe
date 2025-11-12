@@ -77,7 +77,7 @@ const ProfileSummary = ({ styleProfile }) => {
       gmail: '📧',
       text: '📝',
       blog: '✍️',
-      github: '💻',
+      github: '⎇',
       existing: '🔄'
     };
     return iconMap[type] || '📄';
@@ -196,7 +196,12 @@ const ProfileSummary = ({ styleProfile }) => {
         <div className="px-4 py-2 bg-void-elevated border-b border-static-whisper font-mono text-xs text-static-ghost">
           [ANALYZED_CONTENT]
         </div>
-        <div className="grid grid-cols-3 gap-0">
+        <div className="grid grid-cols-4 gap-0">
+          <div className={`p-4 border-r border-static-whisper ${sampleCount.repositories === 0 ? 'opacity-40' : ''}`}>
+            <div className="font-mono text-xs text-static-ghost mb-2 text-center">⎇</div>
+            <div className="font-mono text-xs text-static-muted mb-1 text-center">Repositories</div>
+            <div className="font-mono text-2xl text-static-white text-center">{sampleCount.repositories}</div>
+          </div>
           <div className={`p-4 border-r border-static-whisper ${sampleCount.articles === 0 ? 'opacity-40' : ''}`}>
             <div className="font-mono text-xs text-static-ghost mb-2 text-center">📝</div>
             <div className="font-mono text-xs text-static-muted mb-1 text-center">Articles</div>

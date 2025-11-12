@@ -1240,7 +1240,12 @@ export const analyzeTextSample = async (text, onProgress = null) => {
 
   const lowerText = text.toLowerCase();
   const wordCount = text.trim().split(/\s+/).length;
-  const sentenceCount = text.split(/[.!?]+/).filter(s => s.trim().length > 0).length;
+  // Split by punctuation OR paragraph breaks (double newlines)
+  // This handles both formal writing and casual line-break-separated thoughts
+  const sentenceCount = text
+    .split(/[.!?]+|\n\s*\n/)
+    .filter(s => s.trim().length > 10)
+    .length || 1;
   const avgWordsPerSentence = Math.round(wordCount / sentenceCount);
 
   // Determine sentence length category
@@ -1466,7 +1471,7 @@ export const buildStyleProfile = async (sources, userId = 'user-1', advancedAnal
     },
     0
   );
-  const totalRepos = codingSources.reduce(
+  const totalRepos = writingSources.filter(s => s.type === 'github').reduce(
     (sum, s) => sum + (s.result?.metrics?.totalRepos || 0),
     0
   );

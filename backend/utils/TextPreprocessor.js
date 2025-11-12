@@ -140,8 +140,11 @@ class TextPreprocessor {
     const words = text.trim().split(/\s+/);
     const wordCount = words.length;
 
-    // Count sentences (split by sentence terminators)
-    const sentences = text.match(/[^.!?]+[.!?]+/g) || [];
+    // Count sentences (split by sentence terminators OR paragraph breaks)
+    // This handles both formal punctuation and casual line-break-separated thoughts
+    const sentences = text
+      .split(/[.!?]+|\n\s*\n/)
+      .filter(s => s.trim().length > 10);
     const sentenceCount = sentences.length || 1;
 
     // Count paragraphs (split by double newlines or more)

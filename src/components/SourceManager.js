@@ -34,7 +34,7 @@ const SourceManager = ({ sources, onAddSource, onRemoveSource }) => {
   const getSourceIcon = (type) => {
     switch (type) {
       case 'github':
-        return '🐙';
+        return '⎇';
       case 'blog':
         return '📝';
       case 'text':

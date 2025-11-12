@@ -57,7 +57,7 @@ const WelcomeScreen = ({ onGetStarted }) => {
                     SOURCE_ANALYSIS_PROTOCOL
                   </div>
                   <div className="font-mono text-xs text-static-muted">
-                    Analyze coding patterns and writing style from digital sources
+                    Analyze writing style and communication patterns from digital sources
                   </div>
                 </div>
               </div>
@@ -73,7 +73,7 @@ const WelcomeScreen = ({ onGetStarted }) => {
                     REFLECTION_GENERATION_ENGINE
                   </div>
                   <div className="font-mono text-xs text-static-muted">
-                    Generate text and code in your unique voice and style
+                    Generate text in your unique voice and communication style
                   </div>
                 </div>
               </div>

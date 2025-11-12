@@ -399,6 +399,27 @@ export const migrateProfileForLivingProfile = (profile) => {
     console.log('[Migration] Added conversationWords to sampleCount');
   }
   
+  // Add repositories to sampleCount if missing (for GitHub integration)
+  if (migratedProfile.sampleCount && migratedProfile.sampleCount.repositories === undefined) {
+    needsMigration = true;
+    migratedProfile.sampleCount.repositories = 0;
+    console.log('[Migration] Added repositories to sampleCount');
+  }
+  
+  // Add articles to sampleCount if missing (for Blog integration)
+  if (migratedProfile.sampleCount && migratedProfile.sampleCount.articles === undefined) {
+    needsMigration = true;
+    migratedProfile.sampleCount.articles = 0;
+    console.log('[Migration] Added articles to sampleCount');
+  }
+  
+  // Add emailWords to sampleCount if missing (for Gmail integration)
+  if (migratedProfile.sampleCount && migratedProfile.sampleCount.emailWords === undefined) {
+    needsMigration = true;
+    migratedProfile.sampleCount.emailWords = 0;
+    console.log('[Migration] Added emailWords to sampleCount');
+  }
+  
   if (needsMigration) {
     console.log('[Migration] Profile migrated successfully');
   }
