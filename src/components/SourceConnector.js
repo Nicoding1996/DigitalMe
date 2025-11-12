@@ -3,12 +3,11 @@
  * Black Mirror aesthetic - Clinical data input interface
  */
 import { useState } from 'react';
-import { validateGitHubUsername, validateBlogUrl, validateTextSample } from '../services/StyleAnalyzer';
+import { validateBlogUrl, validateTextSample } from '../services/StyleAnalyzer';
 import GmailConnectButton from './GmailConnectButton';
 
 const SourceConnector = ({ onSourcesSubmit, onCancel }) => {
   const [activeTab, setActiveTab] = useState('text');
-  const [githubUsername, setGithubUsername] = useState('');
   const [blogUrls, setBlogUrls] = useState('');
   const [textSample, setTextSample] = useState('');
   const [errors, setErrors] = useState({});
@@ -59,8 +58,7 @@ const SourceConnector = ({ onSourcesSubmit, onCancel }) => {
     const filled = {
       text: false,
       gmail: false,
-      blog: false,
-      github: false
+      blog: false
     };
 
     // Text
@@ -79,11 +77,6 @@ const SourceConnector = ({ onSourcesSubmit, onCancel }) => {
       filled.blog = urls.length > 0 && invalidUrls.length === 0;
     }
 
-    // GitHub
-    if (githubUsername.trim()) {
-      filled.github = validateGitHubUsername(githubUsername.trim());
-    }
-
     return filled;
   };
 
@@ -92,14 +85,6 @@ const SourceConnector = ({ onSourcesSubmit, onCancel }) => {
     const sources = [];
 
     // Collect all filled sources
-    if (githubUsername.trim()) {
-      if (!validateGitHubUsername(githubUsername.trim())) {
-        newErrors.github = 'Invalid GitHub username format';
-      } else {
-        sources.push({ type: 'github', value: githubUsername.trim() });
-      }
-    }
-
     if (blogUrls.trim()) {
       const urls = blogUrls.split('\n').map(url => url.trim()).filter(url => url);
       const invalidUrls = urls.filter(url => !validateBlogUrl(url));
@@ -217,21 +202,6 @@ const SourceConnector = ({ onSourcesSubmit, onCancel }) => {
             <span className="block mb-2 text-lg">✎</span>
             [BLOG]
           </button>
-          
-          <button
-            onClick={() => handleTabChange('github')}
-            className={`relative flex-1 px-6 py-4 font-mono text-xs tracking-wider transition-all ${
-              activeTab === 'github'
-                ? 'bg-void-elevated text-unsettling-cyan border border-unsettling-cyan'
-                : 'bg-void-surface text-static-muted border border-static-whisper hover:border-static-ghost'
-            }`}
-          >
-            {filledSources.github && (
-              <span className="absolute top-2 right-2 text-system-active text-sm">✓</span>
-            )}
-            <span className="block mb-2 text-lg">{'<>'}</span>
-            [GITHUB]
-          </button>
         </div>
 
         {/* Input Area */}
@@ -253,25 +223,6 @@ const SourceConnector = ({ onSourcesSubmit, onCancel }) => {
                   {typeof errors.gmail === 'object' ? errors.gmail.message : errors.gmail}
                 </div>
               )}
-            </div>
-          )}
-
-          {activeTab === 'github' && (
-            <div className="space-y-4">
-              <label className="system-text block">GITHUB USERNAME</label>
-              <input
-                type="text"
-                className={`input-field ${errors.github ? 'border-glitch-red' : ''}`}
-                placeholder="Enter your GitHub username"
-                value={githubUsername}
-                onChange={(e) => setGithubUsername(e.target.value)}
-              />
-              {errors.github && (
-                <div className="text-glitch-red text-sm font-mono">{errors.github}</div>
-              )}
-              <div className="text-static-ghost text-xs italic mt-3">
-                We'll analyze your public repositories to learn your coding style
-              </div>
             </div>
           )}
 
@@ -345,7 +296,7 @@ const SourceConnector = ({ onSourcesSubmit, onCancel }) => {
               </span>
               {hasAnySources && (
                 <span className="text-system-active text-xs">
-                  [{filledCount}/4] {filledCount === 1 && '• Add more for accuracy'}
+                  [{filledCount}/3] {filledCount === 1 && '• Add more for accuracy'}
                 </span>
               )}
             </div>

@@ -4,9 +4,9 @@
  */
 import { useState, useEffect } from 'react';
 import AdvancedPatternsView from './AdvancedPatternsView';
+import Tooltip from './Tooltip';
 
 const ProfileSummary = ({ styleProfile }) => {
-  const [animatedCompleteness, setAnimatedCompleteness] = useState(0);
   const [animatedWordsAnalyzed, setAnimatedWordsAnalyzed] = useState(0);
 
   if (!styleProfile) {
@@ -17,7 +17,7 @@ const ProfileSummary = ({ styleProfile }) => {
     );
   }
 
-  const { coding, writing, confidence, sampleCount, sourceAttribution } = styleProfile;
+  const { writing, confidence, sampleCount, sourceAttribution } = styleProfile;
 
   const getConfidenceLevel = (score) => {
     if (score >= 0.8) return 'high';
@@ -25,65 +25,12 @@ const ProfileSummary = ({ styleProfile }) => {
     return 'low';
   };
 
-  const getCompletenessPercentage = () => {
-    const hasCode = sampleCount.codeLines > 0;
-    const hasText = sampleCount.textWords > 0;
-    const hasRepos = sampleCount.repositories > 0;
-    const hasArticles = sampleCount.articles > 0;
-    const hasConversations = (sampleCount.conversationWords || 0) > 0;
-    
-    // Count active data sources
-    const activeSources = [hasCode, hasText, hasRepos, hasArticles, hasConversations].filter(Boolean).length;
-    
-    // Base percentage from active sources (20% each for 5 sources)
-    let percentage = activeSources * 20;
-    
-    // Total words including conversations
-    const totalWords = sampleCount.textWords + (sampleCount.emailWords || 0) + (sampleCount.conversationWords || 0);
-    
-    // Bonus for data quantity
-    if (totalWords >= 500) percentage += 5;
-    if (totalWords >= 1000) percentage += 5;
-    if (sampleCount.codeLines >= 1000) percentage += 5;
-    if (sampleCount.repositories >= 3) percentage += 5;
-    
-    return Math.min(100, percentage);
-  };
-
   const getTotalWordsAnalyzed = () => {
     return sampleCount.textWords + (sampleCount.emailWords || 0) + (sampleCount.conversationWords || 0);
   };
 
   const confidenceLevel = getConfidenceLevel(confidence);
-  const completeness = getCompletenessPercentage();
   const totalWordsAnalyzed = getTotalWordsAnalyzed();
-
-  // Animate completeness score changes
-  useEffect(() => {
-    const duration = 1000; // 1 second
-    const startTime = Date.now();
-    const startValue = animatedCompleteness;
-    const endValue = completeness;
-
-    const animate = () => {
-      const now = Date.now();
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-
-      // Easing function for smooth animation
-      const easeOutQuad = (t) => t * (2 - t);
-      const easedProgress = easeOutQuad(progress);
-
-      const currentValue = startValue + (endValue - startValue) * easedProgress;
-      setAnimatedCompleteness(Math.round(currentValue));
-
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      }
-    };
-
-    animate();
-  }, [completeness]);
 
   // Animate words analyzed changes
   useEffect(() => {
@@ -165,9 +112,32 @@ const ProfileSummary = ({ styleProfile }) => {
       )}
 
       {/* Metrics */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <div className="border border-static-whisper bg-void-surface p-4">
-          <div className="font-mono text-xs text-static-ghost mb-2">CONFIDENCE_SCORE</div>
+          <div className="flex items-baseline gap-2 mb-2">
+            <div className="font-mono text-xs text-static-ghost">CONFIDENCE_SCORE</div>
+            <Tooltip content={
+              <div className="space-y-2">
+                <div className="text-static-white">
+                  Measures profile accuracy based on data quantity and quality.
+                </div>
+                <div className="border-l-2 border-unsettling-cyan pl-3 space-y-1 text-static-muted">
+                  <div><span className="text-unsettling-cyan">&gt;</span> 100-500 words: 35%</div>
+                  <div><span className="text-unsettling-cyan">&gt;</span> 500-1,500: 55%</div>
+                  <div><span className="text-unsettling-cyan">&gt;</span> 1,500-3,000: 70%</div>
+                  <div><span className="text-unsettling-cyan">&gt;</span> 3,000-5,000: 80%</div>
+                  <div><span className="text-unsettling-cyan">&gt;</span> 5,000+: 88-92%</div>
+                </div>
+                <div className="pt-2 border-t border-static-whisper text-static-ghost">
+                  <span className="text-system-active">[BONUS]</span> +3% per additional source type
+                </div>
+              </div>
+            }>
+              <span className="inline-flex items-center justify-center w-4 h-4 text-xs border border-static-whisper text-static-muted hover:border-unsettling-cyan hover:text-unsettling-cyan transition-all">
+                ?
+              </span>
+            </Tooltip>
+          </div>
           <div className="font-mono text-3xl text-unsettling-cyan mb-2">
             {(confidence * 100).toFixed(0)}%
           </div>
@@ -180,20 +150,34 @@ const ProfileSummary = ({ styleProfile }) => {
         </div>
 
         <div className="border border-static-whisper bg-void-surface p-4">
-          <div className="font-mono text-xs text-static-ghost mb-2">PROFILE_COMPLETENESS</div>
-          <div className="font-mono text-3xl text-system-active mb-2">
-            {animatedCompleteness}%
+          <div className="flex items-baseline gap-2 mb-2">
+            <div className="font-mono text-xs text-static-ghost">WORDS_ANALYZED</div>
+            <Tooltip content={
+              <div className="space-y-2">
+                <div className="text-static-white">
+                  Total word count from all connected sources.
+                </div>
+                <div className="border-l-2 border-static-white pl-3 space-y-1 text-static-muted">
+                  {sampleCount.textWords > 0 && (
+                    <div><span className="text-static-white">&gt;</span> Text: {sampleCount.textWords.toLocaleString()}</div>
+                  )}
+                  {(sampleCount.emailWords || 0) > 0 && (
+                    <div><span className="text-static-white">&gt;</span> Emails: {sampleCount.emailWords.toLocaleString()}</div>
+                  )}
+                  {(sampleCount.conversationWords || 0) > 0 && (
+                    <div><span className="text-unsettling-cyan">&gt;</span> Conversations: {sampleCount.conversationWords.toLocaleString()}</div>
+                  )}
+                </div>
+                <div className="pt-2 border-t border-static-whisper text-static-ghost">
+                  <span className="text-system-active">[TARGET]</span> 3,000+ words for optimal accuracy
+                </div>
+              </div>
+            }>
+              <span className="inline-flex items-center justify-center w-4 h-4 text-xs border border-static-whisper text-static-muted hover:border-unsettling-cyan hover:text-unsettling-cyan transition-all">
+                ?
+              </span>
+            </Tooltip>
           </div>
-          <div className="h-1 bg-void-elevated">
-            <div 
-              className="h-full bg-system-active transition-all duration-1000"
-              style={{ width: `${animatedCompleteness}%` }}
-            />
-          </div>
-        </div>
-
-        <div className="border border-static-whisper bg-void-surface p-4">
-          <div className="font-mono text-xs text-static-ghost mb-2">WORDS_ANALYZED</div>
           <div className="font-mono text-3xl text-static-white mb-2">
             {animatedWordsAnalyzed.toLocaleString()}
           </div>
@@ -212,91 +196,50 @@ const ProfileSummary = ({ styleProfile }) => {
         <div className="px-4 py-2 bg-void-elevated border-b border-static-whisper font-mono text-xs text-static-ghost">
           [ANALYZED_CONTENT]
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-5 divide-x divide-y divide-static-whisper">
-          <div className={`p-4 ${sampleCount.repositories === 0 ? 'opacity-40' : ''}`}>
-            <div className="font-mono text-xs text-static-ghost mb-1">📦 Repositories</div>
-            <div className="font-mono text-xl text-static-white">{sampleCount.repositories}</div>
+        <div className="grid grid-cols-3 gap-0">
+          <div className={`p-4 border-r border-static-whisper ${sampleCount.articles === 0 ? 'opacity-40' : ''}`}>
+            <div className="font-mono text-xs text-static-ghost mb-2 text-center">📝</div>
+            <div className="font-mono text-xs text-static-muted mb-1 text-center">Articles</div>
+            <div className="font-mono text-2xl text-static-white text-center">{sampleCount.articles}</div>
           </div>
-          <div className={`p-4 ${sampleCount.codeLines === 0 ? 'opacity-40' : ''}`}>
-            <div className="font-mono text-xs text-static-ghost mb-1">💻 Lines of Code</div>
-            <div className="font-mono text-xl text-static-white">{sampleCount.codeLines.toLocaleString()}</div>
-          </div>
-          <div className={`p-4 ${sampleCount.articles === 0 ? 'opacity-40' : ''}`}>
-            <div className="font-mono text-xs text-static-ghost mb-1">📝 Articles</div>
-            <div className="font-mono text-xl text-static-white">{sampleCount.articles}</div>
-          </div>
-          <div className={`p-4 ${sampleCount.textWords === 0 ? 'opacity-40' : ''}`}>
-            <div className="font-mono text-xs text-static-ghost mb-1">✍️ Text Words</div>
-            <div className="font-mono text-xl text-static-white">{sampleCount.textWords.toLocaleString()}</div>
+          <div className={`p-4 border-r border-static-whisper ${sampleCount.textWords === 0 ? 'opacity-40' : ''}`}>
+            <div className="font-mono text-xs text-static-ghost mb-2 text-center">✍️</div>
+            <div className="font-mono text-xs text-static-muted mb-1 text-center">Text Words</div>
+            <div className="font-mono text-2xl text-static-white text-center">{sampleCount.textWords.toLocaleString()}</div>
           </div>
           <div className={`p-4 ${(sampleCount.conversationWords || 0) === 0 ? 'opacity-40' : ''}`}>
-            <div className="font-mono text-xs text-static-ghost mb-1">💬 Conversation Words</div>
-            <div className="font-mono text-xl text-static-white">{(sampleCount.conversationWords || 0).toLocaleString()}</div>
+            <div className="font-mono text-xs text-static-ghost mb-2 text-center">💬</div>
+            <div className="font-mono text-xs text-static-muted mb-1 text-center">Conversations</div>
+            <div className="font-mono text-2xl text-static-white text-center">{(sampleCount.conversationWords || 0).toLocaleString()}</div>
           </div>
         </div>
       </div>
 
-      {/* Style Details */}
-      <div className="grid md:grid-cols-2 gap-4">
-        {/* Coding Style */}
-        <div className="border border-static-whisper bg-void-surface">
-          <div className="px-4 py-2 bg-void-elevated border-b border-static-whisper font-mono text-xs text-static-ghost">
-            [CODING_STYLE]
-          </div>
-          <div className="p-4 space-y-2 font-mono text-xs">
-            <div className="flex justify-between">
-              <span className="text-static-muted">Language:</span>
-              <span className="text-static-white">{coding.language}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-static-muted">Framework:</span>
-              <span className="text-static-white">{coding.framework}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-static-muted">Component Style:</span>
-              <span className="text-static-white">{coding.componentStyle}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-static-muted">Naming:</span>
-              <span className="text-static-white">{coding.namingConvention}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-static-muted">Comments:</span>
-              <span className="text-static-white">{coding.commentFrequency}</span>
-            </div>
-            <div className="pt-2 border-t border-static-whisper">
-              <div className="text-static-muted mb-2">Patterns:</div>
-              <div className="text-static-white break-words">{coding.patterns.join(', ')}</div>
-            </div>
-          </div>
+      {/* Writing Style */}
+      <div className="border border-static-whisper bg-void-surface">
+        <div className="px-4 py-2 bg-void-elevated border-b border-static-whisper font-mono text-xs text-static-ghost">
+          [WRITING_STYLE]
         </div>
-
-        {/* Writing Style */}
-        <div className="border border-static-whisper bg-void-surface">
-          <div className="px-4 py-2 bg-void-elevated border-b border-static-whisper font-mono text-xs text-static-ghost">
-            [WRITING_STYLE]
+        <div className="p-4 space-y-2 font-mono text-xs">
+          <div className="flex justify-between">
+            <span className="text-static-muted">Tone:</span>
+            <span className="text-static-white">{writing.tone}</span>
           </div>
-          <div className="p-4 space-y-2 font-mono text-xs">
-            <div className="flex justify-between">
-              <span className="text-static-muted">Tone:</span>
-              <span className="text-static-white">{writing.tone}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-static-muted">Formality:</span>
-              <span className="text-static-white">{writing.formality}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-static-muted">Sentence Length:</span>
-              <span className="text-static-white">{writing.sentenceLength}</span>
-            </div>
-            <div className="pt-2 border-t border-static-whisper">
-              <div className="text-static-muted mb-2">Vocabulary:</div>
-              <div className="text-static-white break-words">{writing.vocabulary.join(', ')}</div>
-            </div>
-            <div className="pt-2 border-t border-static-whisper">
-              <div className="text-static-muted mb-2">Avoids:</div>
-              <div className="text-glitch-red break-words">{writing.avoidance.join(', ')}</div>
-            </div>
+          <div className="flex justify-between">
+            <span className="text-static-muted">Formality:</span>
+            <span className="text-static-white">{writing.formality}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-static-muted">Sentence Length:</span>
+            <span className="text-static-white">{writing.sentenceLength}</span>
+          </div>
+          <div className="pt-2 border-t border-static-whisper">
+            <div className="text-static-muted mb-2">Vocabulary:</div>
+            <div className="text-static-white break-words">{writing.vocabulary.join(', ')}</div>
+          </div>
+          <div className="pt-2 border-t border-static-whisper">
+            <div className="text-static-muted mb-2">Avoids:</div>
+            <div className="text-glitch-red break-words">{writing.avoidance.join(', ')}</div>
           </div>
         </div>
       </div>
