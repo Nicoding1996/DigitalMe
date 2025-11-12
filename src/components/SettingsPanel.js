@@ -1,14 +1,16 @@
 /**
- * SettingsPanel Component
+ * SettingsPanel Component (Config Modal)
  * Black Mirror aesthetic - System Configuration Terminal
  */
 import { useState } from 'react';
 import ProfileSummary from './ProfileSummary';
-import SourceManager from './SourceManager';
 import StyleControls from './StyleControls';
+import CopyButton from './CopyButton';
+import DownloadButton from './DownloadButton';
 
-const SettingsPanel = ({ isOpen, onClose, styleProfile, sources, preferences, conversationHistory = [], onUpdateSources, onUpdatePreferences, onClearHistory, onReanalyzeAdvanced, onLearningToggle }) => {
+const SettingsPanel = ({ isOpen, onClose, styleProfile, preferences, conversationHistory = [], onUpdatePreferences, onClearHistory, onReanalyzeAdvanced, onLearningToggle }) => {
   const [activeTab, setActiveTab] = useState('profile');
+  const [exportFormat, setExportFormat] = useState('markdown');
   const [showAdvancedConfirm, setShowAdvancedConfirm] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [isReanalyzing, setIsReanalyzing] = useState(false);
@@ -115,16 +117,6 @@ const SettingsPanel = ({ isOpen, onClose, styleProfile, sources, preferences, co
           </button>
           <button
             className={`flex-1 px-6 py-3 font-mono text-xs tracking-wider transition-all ${
-              activeTab === 'sources'
-                ? 'bg-void-elevated text-unsettling-cyan border-b-2 border-unsettling-cyan'
-                : 'text-static-muted hover:text-static-white hover:bg-void-elevated'
-            }`}
-            onClick={() => setActiveTab('sources')}
-          >
-            [SOURCES]
-          </button>
-          <button
-            className={`flex-1 px-6 py-3 font-mono text-xs tracking-wider transition-all ${
               activeTab === 'preferences'
                 ? 'bg-void-elevated text-unsettling-cyan border-b-2 border-unsettling-cyan'
                 : 'text-static-muted hover:text-static-white hover:bg-void-elevated'
@@ -132,6 +124,16 @@ const SettingsPanel = ({ isOpen, onClose, styleProfile, sources, preferences, co
             onClick={() => setActiveTab('preferences')}
           >
             [PREFERENCES]
+          </button>
+          <button
+            className={`flex-1 px-6 py-3 font-mono text-xs tracking-wider transition-all ${
+              activeTab === 'export'
+                ? 'bg-void-elevated text-unsettling-cyan border-b-2 border-unsettling-cyan'
+                : 'text-static-muted hover:text-static-white hover:bg-void-elevated'
+            }`}
+            onClick={() => setActiveTab('export')}
+          >
+            [EXPORT]
           </button>
         </div>
 
@@ -187,15 +189,10 @@ const SettingsPanel = ({ isOpen, onClose, styleProfile, sources, preferences, co
                   <button 
                     className="px-6 py-3 bg-void-surface border border-unsettling-cyan text-unsettling-cyan font-mono text-xs hover:bg-unsettling-cyan hover:text-void-deep transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                     onClick={() => setShowAdvancedConfirm(true)}
-                    disabled={isReanalyzing || !sources || sources.length === 0}
+                    disabled={isReanalyzing}
                   >
                     {isReanalyzing ? '[ANALYZING...]' : hasAdvancedAnalysis ? '[REFRESH_PATTERNS]' : '[ANALYZE_PATTERNS]'}
                   </button>
-                  {(!sources || sources.length === 0) && (
-                    <div className="font-mono text-xs text-static-ghost mt-2">
-                      No sources available for analysis
-                    </div>
-                  )}
                 </div>
 
                 <p className="font-mono text-xs text-static-muted mb-4 leading-relaxed">
@@ -208,19 +205,6 @@ const SettingsPanel = ({ isOpen, onClose, styleProfile, sources, preferences, co
                   [RESET_PROFILE]
                 </button>
               </div>
-            </div>
-          )}
-
-          {activeTab === 'sources' && (
-            <div className="space-y-6">
-              <div className="font-mono text-xs text-static-ghost mb-4">
-                [SOURCE_MANAGER]
-              </div>
-              <SourceManager 
-                sources={sources}
-                onAddSource={onUpdateSources}
-                onRemoveSource={onUpdateSources}
-              />
             </div>
           )}
 
@@ -310,6 +294,121 @@ const SettingsPanel = ({ isOpen, onClose, styleProfile, sources, preferences, co
                 >
                   [CLEAR_HISTORY]
                 </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'export' && (
+            <div className="space-y-6">
+              <div className="font-mono text-xs text-static-ghost mb-4">
+                [DATA_EXPORT]
+              </div>
+              
+              {/* Format selection */}
+              <div>
+                <div className="font-mono text-xs text-static-ghost mb-3">
+                  [EXPORT_FORMAT]
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    className={`flex-1 px-4 py-2 font-mono text-xs border transition-all ${
+                      exportFormat === 'markdown'
+                        ? 'bg-void-elevated border-unsettling-cyan text-unsettling-cyan'
+                        : 'bg-void-surface border-static-whisper text-static-muted hover:border-static-ghost hover:text-static-white'
+                    }`}
+                    onClick={() => setExportFormat('markdown')}
+                  >
+                    [MARKDOWN]
+                  </button>
+                  <button
+                    className={`flex-1 px-4 py-2 font-mono text-xs border transition-all ${
+                      exportFormat === 'plain'
+                        ? 'bg-void-elevated border-unsettling-cyan text-unsettling-cyan'
+                        : 'bg-void-surface border-static-whisper text-static-muted hover:border-static-ghost hover:text-static-white'
+                    }`}
+                    onClick={() => setExportFormat('plain')}
+                  >
+                    [PLAIN_TEXT]
+                  </button>
+                </div>
+              </div>
+
+              {/* Content preview */}
+              <div>
+                <div className="font-mono text-xs text-static-ghost mb-3">
+                  [CONTENT_PREVIEW]
+                </div>
+                <div className="border border-static-whisper bg-void-surface">
+                  <div className="px-4 py-2 bg-void-elevated border-b border-static-whisper font-mono text-xs text-static-ghost">
+                    [BUFFER_SIZE: {(() => {
+                      if (conversationHistory.length === 0) return 0;
+                      const content = conversationHistory
+                        .map(msg => {
+                          const role = msg.role === 'user' ? 'YOU' : 'DIGITAL_ME';
+                          const timestamp = new Date(msg.timestamp).toLocaleString();
+                          return `[${role}] ${timestamp}\n${msg.content}\n`;
+                        })
+                        .join('\n---\n\n');
+                      return exportFormat === 'markdown' 
+                        ? `# Digital Me - Conversation Export\n\n${content}`.length 
+                        : content.length;
+                    })()} BYTES]
+                  </div>
+                  <pre className="p-4 max-h-96 overflow-auto scrollbar-minimal">
+                    <code className="font-mono text-xs text-static-white leading-relaxed">
+                      {conversationHistory.length === 0 ? (
+                        '[NO_CONVERSATION_HISTORY]'
+                      ) : (
+                        (() => {
+                          const content = conversationHistory
+                            .map(msg => {
+                              const role = msg.role === 'user' ? 'YOU' : 'DIGITAL_ME';
+                              const timestamp = new Date(msg.timestamp).toLocaleString();
+                              return `[${role}] ${timestamp}\n${msg.content}\n`;
+                            })
+                            .join('\n---\n\n');
+                          return exportFormat === 'markdown' 
+                            ? `# Digital Me - Conversation Export\n\n${content}` 
+                            : content;
+                        })()
+                      )}
+                    </code>
+                  </pre>
+                </div>
+              </div>
+
+              {/* Export actions */}
+              <div className="flex items-center gap-2 pt-4">
+                <CopyButton 
+                  content={conversationHistory.length === 0 ? '[NO_CONVERSATION_HISTORY]' : (() => {
+                    const content = conversationHistory
+                      .map(msg => {
+                        const role = msg.role === 'user' ? 'YOU' : 'DIGITAL_ME';
+                        const timestamp = new Date(msg.timestamp).toLocaleString();
+                        return `[${role}] ${timestamp}\n${msg.content}\n`;
+                      })
+                      .join('\n---\n\n');
+                    return exportFormat === 'markdown' 
+                      ? `# Digital Me - Conversation Export\n\n${content}` 
+                      : content;
+                  })()}
+                />
+                <DownloadButton 
+                  content={conversationHistory.length === 0 ? '[NO_CONVERSATION_HISTORY]' : (() => {
+                    const content = conversationHistory
+                      .map(msg => {
+                        const role = msg.role === 'user' ? 'YOU' : 'DIGITAL_ME';
+                        const timestamp = new Date(msg.timestamp).toLocaleString();
+                        return `[${role}] ${timestamp}\n${msg.content}\n`;
+                      })
+                      .join('\n---\n\n');
+                    return exportFormat === 'markdown' 
+                      ? `# Digital Me - Conversation Export\n\n${content}` 
+                      : content;
+                  })()}
+                  contentType="text"
+                  format={exportFormat}
+                />
               </div>
             </div>
           )}

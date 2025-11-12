@@ -5,7 +5,7 @@ import SourceConnector from './components/SourceConnector';
 import AnalysisProgress from './components/AnalysisProgress';
 import MirrorInterface from './components/MirrorInterface';
 import SettingsPanel from './components/SettingsPanel';
-import ExportModal from './components/ExportModal';
+import SourcesModal from './components/SourcesModal';
 import ErrorBoundary from './components/ErrorBoundary';
 import ConnectionStatus from './components/ConnectionStatus';
 import RefinementNotification from './components/RefinementNotification';
@@ -36,9 +36,7 @@ function App() {
   const [preferences, setPreferences] = useState(generateDefaultPreferences());
   const [conversationHistory, setConversationHistory] = useState([]);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isExportOpen, setIsExportOpen] = useState(false);
-  const [exportContent, setExportContent] = useState('');
-  const [exportContentType, setExportContentType] = useState('text');
+  const [isSourcesOpen, setIsSourcesOpen] = useState(false);
   const [analysisError, setAnalysisError] = useState(null);
   const [failedSources, setFailedSources] = useState([]);
   const [advancedAnalysisState, setAdvancedAnalysisState] = useState(null);
@@ -618,13 +616,21 @@ function App() {
     setIsSettingsOpen(false);
   };
 
+  const handleSourcesClick = () => {
+    setIsSourcesOpen(true);
+  };
+
+  const handleSourcesClose = () => {
+    setIsSourcesOpen(false);
+  };
+
   const handleUpdateSources = (sourceId) => {
     console.log('Update sources:', sourceId);
     // TODO: Implement source management logic
     // For now, just trigger onboarding flow to add new source
     if (!sourceId) {
       setOnboardingStep('connect');
-      setIsSettingsOpen(false);
+      setIsSourcesOpen(false);
     } else {
       // Remove source and corresponding analysis result
       const sourceIndex = sources.findIndex(s => s.id === sourceId);
@@ -643,39 +649,6 @@ function App() {
   const handleUpdatePreferences = (newPreferences) => {
     setPreferences(newPreferences);
     localStorage.setItem(PREFERENCES_KEY, JSON.stringify(newPreferences));
-  };
-
-  const handleExportClick = (content = '', contentType = 'text') => {
-    // Check if first parameter is an event object (from button click)
-    const isEvent = content && typeof content === 'object' && content.nativeEvent;
-    
-    // If no content provided or it's an event, export full conversation history
-    if (isEvent || !content) {
-      if (conversationHistory.length > 0) {
-        // Pass raw conversation data - formatting happens in ExportModal
-        const formattedConversation = conversationHistory
-          .map(msg => {
-            const role = msg.role === 'user' ? 'YOU' : 'DIGITAL_ME';
-            const timestamp = new Date(msg.timestamp).toLocaleString();
-            return `[${role}] ${timestamp}\n${msg.content}\n`;
-          })
-          .join('\n---\n\n');
-        
-        setExportContent(formattedConversation);
-        setExportContentType('text');
-      } else {
-        setExportContent('[NO_CONVERSATION_HISTORY]');
-        setExportContentType('text');
-      }
-    } else {
-      setExportContent(content);
-      setExportContentType(contentType);
-    }
-    setIsExportOpen(true);
-  };
-
-  const handleExportClose = () => {
-    setIsExportOpen(false);
   };
 
   const handleReanalyzeAdvanced = async () => {
@@ -757,9 +730,8 @@ function App() {
       <div className="app">
         {onboardingStep === 'complete' && styleProfile && (
           <Header 
+            onSourcesClick={handleSourcesClick}
             onSettingsClick={handleSettingsClick}
-            onExportClick={handleExportClick}
-            hasContent={conversationHistory.length > 0}
           />
         )}
         
@@ -771,11 +743,11 @@ function App() {
           <SourceConnector 
             onSourcesSubmit={handleSourcesSubmit}
             onCancel={() => {
-              // If we have a profile, go back to complete state (settings)
+              // If we have a profile, go back to complete state (sources modal)
               // Otherwise go back to welcome
               if (styleProfile) {
                 setOnboardingStep('complete');
-                setIsSettingsOpen(true);
+                setIsSourcesOpen(true);
               } else {
                 setOnboardingStep('welcome');
               }
@@ -804,7 +776,6 @@ function App() {
             conversationHistory={conversationHistory}
             preferences={preferences}
             onSubmit={handleSubmit}
-            onExport={handleExportClick}
             onConversationUpdate={handleConversationUpdate}
             onProfileUpdate={handleProfileUpdate}
           />
@@ -814,21 +785,19 @@ function App() {
           isOpen={isSettingsOpen}
           onClose={handleSettingsClose}
           styleProfile={styleProfile}
-          sources={sources}
           preferences={preferences}
           conversationHistory={conversationHistory}
-          onUpdateSources={handleUpdateSources}
           onUpdatePreferences={handleUpdatePreferences}
           onClearHistory={handleClearHistory}
           onReanalyzeAdvanced={handleReanalyzeAdvanced}
           onLearningToggle={handleLearningToggle}
         />
 
-        <ExportModal
-          isOpen={isExportOpen}
-          onClose={handleExportClose}
-          content={exportContent}
-          contentType={exportContentType}
+        <SourcesModal
+          isOpen={isSourcesOpen}
+          onClose={handleSourcesClose}
+          sources={sources}
+          onUpdateSources={handleUpdateSources}
         />
 
         {/* Living Profile Notifications (Requirements: 3.2, 3.5, 7.2, 8.1-8.5) */}

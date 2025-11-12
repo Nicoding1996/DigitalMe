@@ -4,7 +4,7 @@
  */
 import { useEffect, useRef, useState } from 'react';
 
-const MessageHistory = ({ messages = [], role = 'user', onExport }) => {
+const MessageHistory = ({ messages = [], role = 'user' }) => {
   const historyEndRef = useRef(null);
 
   useEffect(() => {
@@ -38,7 +38,6 @@ const MessageHistory = ({ messages = [], role = 'user', onExport }) => {
             key={message.id} 
             message={message} 
             index={index}
-            onExport={onExport}
           />
         ))}
         <div ref={historyEndRef} />
@@ -47,16 +46,9 @@ const MessageHistory = ({ messages = [], role = 'user', onExport }) => {
   );
 };
 
-const LogEntry = ({ message, index, onExport }) => {
+const LogEntry = ({ message, index }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const isCode = message.contentType === 'code';
-  const showExport = message.role === 'ai' && onExport;
-  
-  const handleExport = () => {
-    if (onExport) {
-      onExport(message.content, message.contentType);
-    }
-  };
   
   // Truncate content for preview
   const preview = message.content.length > 80 
@@ -85,18 +77,6 @@ const LogEntry = ({ message, index, onExport }) => {
         <span className="text-static-white flex-1 truncate">
           {preview}
         </span>
-        {showExport && (
-          <button 
-            className="opacity-0 group-hover:opacity-100 px-2 py-0.5 text-xs border border-static-whisper text-static-muted hover:border-unsettling-cyan hover:text-unsettling-cyan transition-all"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleExport();
-            }}
-            title="Export entry"
-          >
-            ↗
-          </button>
-        )}
       </div>
       
       {/* Expanded content */}

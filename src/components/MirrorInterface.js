@@ -11,7 +11,7 @@ import { generateContent } from '../services/ContentGenerator';
 import MessageCollector from '../services/MessageCollector';
 import ProfileRefinerClient from '../services/ProfileRefinerClient';
 
-const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, onSubmit, onExport, onConversationUpdate, onProfileUpdate }) => {
+const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, onSubmit, onConversationUpdate, onProfileUpdate }) => {
   const [messages, setMessages] = useState(conversationHistory);
   const [currentResponse, setCurrentResponse] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -329,7 +329,6 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, 
           response={currentResponse}
           isGenerating={isGenerating}
           messages={messages}
-          onExport={onExport}
           glitchIntensity={preferences?.glitchIntensity || 'medium'}
         />
       </div>
@@ -366,7 +365,7 @@ const LeftPanel = ({ onSubmit, messages, currentCmdNumber }) => {
   );
 };
 
-const RightPanel = ({ response, isGenerating, messages, onExport, glitchIntensity }) => {
+const RightPanel = ({ response, isGenerating, messages, glitchIntensity }) => {
   return (
     <div className="relative flex items-start justify-center p-8 md:p-12 overflow-y-auto scrollbar-minimal">
       <div className="w-full max-w-md pt-8">
@@ -395,7 +394,7 @@ const RightPanel = ({ response, isGenerating, messages, onExport, glitchIntensit
           [ SYSTEM: MIRROR_INITIALIZED ]
         </div>
         
-        <MessageHistory messages={messages} role="ai" onExport={onExport} />
+        <MessageHistory messages={messages} role="ai" />
       </div>
     </div>
   );

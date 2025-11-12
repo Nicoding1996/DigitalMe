@@ -5,7 +5,7 @@
 import React from 'react';
 import Navigation from './Navigation';
 
-const Header = ({ onSettingsClick, onExportClick, hasContent = true }) => {
+const Header = ({ onSourcesClick, onSettingsClick }) => {
   return (
     <header className="fixed top-0 left-0 right-0 h-[60px] bg-mirror-black border-b border-static-whisper z-30">
       <div className="flex items-center justify-between h-full px-6 max-w-full">
@@ -35,9 +35,8 @@ const Header = ({ onSettingsClick, onExportClick, hasContent = true }) => {
         
         {/* Navigation */}
         <Navigation 
+          onSourcesClick={onSourcesClick}
           onSettingsClick={onSettingsClick}
-          onExportClick={onExportClick}
-          hasContent={hasContent}
         />
       </div>
     </header>
