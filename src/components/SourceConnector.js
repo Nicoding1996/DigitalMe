@@ -142,11 +142,11 @@ const SourceConnector = ({ onSourcesSubmit, onCancel }) => {
   const hasAnySources = filledCount > 0;
 
   return (
-    <div className="relative min-h-screen bg-mirror-black px-6 py-8 overflow-y-auto">
+    <div className="relative min-h-screen bg-mirror-black px-6 py-8 overflow-y-auto pb-24">
       {/* Scanline effect */}
       <div className="scanline" />
       
-      <div className="relative z-10 w-full max-w-3xl mx-auto fade-in">
+      <div className="relative z-10 w-full max-w-3xl mx-auto fade-in mb-8">
         {/* Header */}
         <div className="mb-12">
           <div className="flex items-center justify-between mb-4">

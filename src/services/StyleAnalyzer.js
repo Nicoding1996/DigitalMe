@@ -1050,42 +1050,70 @@ export const calculateMergedConfidence = (sources) => {
 // ============================================================================
 
 /**
- * Analyze GitHub repositories to extract coding style
+ * Analyze GitHub repositories to extract communication style
  * @param {string} username - GitHub username
  * @param {Function} onProgress - Optional progress callback
  * @returns {Promise<Object>} Analysis results
  */
 export const analyzeGitHub = async (username, onProgress = null) => {
-  const steps = [
-    'Fetching repositories...',
-    'Analyzing code patterns...',
-    'Extracting naming conventions...',
-    'Identifying framework preferences...',
-    'Building coding profile...'
-  ];
-
-  await simulateProgress(onProgress, steps);
-
-  // Simulate API delay
-  await delay(1000);
-
-  // Mock analysis results
-  const codingStyle = generateMockCodingStyle();
+  const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
   
-  return {
-    success: true,
-    username,
-    repositories: mockGitHubRepos,
-    codingStyle,
-    metrics: {
-      totalRepos: mockGitHubRepos.length,
-      totalStars: mockGitHubRepos.reduce((sum, repo) => sum + repo.stars, 0),
-      primaryLanguage: 'JavaScript',
-      linesAnalyzed: 15420,
-      filesAnalyzed: 234
-    },
-    analyzedAt: Date.now()
-  };
+  try {
+    // Show progress
+    if (onProgress) {
+      onProgress({ message: 'Fetching GitHub data...', progress: 20 });
+    }
+    
+    // Call backend API
+    const response = await fetch(`${backendUrl}/api/analyze-github`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username })
+    });
+    
+    if (onProgress) {
+      onProgress({ message: 'Analyzing communication style...', progress: 60 });
+    }
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      return {
+        success: false,
+        error: {
+          message: data.message || 'Failed to analyze GitHub profile'
+        }
+      };
+    }
+    
+    if (onProgress) {
+      onProgress({ message: 'Building style profile...', progress: 90 });
+    }
+    
+    // Return in expected format
+    return {
+      success: true,
+      writingStyle: data.profile.writing,
+      text: data.text, // For advanced analysis
+      metrics: {
+        wordCount: data.metadata.totalWords,
+        totalRepos: data.metadata.repositoriesAnalyzed,
+        commitsAnalyzed: data.metadata.commitsAnalyzed
+      },
+      analyzedAt: Date.now()
+    };
+    
+  } catch (error) {
+    console.error('[GitHub Analysis] Error:', error);
+    return {
+      success: false,
+      error: {
+        message: error.message || 'Network error occurred while analyzing GitHub'
+      }
+    };
+  }
 };
 
 /**
@@ -1406,9 +1434,9 @@ export const buildStyleProfile = async (sources, userId = 'user-1', advancedAnal
     ? codingSources[0].result.codingStyle
     : generateMockCodingStyle();
 
-  // Combine writing styles from blog, text, Gmail, and existing profile sources using merging algorithm
+  // Combine writing styles from blog, text, Gmail, GitHub, and existing profile sources using merging algorithm
   const writingSources = sources.filter(
-    s => (s.type === 'blog' || s.type === 'text' || s.type === 'gmail' || s.type === 'existing') && (s.result?.writingStyle || s.result?.profile?.writing)
+    s => (s.type === 'blog' || s.type === 'text' || s.type === 'gmail' || s.type === 'github' || s.type === 'existing') && (s.result?.writingStyle || s.result?.profile?.writing)
   );
   
   // Use mergeWritingStyles to intelligently blend all writing sources

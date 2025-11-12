@@ -315,6 +315,86 @@ function validateAnalyzeBlogMiddleware(req, res, next) {
   next();
 }
 
+/**
+ * Validates the request payload for the /api/analyze-github endpoint
+ * @param {Object} body - The request body to validate
+ * @returns {Object} - { valid: boolean, error?: { error: string, message: string } }
+ */
+function validateAnalyzeGitHubRequest(body) {
+  // Check if body exists
+  if (!body || typeof body !== 'object') {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'Request body must be a valid JSON object'
+      }
+    };
+  }
+
+  // Check for presence of username field
+  if (!('username' in body)) {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'Missing required field: username'
+      }
+    };
+  }
+
+  // Ensure username is a string
+  if (typeof body.username !== 'string') {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'Field "username" must be a string'
+      }
+    };
+  }
+
+  // Ensure username is non-empty
+  if (body.username.trim().length === 0) {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'Field "username" cannot be empty'
+      }
+    };
+  }
+
+  // Validate GitHub username format
+  // GitHub usernames: alphanumeric and hyphens, 1-39 characters, cannot start/end with hyphen
+  const usernameRegex = /^[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}$/;
+  if (!usernameRegex.test(body.username.trim())) {
+    return {
+      valid: false,
+      error: {
+        error: 'validation_error',
+        message: 'Invalid GitHub username format'
+      }
+    };
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Express middleware for validating /api/analyze-github requests
+ * Returns 400 status with error details if validation fails
+ */
+function validateAnalyzeGitHubMiddleware(req, res, next) {
+  const validation = validateAnalyzeGitHubRequest(req.body);
+  
+  if (!validation.valid) {
+    return res.status(400).json(validation.error);
+  }
+  
+  next();
+}
+
 module.exports = {
   validateGenerateRequest,
   validateGenerateMiddleware,
@@ -322,5 +402,7 @@ module.exports = {
   validateAnalyzeAdvancedMiddleware,
   validateAnalyzeBlogRequest,
   validateAnalyzeBlogMiddleware,
+  validateAnalyzeGitHubRequest,
+  validateAnalyzeGitHubMiddleware,
   MAX_PROMPT_LENGTH
 };

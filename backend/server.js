@@ -410,6 +410,74 @@ app.post('/api/analyze-advanced', validateAnalyzeAdvancedMiddleware, async (req,
   }
 });
 
+// API endpoint for GitHub analysis
+app.post('/api/analyze-github', async (req, res) => {
+  try {
+    const { username } = req.body;
+    
+    // Validate request
+    const { validateAnalyzeGitHubRequest } = require('./validation');
+    const validation = validateAnalyzeGitHubRequest(req.body);
+    
+    if (!validation.valid) {
+      return res.status(400).json(validation.error);
+    }
+    
+    console.log(`[GitHub Analysis] Starting analysis for username: ${username}`);
+    
+    // Initialize services
+    const GitHubFetchingService = require('./services/GitHubFetchingService');
+    const GitHubStyleAnalyzer = require('./services/GitHubStyleAnalyzer');
+    
+    const fetcher = new GitHubFetchingService();
+    const analyzer = new GitHubStyleAnalyzer();
+    
+    // Fetch GitHub data
+    const fetchResult = await fetcher.fetchUserData(username);
+    
+    // Check if we got enough content
+    if (!fetchResult.success || fetchResult.wordCount < 50) {
+      return res.status(400).json({
+        success: false,
+        error: 'insufficient_data',
+        message: 'Unable to extract sufficient content from GitHub profile. User may have limited activity.',
+        metadata: fetchResult.metadata
+      });
+    }
+    
+    // Analyze the GitHub content
+    const analysisResult = await analyzer.analyzeGitHubContent(
+      fetchResult.combinedText,
+      fetchResult.wordCount,
+      fetchResult.metadata
+    );
+    
+    console.log(`[GitHub Analysis] Complete: ${fetchResult.metadata.commitsAnalyzed} commits, ${fetchResult.wordCount} words`);
+    
+    // Return success response
+    res.json({
+      success: true,
+      profile: analysisResult.profile,
+      text: analysisResult.text,
+      metadata: {
+        repositoriesAnalyzed: fetchResult.metadata.repositoriesAnalyzed,
+        commitsAnalyzed: fetchResult.metadata.commitsAnalyzed,
+        readmesAnalyzed: fetchResult.metadata.readmesAnalyzed,
+        totalWords: fetchResult.wordCount
+      }
+    });
+    
+  } catch (error) {
+    console.error('[GitHub Analysis] Error:', error.message);
+    
+    res.status(500).json({
+      success: false,
+      error: 'analysis_error',
+      message: error.message || 'Failed to analyze GitHub profile'
+    });
+  }
+});
+
 // API endpoint for blog analysis
 app.post('/api/analyze-blog', async (req, res) => {
   try {

@@ -330,6 +330,9 @@ function App() {
               } else if (result.type === 'blog' && result.result?.text) {
                 console.log('[Advanced Analysis] Found blog text:', result.result.text.length, 'chars');
                 return result.result.text;
+              } else if (result.type === 'github' && result.result?.text) {
+                console.log('[Advanced Analysis] Found GitHub text:', result.result.text.length, 'chars');
+                return result.result.text;
               }
               console.log('[Advanced Analysis] No text found for type:', result.type);
               return '';
