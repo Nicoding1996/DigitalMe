@@ -46,6 +46,101 @@ The backend's `buildMetaPrompt()` function constructs a dynamic meta-prompt that
 
 ---
 
+## Multi-Source Data Acquisition
+
+**DigitalMe** analyzes writing style from four different data sources, each with quality-weighted contributions to the final profile.
+
+### Supported Sources
+
+**1. Text Samples** (Quality Weight: 0.85)
+- Direct text input (100+ words minimum)
+- Real-time analysis
+- Ideal for quick profile creation
+
+**2. Gmail Integration** (Quality Weight: 1.0 - Highest)
+- OAuth 2.0 secure authentication
+- Analyzes sent emails (up to 200)
+- Automatic email cleansing (removes signatures, quoted text, automated messages)
+- Natural, unedited writing samples provide highest quality data
+
+**3. Blog Analysis** (Quality Weight: 0.65)
+- Web scraping from public blog URLs
+- Supports Medium, Dev.to, WordPress, and custom blogs
+- Intelligent content extraction (removes navigation, ads, sidebars)
+- Polished content weighted lower due to editing
+
+**4. GitHub Integration** (Quality Weight: 0.7)
+- Public repository analysis via GitHub API
+- Commit message style analysis
+- README documentation extraction
+- Focuses on communication style, not code syntax
+
+### Multi-Source Intelligence
+
+**Quality-Weighted Merging:**
+- Each source contributes based on quality weight × word count
+- Higher quality sources (Gmail) have more influence than polished content (blogs)
+- Confidence increases with total word count across all sources
+- Source attribution tracks which sources influenced each style attribute
+
+**Word-Count-Based Confidence:**
+- 500-1,499 words: 35-55% (minimum viable)
+- 1,500-2,999 words: 55-70% (good)
+- 3,000-4,999 words: 70-80% (strong)
+- 5,000-9,999 words: 80-88% (excellent)
+- 10,000+ words: 88-92% (optimal)
+- Maximum: 95% (perfect replication is impossible)
+
+**Quality Detection:**
+- Spam detection (duplicate sentences within source)
+- Vocabulary diversity validation
+- Pattern consistency across sources
+- Natural repetition vs copy-paste distinction
+
+---
+
+## Living Profile System
+
+**DigitalMe** features real-time learning that continuously refines your style profile as you interact with your AI doppelgänger.
+
+### How It Works
+
+**Automatic Message Collection:**
+- Collects your messages from conversations (10+ words, quality filtered)
+- Ignores code blocks and low-quality messages
+- Batch triggers: 10 messages OR 5 minutes of inactivity
+
+**Confidence-Weighted Updates:**
+- Low confidence attributes (< 50%) update more significantly
+- High confidence attributes (> 80%) update minimally
+- Diminishing returns prevent profile drift
+- Incremental refinement preserves existing patterns
+
+**What Gets Updated:**
+- Basic writing style (tone, formality, sentence length)
+- Vocabulary and avoidance patterns
+- Confidence scores per attribute
+- Word counts and learning metadata
+
+**What Stays Manual:**
+- Advanced patterns (signature phrases, thought patterns, personality markers)
+- Source attribution (conversations not tracked as separate source)
+
+### User Control
+
+**Learning Toggle:**
+- Enable/disable real-time learning in Settings
+- Clear pending batch when disabled
+- Session persistence across page reloads
+
+**Transparency:**
+- Delta reports show exactly what changed
+- "View Changes" button displays old → new values
+- Auto-dismiss notifications (8 seconds)
+- Profile completeness score and words analyzed counter
+
+---
+
 ## Conversational Intelligence
 
 The AI maintains conversation context and responds intelligently to refinement requests, making it a true interactive mirror rather than a static style copier.
@@ -85,3 +180,19 @@ The AI maintains conversation context and responds intelligently to refinement r
 *Content:*
 - "add examples" / "remove jargon"
 - "focus on [specific topic]"
+
+---
+
+## Export & Data Management
+
+**Profile Export:**
+- Export complete style profile as JSON
+- Download conversation history
+- Backup and restore profiles
+- Share profiles across devices
+
+**Privacy & Security:**
+- OAuth tokens encrypted with AES-256-GCM
+- No data stored on servers (localStorage only)
+- Read-only access to Gmail Sent folder
+- Revoke access anytime from Settings
