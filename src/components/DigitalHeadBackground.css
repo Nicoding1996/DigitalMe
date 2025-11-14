@@ -1,0 +1,31 @@
+.digital-head-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.particle-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.4;
+}
+
+@media (max-width: 1024px) {
+  .particle-canvas {
+    opacity: 0.3;
+  }
+}
+
+@media (max-width: 768px) {
+  .particle-canvas {
+    opacity: 0.2;
+  }
+}

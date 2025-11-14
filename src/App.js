@@ -10,6 +10,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import ConnectionStatus from './components/ConnectionStatus';
 import RefinementNotification from './components/RefinementNotification';
 import DeltaReportModal from './components/DeltaReportModal';
+import DigitalHeadBackground from './components/DigitalHeadBackground';
 import { analyzeGitHub, analyzeBlog, analyzeTextSample, buildStyleProfile } from './services/StyleAnalyzer';
 import { generateMockSource, generateDefaultPreferences, migrateProfileForLivingProfile } from './models';
 import './App.css';
@@ -726,6 +727,7 @@ function App() {
 
   return (
     <ErrorBoundary>
+      <DigitalHeadBackground />
       <ConnectionStatus />
       <div className="app">
         {onboardingStep === 'complete' && styleProfile && (
