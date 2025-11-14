@@ -133,6 +133,11 @@ The backend's `buildMetaPrompt()` function constructs a dynamic meta-prompt that
 - Clear pending batch when disabled
 - Session persistence across page reloads
 
+**Best Practice for External Content:**
+- When pasting large external content (articles, emails from others), temporarily disable learning to avoid polluting your profile
+- When pasting YOUR OWN drafts for improvement, keep learning enabled to capture your authentic voice
+- The system cannot distinguish between your writing and pasted content, so use the toggle when needed
+
 **Transparency:**
 - Delta reports show exactly what changed
 - "View Changes" button displays old → new values
