@@ -4,7 +4,7 @@
  */
 import { useEffect, useRef, useState } from 'react';
 
-const MessageHistory = ({ messages = [], role = 'user' }) => {
+const MessageHistory = ({ messages = [], role = 'user', expandedMessageIndex, onToggleExpand }) => {
   const historyEndRef = useRef(null);
 
   useEffect(() => {
@@ -18,6 +18,19 @@ const MessageHistory = ({ messages = [], role = 'user' }) => {
   }
 
   const roleMessages = messages.filter(msg => msg.role === role);
+  
+  // Group messages by CMD number
+  const groupedMessages = roleMessages.reduce((groups, message) => {
+    const cmdNumber = message.cmdNumber || 1;
+    if (!groups[cmdNumber]) {
+      groups[cmdNumber] = [];
+    }
+    groups[cmdNumber].push(message);
+    return groups;
+  }, {});
+  
+  const cmdNumbers = Object.keys(groupedMessages).map(Number).sort((a, b) => a - b);
+  const currentCmd = cmdNumbers[cmdNumbers.length - 1];
 
   return (
     <div className="w-full mt-12 pt-8 border-t border-static-whisper">
@@ -31,14 +44,35 @@ const MessageHistory = ({ messages = [], role = 'user' }) => {
         </span>
       </div>
       
-      {/* Log entries */}
+      {/* Log entries grouped by CMD */}
       <div className="flex flex-col gap-0 max-h-[500px] overflow-y-auto scrollbar-minimal font-mono text-xs">
-        {roleMessages.map((message, index) => (
-          <LogEntry 
-            key={message.id} 
-            message={message} 
-            index={index}
-          />
+        {cmdNumbers.map((cmdNumber, cmdIndex) => (
+          <div key={cmdNumber}>
+            {/* CMD Transition Divider (show before all CMDs except the first) */}
+            {cmdIndex > 0 && <CmdTransition cmdNumber={cmdNumber} />}
+            
+            {/* Messages for this CMD */}
+            <div className={cmdNumber !== currentCmd ? 'opacity-60' : ''}>
+              {groupedMessages[cmdNumber].map((message, localIndex) => {
+                // Find this message's position in the FULL conversation (all roles)
+                const allMessagesInCmd = messages.filter(m => (m.cmdNumber || 1) === cmdNumber);
+                const positionInCmd = allMessagesInCmd.findIndex(m => m.id === message.id);
+                // Use floor division to pair user+AI messages (0,1 -> 0; 2,3 -> 1; etc)
+                const pairIndex = Math.floor(positionInCmd / 2);
+                const pairKey = `${cmdNumber}-${pairIndex}`;
+                
+                return (
+                  <LogEntry 
+                    key={message.id} 
+                    message={message} 
+                    pairKey={pairKey}
+                    expandedPairKey={expandedMessageIndex}
+                    onToggleExpand={onToggleExpand}
+                  />
+                );
+              })}
+            </div>
+          </div>
         ))}
         <div ref={historyEndRef} />
       </div>
@@ -46,8 +80,25 @@ const MessageHistory = ({ messages = [], role = 'user' }) => {
   );
 };
 
-const LogEntry = ({ message, index }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+const CmdTransition = ({ cmdNumber }) => {
+  return (
+    <div className="relative my-6 flex items-center justify-center">
+      {/* Horizontal line */}
+      <div className="absolute inset-0 flex items-center">
+        <div className="w-full border-t border-neon-green/30" />
+      </div>
+      {/* CMD label */}
+      <div className="relative px-3 bg-void-deep">
+        <span className="text-neon-green/50 text-xs font-mono">
+          [CMD_{cmdNumber.toString().padStart(2, '0')}]
+        </span>
+      </div>
+    </div>
+  );
+};
+
+const LogEntry = ({ message, pairKey, expandedPairKey, onToggleExpand }) => {
+  const isExpanded = expandedPairKey === pairKey;
   const isCode = message.contentType === 'code';
   
   // Truncate content for preview
@@ -58,12 +109,17 @@ const LogEntry = ({ message, index }) => {
   // Use cmdNumber from message, fallback to 1 for old messages
   const cmdNumber = message.cmdNumber || 1;
   
+  const handleClick = () => {
+    // Toggle: if already expanded, collapse; otherwise expand this pair
+    onToggleExpand(isExpanded ? null : pairKey);
+  };
+  
   return (
     <div className="group hover:bg-void-elevated transition-colors duration-200">
       {/* Entry header - log line */}
       <div 
         className="flex items-center gap-4 py-2 px-3 border-l-2 border-static-whisper group-hover:border-unsettling-cyan cursor-pointer"
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={handleClick}
       >
         <span className="text-static-ghost w-16">
           [CMD_{cmdNumber.toString().padStart(2, '0')}]

@@ -17,6 +17,7 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, 
   const [currentResponse, setCurrentResponse] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [currentCmdNumber, setCurrentCmdNumber] = useState(1);
+  const [expandedPairKey, setExpandedPairKey] = useState(null);
   
   // Initialize MessageCollector and ProfileRefinerClient
   const messageCollectorRef = useRef(null);
@@ -93,6 +94,19 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, 
     }
   }, [conversationHistory]);
 
+  // Keyboard shortcut: Ctrl+N for new CMD
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        handleNewCmd();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const updateMessages = (newMessages) => {
     setMessages(newMessages);
     if (onConversationUpdate) {
@@ -155,6 +169,10 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, 
         onProfileUpdate(null, null, 'Unable to update profile. Your current profile is unchanged.');
       }
     }
+  };
+
+  const handleNewCmd = () => {
+    setCurrentCmdNumber(prev => prev + 1);
   };
 
   const handleSubmit = async (input, isNewCommand = false) => {
@@ -302,6 +320,9 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, 
           onSubmit={handleSubmit}
           messages={messages}
           currentCmdNumber={currentCmdNumber}
+          onNewCmd={handleNewCmd}
+          expandedPairKey={expandedPairKey}
+          onToggleExpand={setExpandedPairKey}
         />
         
         {/* THE CHASM - Dimensional void between human and AI */}
@@ -331,13 +352,17 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, 
           isGenerating={isGenerating}
           messages={messages}
           glitchIntensity={preferences?.glitchIntensity || 'medium'}
+          currentCmdNumber={currentCmdNumber}
+          onNewCmd={handleNewCmd}
+          expandedPairKey={expandedPairKey}
+          onToggleExpand={setExpandedPairKey}
         />
       </div>
     </div>
   );
 };
 
-const LeftPanel = ({ onSubmit, messages, currentCmdNumber }) => {
+const LeftPanel = ({ onSubmit, messages, currentCmdNumber, onNewCmd, expandedPairKey, onToggleExpand }) => {
   return (
     <div className="relative flex items-start justify-center p-8 md:p-12 overflow-y-auto scrollbar-minimal">
       <div className="w-full max-w-md pt-8">
@@ -360,13 +385,18 @@ const LeftPanel = ({ onSubmit, messages, currentCmdNumber }) => {
           currentCmdNumber={currentCmdNumber}
         />
         
-        <MessageHistory messages={messages} role="user" />
+        <MessageHistory 
+          messages={messages} 
+          role="user"
+          expandedMessageIndex={expandedPairKey}
+          onToggleExpand={onToggleExpand}
+        />
       </div>
     </div>
   );
 };
 
-const RightPanel = ({ response, isGenerating, messages, glitchIntensity }) => {
+const RightPanel = ({ response, isGenerating, messages, glitchIntensity, currentCmdNumber, onNewCmd, expandedPairKey, onToggleExpand }) => {
   const [shouldGlitch, setShouldGlitch] = useState(false);
 
   // Random glitch effect every 15-25 seconds
@@ -425,7 +455,12 @@ const RightPanel = ({ response, isGenerating, messages, glitchIntensity }) => {
           [ SYSTEM: MIRROR_INITIALIZED ]
         </div>
         
-        <MessageHistory messages={messages} role="ai" />
+        <MessageHistory 
+          messages={messages} 
+          role="ai"
+          expandedMessageIndex={expandedPairKey}
+          onToggleExpand={onToggleExpand}
+        />
       </div>
     </div>
   );

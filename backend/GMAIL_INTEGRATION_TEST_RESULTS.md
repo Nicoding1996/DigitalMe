@@ -409,6 +409,41 @@ The implementation is production-ready pending:
 
 ---
 
+## Example: Mirrored Conversation Log Format
+
+The following shows how conversation logs are now displayed with the new CMD (Command) system:
+
+### CMD 01
+
+| Human                          | Doppelgänger                   |
+|--------------------------------|--------------------------------|
+| 01:50 Can you write a message m... | 01:50 Hey man, I was thinking a... |
+| 01:52 write a message for my GF... | 01:53 Hey man, I was thinking a... |
+| 01:54 write a message for my GF... | 01:54 Man, I'm just sitting her... |
+| 01:56 ask enzo if he would like... | 01:56 Hey Enzo, you free for pa... |
+| 01:57 make it shorter and more ... | 01:57 Yo Enzo, pasta tonight? Le... |
+
+─────────────────────────────────────────────────────────────
+
+### CMD 02
+
+| Human                          | Doppelgänger                   |
+|--------------------------------|--------------------------------|
+| 02:01 make it shorter          | 02:01 Hey Bianca, I literall... |
+| 02:03 sound more excited       | 02:03 I want you to create a cu... |
+| 02:05 change the boys to louth... | 02:05 Hey Enzo, are you mista... |
+| 02:06 Explain the causes and ef... | 02:06 When you try to break do... |
+
+**Features:**
+- Each CMD represents a conversation thread
+- Visual separation between CMDs with horizontal divider
+- Mirrored layout reinforces Human ↔ Doppelgänger duality
+- Previous CMDs dimmed (60% opacity) to focus on current conversation
+- CMD numbers displayed in both corners: `[01]`, `[02]`, etc.
+- Click CMD number or press `Ctrl+N` to start new thread
+
+---
+
 **Report Generated:** [Current Date]  
 **Implementation Complete:** ✅  
 **Ready for Manual Testing:** ✅  
