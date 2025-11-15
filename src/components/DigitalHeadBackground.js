@@ -29,8 +29,8 @@ const DigitalHeadBackground = () => {
         this.y = Math.random() * canvas.height;
         this.vx = (Math.random() - 0.5) * 0.3;
         this.vy = (Math.random() - 0.5) * 0.3;
-        this.radius = Math.random() * 1.5 + 0.5;
-        this.opacity = Math.random() * 0.3 + 0.1;
+        this.radius = Math.random() * 2 + 1;
+        this.opacity = Math.random() * 0.4 + 0.2;
       }
 
       update() {
@@ -71,8 +71,8 @@ const DigitalHeadBackground = () => {
             ctx.beginPath();
             ctx.moveTo(p1.x, p1.y);
             ctx.lineTo(p2.x, p2.y);
-            ctx.strokeStyle = `rgba(0, 217, 255, ${0.1 * (1 - distance / 120)})`;
-            ctx.lineWidth = 0.5;
+            ctx.strokeStyle = `rgba(0, 217, 255, ${0.15 * (1 - distance / 120)})`;
+            ctx.lineWidth = 0.8;
             ctx.stroke();
           }
         });
