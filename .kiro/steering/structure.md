@@ -17,8 +17,11 @@ digitalme/                          # Monorepo root
 │   ├── routes/                     # API route handlers
 │   │   └── gmailAuth.js           # Gmail authentication routes
 │   ├── services/                   # Business logic services
+│   │   ├── AdvancedStyleAnalyzer.js       # Advanced pattern extraction
 │   │   ├── AnalysisSessionService.js      # Session management
+│   │   ├── BlogStyleAnalyzer.js           # Blog content analysis
 │   │   ├── EmailCleansingService.js       # Email data cleaning
+│   │   ├── GitHubStyleAnalyzer.js         # GitHub commit/README analysis
 │   │   ├── GmailAnalysisOrchestrator.js   # Gmail analysis coordination
 │   │   ├── GmailAuthService.js            # Gmail OAuth handling
 │   │   ├── GmailRetrievalService.js       # Gmail API data fetching
@@ -40,6 +43,7 @@ digitalme/                          # Monorepo root
 │   │   ├── AnalysisProgress.js    # Gmail analysis progress UI
 │   │   ├── ConnectionStatus.js    # Backend connection indicator
 │   │   ├── CopyButton.js          # Copy to clipboard utility
+│   │   ├── DigitalHeadBackground.js # Animated particle background
 │   │   ├── DownloadButton.js      # Download functionality
 │   │   ├── ErrorBoundary.js       # Error boundary wrapper
 │   │   ├── ExportModal.js         # Data export modal

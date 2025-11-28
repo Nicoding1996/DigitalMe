@@ -115,7 +115,12 @@ npm run dev
 - Implement proper error handling with try/catch blocks
 - Follow security best practices (never log API keys, sanitize errors)
 - Use middleware for cross-cutting concerns (validation, rate limiting)
-- Organize business logic into service classes (e.g., GmailAuthService, BlogScrapingService)
+- Organize business logic into service classes:
+  - **GmailAuthService**: OAuth authentication flow
+  - **GmailStyleAnalyzer**: Email content analysis
+  - **BlogStyleAnalyzer**: Blog scraping and analysis (axios + cheerio)
+  - **GitHubStyleAnalyzer**: Repository and commit analysis (@octokit/rest)
+  - **AdvancedStyleAnalyzer**: Pattern extraction and quality scoring
 - Use exponential backoff for external API retries
 
 ## Browser Support

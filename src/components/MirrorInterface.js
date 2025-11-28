@@ -398,6 +398,17 @@ const LeftPanel = ({ onSubmit, messages, currentCmdNumber, onNewCmd, expandedPai
 
 const RightPanel = ({ response, isGenerating, messages, glitchIntensity, currentCmdNumber, onNewCmd, expandedPairKey, onToggleExpand }) => {
   const [shouldGlitch, setShouldGlitch] = useState(false);
+  const scrollContainerRef = useRef(null);
+
+  // Auto-scroll when response completes
+  useEffect(() => {
+    if (!isGenerating && response && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        top: scrollContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  }, [isGenerating, response]);
 
   // Random glitch effect every 15-25 seconds
   useEffect(() => {
@@ -426,7 +437,7 @@ const RightPanel = ({ response, isGenerating, messages, glitchIntensity, current
   }, [isGenerating]);
 
   return (
-    <div className="relative flex items-start justify-center p-8 md:p-12 overflow-y-auto scrollbar-mirrored">
+    <div ref={scrollContainerRef} className="relative flex items-start justify-center p-8 md:p-12 overflow-y-auto scrollbar-mirrored">
       <div className="w-full max-w-md pt-8">
         {/* Panel header - terminal style */}
         <div className="mb-8">

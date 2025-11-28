@@ -29,8 +29,9 @@ try {
 // Initialize Express application
 const app = express();
 
-// Configure JSON body parser middleware
-app.use(express.json());
+// Configure JSON body parser middleware with increased size limit
+// Needed for large style profiles, conversation history, and Gmail data
+app.use(express.json({ limit: '10mb' }));
 
 // Serve static files for OAuth callback page
 app.use(express.static('public'));

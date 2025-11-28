@@ -25,6 +25,18 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const isCodeRequest = (prompt) => {
   const lowerPrompt = prompt.toLowerCase();
   
+  // Text content indicators - if present, it's NOT a code request
+  const textContentKeywords = [
+    'announcement', 'article', 'blog post', 'description', 
+    'email', 'letter', 'message', 'paragraph', 'essay',
+    'story', 'summary', 'report', 'document', 'copy',
+    'content', 'text', 'write about', 'explain', 'describe'
+  ];
+  
+  if (textContentKeywords.some(keyword => lowerPrompt.includes(keyword))) {
+    return false;
+  }
+  
   // Strong code indicators - these alone are enough
   const strongCodeKeywords = [
     'function', 'component', 'code', 'implement', 
@@ -63,7 +75,7 @@ const detectLanguage = (prompt) => {
   if (lowerPrompt.includes('react') || lowerPrompt.includes('jsx')) return 'javascript';
   if (lowerPrompt.includes('python')) return 'python';
   if (lowerPrompt.includes('java')) return 'java';
-  if (lowerPrompt.includes('css') || lowerPrompt.includes('style')) return 'css';
+  if (lowerPrompt.includes('css code') || lowerPrompt.includes('css style') || lowerPrompt.includes('stylesheet')) return 'css';
   if (lowerPrompt.includes('html')) return 'html';
   
   return 'javascript'; // Default to JavaScript
