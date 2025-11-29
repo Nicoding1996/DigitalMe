@@ -4,8 +4,3 @@ build
 # Environment variables
 .env
 backend/.env
-
-# Documentation
-DEPLOYMENT_GUIDE.md
-HACKATHON_VIDEO_SCRIPT.md
-HACKATHON_SUBMISSION.md
