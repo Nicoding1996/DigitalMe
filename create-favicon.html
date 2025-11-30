@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DigitalMe Favicon Generator</title>
+    <style>
+        body { 
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: #00e5ff;
+            margin: 0;
+        }
+        h2 {
+            font-weight: 300;
+            letter-spacing: 2px;
+            margin-bottom: 30px;
+        }
+        canvas { 
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            margin: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 229, 255, 0.2);
+        }
+        .instructions {
+            text-align: center;
+            max-width: 500px;
+            line-height: 1.8;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        code {
+            background: rgba(0, 229, 255, 0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <h2>DIGITALME FAVICON</h2>
+    <canvas id="canvas" width="192" height="192"></canvas>
+    <div class="instructions">
+        <p><strong>Right-click the canvas</strong> → Save image as <code>logo192.png</code></p>
+        <p>Place in the <code>public/</code> folder</p>
+    </div>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const size = 192;
+        const center = size / 2;
+        const radius = 66;
+        
+        // Radial background gradient
+        const bgGrad = ctx.createRadialGradient(center, center, 0, center, center, center);
+        bgGrad.addColorStop(0, '#0f0f1a');
+        bgGrad.addColorStop(1, '#050508');
+        ctx.fillStyle = bgGrad;
+        ctx.beginPath();
+        ctx.arc(center, center, center, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Subtle outer ring
+        ctx.strokeStyle = '#00e5ff';
+        ctx.globalAlpha = 0.15;
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.arc(center, center, radius + 9, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        // Human side gradient (bright)
+        const humanGrad = ctx.createLinearGradient(center, 30, center, size - 30);
+        humanGrad.addColorStop(0, '#00e5ff');
+        humanGrad.addColorStop(1, '#0088ff');
+        
+        // AI side gradient (muted)
+        const aiGrad = ctx.createLinearGradient(center, 30, center, size - 30);
+        aiGrad.addColorStop(0, '#0088ff');
+        aiGrad.addColorStop(1, '#0044ff');
+        
+        // LEFT SEMICIRCLE - Human (bright, alive)
+        ctx.fillStyle = humanGrad;
+        ctx.globalAlpha = 1;
+        ctx.shadowBlur = 18;
+        ctx.shadowColor = '#00e5ff';
+        ctx.beginPath();
+        ctx.arc(center, center, radius, Math.PI * 0.5, Math.PI * 1.5);
+        ctx.lineTo(center, center - radius);
+        ctx.closePath();
+        ctx.fill();
+        
+        // RIGHT SEMICIRCLE - AI (dimmer, ghostly)
+        ctx.fillStyle = aiGrad;
+        ctx.globalAlpha = 0.7;
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = '#0066ff';
+        ctx.beginPath();
+        ctx.arc(center, center, radius, Math.PI * 1.5, Math.PI * 0.5);
+        ctx.lineTo(center, center - radius);
+        ctx.closePath();
+        ctx.fill();
+        
+        // THE MIRROR LINE - Intense glow
+        ctx.shadowBlur = 30;
+        ctx.shadowColor = '#00e5ff';
+        ctx.strokeStyle = '#00e5ff';
+        ctx.globalAlpha = 1;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(center, 26);
+        ctx.lineTo(center, size - 26);
+        ctx.stroke();
+        
+        // White hot core
+        ctx.strokeStyle = '#ffffff';
+        ctx.globalAlpha = 0.6;
+        ctx.lineWidth = 0.5;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#ffffff';
+        ctx.beginPath();
+        ctx.moveTo(center, 30);
+        ctx.lineTo(center, size - 30);
+        ctx.stroke();
+        
+        // Minimal scan lines - left (human)
+        ctx.shadowBlur = 2;
+        ctx.strokeStyle = '#00e5ff';
+        ctx.globalAlpha = 0.4;
+        ctx.lineWidth = 0.8;
+        
+        [67, 86, 105, 124].forEach(y => {
+            ctx.beginPath();
+            ctx.moveTo(52, y);
+            ctx.lineTo(center - 2, y);
+            ctx.stroke();
+        });
+        
+        // Minimal scan lines - right (AI, faded)
+        ctx.globalAlpha = 0.25;
+        [67, 86, 105, 124].forEach(y => {
+            ctx.beginPath();
+            ctx.moveTo(center + 2, y);
+            ctx.lineTo(140, y);
+            ctx.stroke();
+        });
+        
+        // Single glitch bar
+        ctx.shadowBlur = 4;
+        ctx.globalAlpha = 0.6;
+        ctx.fillStyle = '#00e5ff';
+        ctx.fillRect(56, 95, 37, 1.5);
+        ctx.globalAlpha = 0.4;
+        ctx.fillRect(center + 2, 96, 37, 1.5);
+        
+        // Minimalist corner accents
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = '#00e5ff';
+        ctx.globalAlpha = 0.3;
+        ctx.lineWidth = 1.2;
+        
+        const bracket = 7;
+        const margin = 26;
+        
+        // Corners
+        [[margin, margin, 1, 1], 
+         [size - margin, margin, -1, 1],
+         [margin, size - margin, 1, -1],
+         [size - margin, size - margin, -1, -1]
+        ].forEach(([x, y, dx, dy]) => {
+            ctx.beginPath();
+            ctx.moveTo(x + bracket * dx, y);
+            ctx.lineTo(x, y);
+            ctx.lineTo(x, y + bracket * dy);
+            ctx.stroke();
+        });
+    </script>
+</body>
+</html>
+</body>
+</html>

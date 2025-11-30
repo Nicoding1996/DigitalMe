@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <!-- Radial gradient for depth -->
+    <radialGradient id="bgGradient" cx="50%" cy="50%">
+      <stop offset="0%" style="stop-color:#0f0f1a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#050508;stop-opacity:1" />
+    </radialGradient>
+    
+    <!-- Human side gradient (bright, alive) -->
+    <linearGradient id="humanSide" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#00e5ff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0088ff;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- AI side gradient (muted, digital) -->
+    <linearGradient id="aiSide" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#0088ff;stop-opacity:0.5" />
+      <stop offset="100%" style="stop-color:#0044ff;stop-opacity:0.5" />
+    </linearGradient>
+    
+    <!-- Intense glow for mirror line -->
+    <filter id="mirrorGlow">
+      <feGaussianBlur stdDeviation="10" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Soft glow for faces -->
+    <filter id="faceGlow">
+      <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background with depth -->
+  <circle cx="256" cy="256" r="256" fill="url(#bgGradient)"/>
+  
+  <!-- Subtle outer ring -->
+  <circle cx="256" cy="256" r="200" fill="none" stroke="#00e5ff" stroke-width="0.5" opacity="0.15"/>
+  
+  <!-- LEFT FACE - Human (bright, full opacity) -->
+  <path d="M 256 80 
+           A 176 176 0 0 1 256 432
+           L 256 256 Z" 
+        fill="url(#humanSide)" 
+        opacity="1"
+        filter="url(#faceGlow)"/>
+  
+  <!-- RIGHT FACE - AI Reflection (dimmer, ghostly) -->
+  <path d="M 256 80 
+           A 176 176 0 0 0 256 432
+           L 256 256 Z" 
+        fill="url(#aiSide)" 
+        opacity="0.7"
+        filter="url(#faceGlow)"/>
+  
+  <!-- THE MIRROR - Central dividing line with intense glow -->
+  <line x1="256" y1="70" x2="256" y2="442" 
+        stroke="#00e5ff" 
+        stroke-width="3" 
+        opacity="1"
+        filter="url(#mirrorGlow)"/>
+  
+  <!-- White hot core -->
+  <line x1="256" y1="80" x2="256" y2="432" 
+        stroke="#ffffff" 
+        stroke-width="0.5" 
+        opacity="0.6"/>
+  
+  <!-- Minimal scan lines - left (human) -->
+  <g opacity="0.4" stroke="#00e5ff" stroke-width="1" fill="none">
+    <line x1="140" y1="180" x2="250" y2="180"/>
+    <line x1="150" y1="230" x2="250" y2="230"/>
+    <line x1="135" y1="280" x2="250" y2="280"/>
+    <line x1="145" y1="330" x2="250" y2="330"/>
+  </g>
+  
+  <!-- Minimal scan lines - right (AI, more faded) -->
+  <g opacity="0.25" stroke="#00e5ff" stroke-width="1" fill="none">
+    <line x1="262" y1="180" x2="372" y2="180"/>
+    <line x1="262" y1="230" x2="362" y2="230"/>
+    <line x1="262" y1="280" x2="377" y2="280"/>
+    <line x1="262" y1="330" x2="367" y2="330"/>
+  </g>
+  
+  <!-- Single glitch bar for visual interest -->
+  <g opacity="0.6">
+    <rect x="150" y="254" width="100" height="2" fill="#00e5ff"/>
+    <rect x="260" y="256" width="100" height="2" fill="#00e5ff" opacity="0.4"/>
+  </g>
+  
+  <!-- Minimalist corner accents -->
+  <g stroke="#00e5ff" stroke-width="1.5" fill="none" opacity="0.3">
+    <path d="M 90 110 L 70 110 L 70 130"/>
+    <path d="M 422 110 L 442 110 L 442 130"/>
+    <path d="M 90 402 L 70 402 L 70 382"/>
+    <path d="M 422 402 L 442 402 L 442 382"/>
+  </g>
+</svg>
