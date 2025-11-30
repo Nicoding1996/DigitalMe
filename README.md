@@ -148,7 +148,7 @@ Eliminated repetitive explanations - Kiro always knew the context.
 
 ## 🎬 Demo
 
-[Video Demo](https://youtube.com/your-demo-video) | [Live Demo](https://digitalme.vercel.app)
+[Video Demo](https://youtu.be/mYrXn9NlBY4) | [Live Demo](https://digitalme.vercel.app)
 
 ## 📝 Documentation
 

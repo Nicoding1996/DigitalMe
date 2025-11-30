@@ -389,7 +389,8 @@ const callKiroAgent = async (userMessage, styleProfile, conversationHistory = []
   
   console.log('Formatted history:', formattedHistory.length, 'messages');
   
-  const response = await fetch('http://localhost:3001/api/generate', {
+  const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
+  const response = await fetch(`${backendUrl}/api/generate`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
