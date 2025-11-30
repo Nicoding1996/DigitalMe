@@ -5,7 +5,7 @@
  */
 import { useState, useEffect, useRef } from 'react';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
 
 const GmailConnectButton = ({ 
   onConnectionStart, 
