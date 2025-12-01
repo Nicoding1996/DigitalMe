@@ -51,12 +51,14 @@ class GmailAuthService {
       redirectUri: redirectUri
     });
     
-    // Generate authorization URL
+    // Generate authorization URL with explicit redirect_uri
+    // This overrides the redirect_uri set in the OAuth2 client constructor
     const authUrl = this.oauth2Client.generateAuthUrl({
       access_type: 'offline', // Request refresh token
       scope: this.scopes,
       state: state,
-      prompt: 'consent' // Force consent screen to ensure refresh token
+      prompt: 'consent', // Force consent screen to ensure refresh token
+      redirect_uri: redirectUri // CRITICAL: Must match Google Cloud Console exactly
     });
     
     return { authUrl, state };
@@ -86,12 +88,19 @@ class GmailAuthService {
       throw new Error('State token has expired');
     }
     
+    // Get the redirect URI that was used for this OAuth flow
+    const redirectUri = stateData.redirectUri;
+    
     // Remove state token after validation (one-time use)
     this.stateTokens.delete(state);
     
     try {
       // Exchange authorization code for tokens
-      const { tokens } = await this.oauth2Client.getToken(code);
+      // CRITICAL: Must use the same redirect_uri that was used in generateAuthUrl
+      const { tokens } = await this.oauth2Client.getToken({
+        code: code,
+        redirect_uri: redirectUri
+      });
       
       // Calculate token expiration time
       const expiresAt = new Date(Date.now() + (tokens.expiry_date || 3600 * 1000));
