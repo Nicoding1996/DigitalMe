@@ -504,9 +504,30 @@ const SettingsPanel = ({ isOpen, onClose, styleProfile, preferences, conversatio
                 </button>
                 <button
                   className="flex-1 px-4 py-3 bg-glitch-red border border-glitch-red text-void-deep font-mono text-xs hover:bg-transparent hover:text-glitch-red transition-all"
-                  onClick={() => {
+                  onClick={async () => {
+                    // Disconnect Gmail if connected
+                    const gmailSessionId = localStorage.getItem('gmail_session_id');
+                    if (gmailSessionId) {
+                      try {
+                        const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
+                        await fetch(`${API_BASE_URL}/api/gmail/disconnect`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ sessionId: gmailSessionId })
+                        });
+                      } catch (e) {
+                        // Ignore disconnect errors during reset
+                      }
+                    }
+                    
+                    // Clear all localStorage
                     localStorage.removeItem('digitalme_profile');
                     localStorage.removeItem('digitalme_sources');
+                    localStorage.removeItem('gmail_session_id');
+                    localStorage.removeItem('digitalme_messages');
+                    localStorage.removeItem('digitalme_learning_enabled');
+                    localStorage.removeItem('digitalme_pending_messages');
+                    
                     window.location.reload();
                   }}
                 >

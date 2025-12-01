@@ -245,6 +245,7 @@ const GmailConnectButton = ({
           const sid = event.data.sessionId;
           console.log('[Gmail OAuth] Starting analysis tracking for session:', sid);
           setSessionId(sid);
+          localStorage.setItem('gmail_session_id', sid); // Store for disconnect on reset
           setConnectionStatus('retrieving');
           setProgressMessage('Retrieving sent emails');
           startPolling(sid);
@@ -462,6 +463,7 @@ const GmailConnectButton = ({
       // Reset state regardless of response (best effort disconnect)
       setConnectionStatus('idle');
       setSessionId(null);
+      localStorage.removeItem('gmail_session_id'); // Clear stored session ID
       setError(null);
       setProgressMessage('');
       setAnalysisStats({
@@ -476,6 +478,7 @@ const GmailConnectButton = ({
       // Don't show error to user - just reset state
       setConnectionStatus('idle');
       setSessionId(null);
+      localStorage.removeItem('gmail_session_id'); // Clear stored session ID
       setError(null);
       setProgressMessage('');
       setAnalysisStats({
