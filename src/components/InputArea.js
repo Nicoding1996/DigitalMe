@@ -86,6 +86,8 @@ const InputArea = forwardRef(({ onSubmit, messageCount = 0, currentCmdNumber = 1
     const value = e.target.value;
     
     if (value.length > MAX_INPUT_LENGTH) {
+      // Truncate to max length instead of blocking
+      setInput(value.slice(0, MAX_INPUT_LENGTH));
       setError(`BUFFER_OVERFLOW`);
       return;
     }
