@@ -55,30 +55,30 @@ const StyleControls = ({ preferences, onUpdatePreferences }) => {
         <p className="font-mono text-xs text-static-muted mb-4">Adjust the intensity of the glitch animation</p>
         <div className="grid grid-cols-3 gap-2 mb-3">
           <button
-            className={`p-3 border font-mono text-xs transition-all ${
+            className={`p-3 min-h-[44px] border font-mono text-xs transition-all touch-manipulation ${
               localPreferences.glitchIntensity === 'low'
                 ? 'border-unsettling-cyan text-unsettling-cyan bg-void-elevated'
-                : 'border-static-whisper text-static-muted hover:border-static-ghost'
+                : 'border-static-whisper text-static-muted hover:border-static-ghost active:bg-void-elevated'
             }`}
             onClick={() => handleGlitchIntensityChange({ target: { value: 'low' } })}
           >
             [LOW]
           </button>
           <button
-            className={`p-3 border font-mono text-xs transition-all ${
+            className={`p-3 min-h-[44px] border font-mono text-xs transition-all touch-manipulation ${
               localPreferences.glitchIntensity === 'medium'
                 ? 'border-unsettling-cyan text-unsettling-cyan bg-void-elevated'
-                : 'border-static-whisper text-static-muted hover:border-static-ghost'
+                : 'border-static-whisper text-static-muted hover:border-static-ghost active:bg-void-elevated'
             }`}
             onClick={() => handleGlitchIntensityChange({ target: { value: 'medium' } })}
           >
             [MEDIUM]
           </button>
           <button
-            className={`p-3 border font-mono text-xs transition-all ${
+            className={`p-3 min-h-[44px] border font-mono text-xs transition-all touch-manipulation ${
               localPreferences.glitchIntensity === 'high'
                 ? 'border-unsettling-cyan text-unsettling-cyan bg-void-elevated'
-                : 'border-static-whisper text-static-muted hover:border-static-ghost'
+                : 'border-static-whisper text-static-muted hover:border-static-ghost active:bg-void-elevated'
             }`}
             onClick={() => handleGlitchIntensityChange({ target: { value: 'high' } })}
           >
@@ -95,10 +95,10 @@ const StyleControls = ({ preferences, onUpdatePreferences }) => {
         <div className="font-mono text-xs text-static-ghost mb-3">AUTO_SAVE</div>
         <p className="font-mono text-xs text-static-muted mb-4">Automatically save conversation history</p>
         <button
-          className={`px-6 py-2 border font-mono text-xs transition-all ${
+          className={`px-6 py-2 min-h-[44px] border font-mono text-xs transition-all touch-manipulation ${
             localPreferences.autoSave
               ? 'border-system-active text-system-active bg-void-elevated'
-              : 'border-static-whisper text-static-muted hover:border-static-ghost'
+              : 'border-static-whisper text-static-muted hover:border-static-ghost active:bg-void-elevated'
           }`}
           onClick={handleAutoSaveToggle}
           role="switch"

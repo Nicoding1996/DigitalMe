@@ -188,12 +188,13 @@ The practical benefit is improved application performance and user experience, p
  * @param {string} prompt - User's text generation request
  * @param {Object} styleProfile - User's style profile
  * @param {Array} context - Conversation history
+ * @param {Function} onChunk - Optional callback for streaming chunks (Requirement 4.2)
  * @returns {Promise<Object>} Generated text response
  */
-export const generateText = async (prompt, styleProfile, context = []) => {
+export const generateText = async (prompt, styleProfile, context = [], onChunk = null) => {
   try {
     // Call the real Kiro AI agent with style-aware prompt and conversation history
-    const aiResponse = await callKiroAgent(prompt, styleProfile, context);
+    const aiResponse = await callKiroAgent(prompt, styleProfile, context, onChunk);
     
     return {
       success: true,
@@ -370,9 +371,10 @@ const mockCodeResponses = {
  * @param {string} userMessage - User's request
  * @param {Object} styleProfile - User's style profile
  * @param {Array} conversationHistory - Previous messages for context
+ * @param {Function} onChunk - Optional callback for streaming chunks (Requirement 4.2)
  * @returns {Promise<string>} AI response
  */
-const callKiroAgent = async (userMessage, styleProfile, conversationHistory = []) => {
+const callKiroAgent = async (userMessage, styleProfile, conversationHistory = [], onChunk = null) => {
   // Call the backend proxy service with prompt, styleProfile, and conversation history
   // The backend will construct the meta-prompt dynamically with full context
   console.log('Calling backend with user message, style profile, and conversation history');
@@ -430,6 +432,11 @@ const callKiroAgent = async (userMessage, styleProfile, conversationHistory = []
         const chunk = decoder.decode(value, { stream: true });
         fullText += chunk;
         console.log('Chunk received, length:', chunk.length);
+        
+        // Call onChunk callback with accumulated text for streaming display (Requirement 4.2)
+        if (onChunk) {
+          onChunk(fullText);
+        }
       }
     }
   } catch (error) {
@@ -446,14 +453,15 @@ const callKiroAgent = async (userMessage, styleProfile, conversationHistory = []
  * @param {string} prompt - User's code generation request
  * @param {Object} styleProfile - User's style profile
  * @param {Array} context - Conversation history
+ * @param {Function} onChunk - Optional callback for streaming chunks (Requirement 4.2)
  * @returns {Promise<Object>} Generated code response
  */
-export const generateCode = async (prompt, styleProfile, context = []) => {
+export const generateCode = async (prompt, styleProfile, context = [], onChunk = null) => {
   const language = detectLanguage(prompt);
   
   try {
     // Call the real Kiro AI agent with style-aware prompt and conversation history
-    const aiResponse = await callKiroAgent(prompt, styleProfile, context);
+    const aiResponse = await callKiroAgent(prompt, styleProfile, context, onChunk);
     
     return {
       success: true,
@@ -520,9 +528,10 @@ export const generateCode = async (prompt, styleProfile, context = []) => {
  * @param {string} prompt - User's generation request
  * @param {Object} styleProfile - User's style profile
  * @param {Array} context - Conversation history
+ * @param {Function} onChunk - Optional callback for streaming chunks (Requirement 4.2)
  * @returns {Promise<Object>} Generated content response
  */
-export const generateContent = async (prompt, styleProfile, context = []) => {
+export const generateContent = async (prompt, styleProfile, context = [], onChunk = null) => {
   if (!prompt || !styleProfile) {
     return {
       success: false,
@@ -538,9 +547,9 @@ export const generateContent = async (prompt, styleProfile, context = []) => {
   
   try {
     if (isCode) {
-      return await generateCode(prompt, styleProfile, context);
+      return await generateCode(prompt, styleProfile, context, onChunk);
     } else {
-      return await generateText(prompt, styleProfile, context);
+      return await generateText(prompt, styleProfile, context, onChunk);
     }
   } catch (error) {
     return {

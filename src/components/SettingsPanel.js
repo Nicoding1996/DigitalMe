@@ -78,24 +78,24 @@ const SettingsPanel = ({ isOpen, onClose, styleProfile, preferences, conversatio
 
   return (
     <div 
-      className="fixed inset-0 bg-overlay-darker backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-overlay-darker backdrop-blur-sm z-50 flex items-center justify-center p-0 md:p-4"
       onClick={handleOverlayClick}
     >
-      <div className="w-full max-w-4xl max-h-[90vh] bg-void-deep border border-static-whisper flex flex-col">
+      <div className="w-full h-full md:h-auto md:max-w-4xl md:max-h-[90vh] bg-void-deep border-0 md:border border-static-whisper flex flex-col">
         {/* Terminal header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-void-elevated border-b border-static-whisper">
-          <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between px-4 md:px-6 py-4 bg-void-elevated border-b border-static-whisper">
+          <div className="flex items-center gap-3 md:gap-4">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-glitch-red" />
               <span className="w-2 h-2 rounded-full bg-system-warning" />
               <span className="w-2 h-2 rounded-full bg-system-active" />
             </div>
-            <span className="font-mono text-sm text-static-white">
+            <span className="font-mono text-xs md:text-sm text-static-white">
               [SYSTEM_CONFIGURATION.exe]
             </span>
           </div>
           <button 
-            className="font-mono text-xl text-static-muted hover:text-glitch-red transition-colors"
+            className="font-mono text-xl text-static-muted hover:text-glitch-red active:text-glitch-red transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation"
             onClick={onClose}
             aria-label="Close settings"
           >
@@ -106,30 +106,30 @@ const SettingsPanel = ({ isOpen, onClose, styleProfile, preferences, conversatio
         {/* Tabs */}
         <div className="flex border-b border-static-whisper bg-void-surface">
           <button
-            className={`flex-1 px-6 py-3 font-mono text-xs tracking-wider transition-all ${
+            className={`flex-1 px-3 md:px-6 py-3 min-h-[44px] font-mono text-xs tracking-wider transition-all touch-manipulation ${
               activeTab === 'profile'
                 ? 'bg-void-elevated text-unsettling-cyan border-b-2 border-unsettling-cyan'
-                : 'text-static-muted hover:text-static-white hover:bg-void-elevated'
+                : 'text-static-muted hover:text-static-white hover:bg-void-elevated active:bg-void-elevated'
             }`}
             onClick={() => setActiveTab('profile')}
           >
             [PROFILE]
           </button>
           <button
-            className={`flex-1 px-6 py-3 font-mono text-xs tracking-wider transition-all ${
+            className={`flex-1 px-3 md:px-6 py-3 min-h-[44px] font-mono text-xs tracking-wider transition-all touch-manipulation ${
               activeTab === 'preferences'
                 ? 'bg-void-elevated text-unsettling-cyan border-b-2 border-unsettling-cyan'
-                : 'text-static-muted hover:text-static-white hover:bg-void-elevated'
+                : 'text-static-muted hover:text-static-white hover:bg-void-elevated active:bg-void-elevated'
             }`}
             onClick={() => setActiveTab('preferences')}
           >
             [PREFERENCES]
           </button>
           <button
-            className={`flex-1 px-6 py-3 font-mono text-xs tracking-wider transition-all ${
+            className={`flex-1 px-3 md:px-6 py-3 min-h-[44px] font-mono text-xs tracking-wider transition-all touch-manipulation ${
               activeTab === 'export'
                 ? 'bg-void-elevated text-unsettling-cyan border-b-2 border-unsettling-cyan'
-                : 'text-static-muted hover:text-static-white hover:bg-void-elevated'
+                : 'text-static-muted hover:text-static-white hover:bg-void-elevated active:bg-void-elevated'
             }`}
             onClick={() => setActiveTab('export')}
           >
@@ -138,7 +138,7 @@ const SettingsPanel = ({ isOpen, onClose, styleProfile, preferences, conversatio
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto scrollbar-minimal p-6">
+        <div className="flex-1 overflow-y-auto scrollbar-minimal p-4 md:p-6">
           {activeTab === 'profile' && (
             <div className="space-y-6">
               <div className="font-mono text-xs text-static-ghost mb-4">
@@ -187,7 +187,7 @@ const SettingsPanel = ({ isOpen, onClose, styleProfile, preferences, conversatio
                   )}
                   
                   <button 
-                    className="px-6 py-3 bg-void-surface border border-unsettling-cyan text-unsettling-cyan font-mono text-xs hover:bg-unsettling-cyan hover:text-void-deep transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-6 py-3 min-h-[44px] bg-void-surface border border-unsettling-cyan text-unsettling-cyan font-mono text-xs hover:bg-unsettling-cyan hover:text-void-deep active:bg-unsettling-cyan active:text-void-deep transition-all disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
                     onClick={() => setShowAdvancedConfirm(true)}
                     disabled={isReanalyzing}
                   >
@@ -199,7 +199,7 @@ const SettingsPanel = ({ isOpen, onClose, styleProfile, preferences, conversatio
                   Reset your profile to re-analyze your writing style with updated algorithms.
                 </p>
                 <button 
-                  className="px-6 py-3 bg-void-surface border border-glitch-red text-glitch-red font-mono text-xs hover:bg-glitch-red hover:text-void-deep transition-all"
+                  className="px-6 py-3 min-h-[44px] bg-void-surface border border-glitch-red text-glitch-red font-mono text-xs hover:bg-glitch-red hover:text-void-deep active:bg-glitch-red active:text-void-deep transition-all touch-manipulation"
                   onClick={() => setShowResetConfirm(true)}
                 >
                   [RESET_PROFILE]
@@ -288,7 +288,7 @@ const SettingsPanel = ({ isOpen, onClose, styleProfile, preferences, conversatio
                   STORED_MESSAGES: {conversationHistory.length} / 50
                 </p>
                 <button 
-                  className="px-6 py-3 bg-void-surface border border-static-whisper text-static-white font-mono text-xs hover:border-glitch-red hover:text-glitch-red transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="px-6 py-3 min-h-[44px] bg-void-surface border border-static-whisper text-static-white font-mono text-xs hover:border-glitch-red hover:text-glitch-red active:border-glitch-red active:text-glitch-red transition-all disabled:opacity-30 disabled:cursor-not-allowed touch-manipulation"
                   onClick={onClearHistory}
                   disabled={conversationHistory.length === 0}
                 >
@@ -311,20 +311,20 @@ const SettingsPanel = ({ isOpen, onClose, styleProfile, preferences, conversatio
                 </div>
                 <div className="flex gap-2">
                   <button
-                    className={`flex-1 px-4 py-2 font-mono text-xs border transition-all ${
+                    className={`flex-1 px-4 py-3 min-h-[44px] font-mono text-xs border transition-all touch-manipulation ${
                       exportFormat === 'markdown'
                         ? 'bg-void-elevated border-unsettling-cyan text-unsettling-cyan'
-                        : 'bg-void-surface border-static-whisper text-static-muted hover:border-static-ghost hover:text-static-white'
+                        : 'bg-void-surface border-static-whisper text-static-muted hover:border-static-ghost hover:text-static-white active:bg-void-elevated'
                     }`}
                     onClick={() => setExportFormat('markdown')}
                   >
                     [MARKDOWN]
                   </button>
                   <button
-                    className={`flex-1 px-4 py-2 font-mono text-xs border transition-all ${
+                    className={`flex-1 px-4 py-3 min-h-[44px] font-mono text-xs border transition-all touch-manipulation ${
                       exportFormat === 'plain'
                         ? 'bg-void-elevated border-unsettling-cyan text-unsettling-cyan'
-                        : 'bg-void-surface border-static-whisper text-static-muted hover:border-static-ghost hover:text-static-white'
+                        : 'bg-void-surface border-static-whisper text-static-muted hover:border-static-ghost hover:text-static-white active:bg-void-elevated'
                     }`}
                     onClick={() => setExportFormat('plain')}
                   >

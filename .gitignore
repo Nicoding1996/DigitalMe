@@ -4,3 +4,18 @@ build
 # Environment variables
 .env
 backend/.env
+
+# Development documentation (completed tasks, summaries, implementation notes)
+*_COMPLETE.md
+*_SUMMARY.md
+*_IMPLEMENTATION*.md
+*_UPDATE.md
+*_VERIFICATION.md
+*_PROGRESS.md
+*_ROADMAP.md
+*_REFACTOR.md
+*_TRANSFORMATION*.md
+*_MIGRATION*.md
+PROJECT_STATUS.md
+SUMMARY.md
+HACKATHON_*.md

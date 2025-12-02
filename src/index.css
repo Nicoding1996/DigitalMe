@@ -188,4 +188,9 @@
   .scrollbar-mirrored::-webkit-scrollbar-thumb:hover {
     background: rgba(0, 217, 255, 0.4);
   }
+  
+  /* Touch manipulation for better mobile interaction */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
 }

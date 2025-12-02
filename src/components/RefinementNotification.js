@@ -68,7 +68,7 @@ const RefinementNotification = ({ visible, deltaReport, onDismiss, onViewDetails
           </span>
           <button
             onClick={handleDismiss}
-            className="font-mono text-xs text-static-muted hover:text-glitch-red transition-colors"
+            className="font-mono text-xs text-static-muted hover:text-glitch-red active:text-glitch-red transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation"
             aria-label="Dismiss notification"
           >
             [X]
@@ -102,14 +102,14 @@ const RefinementNotification = ({ visible, deltaReport, onDismiss, onViewDetails
             {!isError && onViewDetails && (
               <button
                 onClick={handleViewDetails}
-                className="flex-1 px-4 py-2 bg-void-surface border border-unsettling-cyan text-unsettling-cyan font-mono text-xs hover:bg-unsettling-cyan hover:text-void-deep transition-all"
+                className="flex-1 px-4 py-2 min-h-[44px] bg-void-surface border border-unsettling-cyan text-unsettling-cyan font-mono text-xs hover:bg-unsettling-cyan hover:text-void-deep active:bg-unsettling-cyan active:text-void-deep transition-all touch-manipulation"
               >
                 [VIEW_CHANGES]
               </button>
             )}
             <button
               onClick={handleDismiss}
-              className={`${isError ? 'flex-1' : ''} px-4 py-2 bg-void-surface border border-static-whisper text-static-white font-mono text-xs hover:border-static-white transition-all`}
+              className={`${isError ? 'flex-1' : ''} px-4 py-2 min-h-[44px] bg-void-surface border border-static-whisper text-static-white font-mono text-xs hover:border-static-white active:bg-void-elevated transition-all touch-manipulation`}
             >
               [DISMISS]
             </button>

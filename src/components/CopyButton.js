@@ -29,8 +29,8 @@ const CopyButton = ({ content, onCopySuccess, compact = false }) => {
     }
   };
 
-  const baseClasses = "bg-void-surface border border-static-whisper text-static-white font-mono hover:border-unsettling-cyan hover:text-unsettling-cyan transition-all disabled:opacity-30 disabled:cursor-not-allowed";
-  const sizeClasses = compact ? "px-3 py-1 text-xs" : "px-6 py-2 text-xs";
+  const baseClasses = "bg-void-surface border border-static-whisper text-static-white font-mono hover:border-unsettling-cyan hover:text-unsettling-cyan active:bg-void-elevated transition-all disabled:opacity-30 disabled:cursor-not-allowed touch-manipulation";
+  const sizeClasses = compact ? "px-3 py-2 min-h-[44px] text-xs" : "px-6 py-3 min-h-[44px] text-xs";
 
   return (
     <button 

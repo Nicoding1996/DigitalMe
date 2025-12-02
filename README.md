@@ -11,7 +11,7 @@
 
 DigitalMe analyzes your writing from Gmail, GitHub, blogs, and text samples to create an AI that talks like you. Not generic ChatGPT speak - YOUR actual voice, vocabulary, and style.
 
-**The Problem:** AI writing sounds robotic and generic. Everyone can tell when you used ChatGPT.
+**The Problem:** AI writing sounds robotic and generic. Everyone can tell when you used AI.
 
 **The Solution:** An AI doppelgänger that learns your unique communication style and generates content that sounds authentically human - YOUR human.
 
@@ -148,7 +148,7 @@ Eliminated repetitive explanations - Kiro always knew the context.
 
 ## 🎬 Demo
 
-[Video Demo](https://youtu.be/mYrXn9NlBY4) | [Live Demo](https://digital-me-peach.vercel.app/)
+[Video Demo](https://youtu.be/mYrXn9NlBY4) | [Live Demo](https://digital-me-peach.vercel.app)
 
 ## 📝 Documentation
 

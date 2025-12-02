@@ -2,7 +2,7 @@
  * MirrorInterface Component
  * Black Mirror aesthetic - The Chasm between human and AI
  */
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import InputArea from './InputArea';
 import ResponseArea from './ResponseArea';
 import MessageHistory from './MessageHistory';
@@ -12,16 +12,27 @@ import { generateContent } from '../services/ContentGenerator';
 import MessageCollector from '../services/MessageCollector';
 import ProfileRefinerClient from '../services/ProfileRefinerClient';
 
-const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, onSubmit, onConversationUpdate, onProfileUpdate }) => {
+const MirrorInterface = forwardRef(({ styleProfile, conversationHistory = [], preferences, cmdNumber = 1, onSubmit, onConversationUpdate, onProfileUpdate, onCmdNumberUpdate }, ref) => {
   const [messages, setMessages] = useState(conversationHistory);
   const [currentResponse, setCurrentResponse] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [currentCmdNumber, setCurrentCmdNumber] = useState(1);
+  const [currentCmdNumber, setCurrentCmdNumber] = useState(cmdNumber);
   const [expandedPairKey, setExpandedPairKey] = useState(null);
+  const [streamingText, setStreamingText] = useState(null); // For streaming display (Requirement 4.2)
   
   // Initialize MessageCollector and ProfileRefinerClient
   const messageCollectorRef = useRef(null);
   const profileRefinerClientRef = useRef(null);
+  const inputAreaRef = useRef(null);
+  
+  // Expose focus method to parent via ref (Requirement 7.4)
+  useImperativeHandle(ref, () => ({
+    focusInput: () => {
+      if (inputAreaRef.current) {
+        inputAreaRef.current.focus();
+      }
+    }
+  }));
   
   // Initialize services on mount
   useEffect(() => {
@@ -84,15 +95,12 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, 
   // Sync messages with conversationHistory prop (e.g., when history is cleared)
   useEffect(() => {
     setMessages(conversationHistory);
-    // Reset or restore command number based on conversation history
-    if (conversationHistory.length === 0) {
-      setCurrentCmdNumber(1);
-    } else {
-      // Find the highest cmdNumber in the conversation history
-      const maxCmdNumber = Math.max(...conversationHistory.map(msg => msg.cmdNumber || 1));
-      setCurrentCmdNumber(maxCmdNumber);
-    }
   }, [conversationHistory]);
+
+  // Sync currentCmdNumber with cmdNumber prop (Requirement 5.1)
+  useEffect(() => {
+    setCurrentCmdNumber(cmdNumber);
+  }, [cmdNumber]);
 
   // Keyboard shortcut: Ctrl+N for new CMD
   useEffect(() => {
@@ -172,7 +180,14 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, 
   };
 
   const handleNewCmd = () => {
-    setCurrentCmdNumber(prev => prev + 1);
+    setCurrentCmdNumber(prev => {
+      const newCmdNumber = prev + 1;
+      // Notify parent component to persist CMD number (Requirement 5.1)
+      if (onCmdNumberUpdate) {
+        onCmdNumberUpdate(newCmdNumber);
+      }
+      return newCmdNumber;
+    });
   };
 
   const handleSubmit = async (input, isNewCommand = false) => {
@@ -182,6 +197,10 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, 
     // Increment command number if this is a new command
     if (isNewCommand) {
       setCurrentCmdNumber(cmdNumber);
+      // Notify parent component to persist CMD number (Requirement 5.1)
+      if (onCmdNumberUpdate) {
+        onCmdNumberUpdate(cmdNumber);
+      }
     }
     
     // Add user message
@@ -201,6 +220,7 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, 
     updateMessages(messagesWithUser);
     setIsGenerating(true);
     setCurrentResponse(null);
+    setStreamingText(null); // Reset streaming text (Requirement 4.2)
     
     // Living Profile: Add message to collector (Requirement 1.1)
     if (messageCollectorRef.current) {
@@ -216,9 +236,14 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, 
     // Use messagesWithUser to include the current user message in context
     const currentCmdContext = messagesWithUser.filter(msg => msg.cmdNumber === cmdNumber);
     
-    // Generate AI response using ContentGenerator service with scoped context
+    // Generate AI response using ContentGenerator service with scoped context and streaming callback
     try {
-      const result = await generateContent(input, styleProfile, currentCmdContext);
+      // Streaming callback to update UI as chunks arrive (Requirement 4.2)
+      const handleChunk = (accumulatedText) => {
+        setStreamingText(accumulatedText);
+      };
+      
+      const result = await generateContent(input, styleProfile, currentCmdContext, handleChunk);
       
       if (result.success) {
         const aiMessage = {
@@ -286,6 +311,7 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, 
       });
     } finally {
       setIsGenerating(false);
+      setStreamingText(null); // Clear streaming text when done (Requirement 4.2)
     }
     
     if (onSubmit) {
@@ -298,8 +324,8 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, 
       {/* Scanline effect */}
       <div className="scanline" />
       
-      {/* System status indicators - top right */}
-      <div className="fixed top-20 right-4 flex flex-col gap-2 font-mono text-xs text-static-ghost z-50">
+      {/* System status indicators - top right (hidden on mobile to save space) */}
+      <div className="hidden md:flex fixed top-20 right-4 flex-col gap-2 font-mono text-xs text-static-ghost z-50">
         <div className="flex items-center gap-2">
           <span className="w-1 h-1 bg-system-active rounded-full animate-pulse" />
           <span>SYSTEM_ONLINE</span>
@@ -314,9 +340,10 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, 
         </div>
       </div>
       
-      {/* Split container */}
-      <div className="grid grid-cols-1 md:grid-cols-2 w-full h-full relative">
+      {/* Split container - Vertical stack on mobile (< 768px), side-by-side on desktop */}
+      <div className="flex flex-col md:grid md:grid-cols-2 w-full h-full relative">
         <LeftPanel 
+          ref={inputAreaRef}
           onSubmit={handleSubmit}
           messages={messages}
           currentCmdNumber={currentCmdNumber}
@@ -325,7 +352,7 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, 
           onToggleExpand={setExpandedPairKey}
         />
         
-        {/* THE CHASM - Dimensional void between human and AI */}
+        {/* THE CHASM - Dimensional void between human and AI (desktop only) */}
         <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-32 -translate-x-1/2 pointer-events-none z-10">
           {/* The void gradient */}
           <div className="absolute inset-0 bg-gradient-to-r from-chasm-start via-chasm-mid to-chasm-end opacity-30" />
@@ -347,6 +374,9 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, 
           <div className="absolute left-1/2 top-3/4 w-1 h-1 -translate-x-1/2 bg-unsettling-cyan rounded-full animate-pulse-slow" style={{ animationDelay: '2s' }} />
         </div>
         
+        {/* Mobile divider - Horizontal separator between panels */}
+        <div className="md:hidden w-full h-px bg-unsettling-cyan opacity-20 my-2" />
+        
         <RightPanel 
           response={currentResponse}
           isGenerating={isGenerating}
@@ -356,22 +386,25 @@ const MirrorInterface = ({ styleProfile, conversationHistory = [], preferences, 
           onNewCmd={handleNewCmd}
           expandedPairKey={expandedPairKey}
           onToggleExpand={setExpandedPairKey}
+          streamingText={streamingText}
         />
       </div>
     </div>
   );
-};
+});
 
-const LeftPanel = ({ onSubmit, messages, currentCmdNumber, onNewCmd, expandedPairKey, onToggleExpand }) => {
+MirrorInterface.displayName = 'MirrorInterface';
+
+const LeftPanel = forwardRef(({ onSubmit, messages, currentCmdNumber, onNewCmd, expandedPairKey, onToggleExpand }, ref) => {
   return (
-    <div className="relative flex items-start justify-center p-8 md:p-12 overflow-y-auto scrollbar-minimal">
-      <div className="w-full max-w-md pt-8">
+    <div className="relative flex items-start justify-center p-4 md:p-8 lg:p-12 overflow-y-auto scrollbar-minimal">
+      <div className="w-full max-w-md pt-4 md:pt-8">
         {/* Panel header - terminal style */}
-        <div className="mb-8">
+        <div className="mb-6 md:mb-8">
           <div className="font-mono text-xs text-static-ghost mb-4">
             [TERMINAL_HUMAN.exe]
           </div>
-          <h1 className="text-3xl font-display font-bold text-static-white mb-2 tracking-tight">
+          <h1 className="text-2xl md:text-3xl font-display font-bold text-static-white mb-2 tracking-tight">
             Human
           </h1>
           <p className="text-xs text-static-muted font-mono">
@@ -380,6 +413,7 @@ const LeftPanel = ({ onSubmit, messages, currentCmdNumber, onNewCmd, expandedPai
         </div>
         
         <InputArea 
+          ref={ref}
           onSubmit={onSubmit} 
           messageCount={messages.filter(m => m.role === 'user').length}
           currentCmdNumber={currentCmdNumber}
@@ -394,9 +428,11 @@ const LeftPanel = ({ onSubmit, messages, currentCmdNumber, onNewCmd, expandedPai
       </div>
     </div>
   );
-};
+});
 
-const RightPanel = ({ response, isGenerating, messages, glitchIntensity, currentCmdNumber, onNewCmd, expandedPairKey, onToggleExpand }) => {
+LeftPanel.displayName = 'LeftPanel';
+
+const RightPanel = ({ response, isGenerating, messages, glitchIntensity, currentCmdNumber, onNewCmd, expandedPairKey, onToggleExpand, streamingText }) => {
   const [shouldGlitch, setShouldGlitch] = useState(false);
   const scrollContainerRef = useRef(null);
 
@@ -437,15 +473,15 @@ const RightPanel = ({ response, isGenerating, messages, glitchIntensity, current
   }, [isGenerating]);
 
   return (
-    <div ref={scrollContainerRef} className="relative flex items-start justify-center p-8 md:p-12 overflow-y-auto scrollbar-mirrored">
-      <div className="w-full max-w-md pt-8">
+    <div ref={scrollContainerRef} className="relative flex items-start justify-center p-4 md:p-8 lg:p-12 overflow-y-auto scrollbar-mirrored">
+      <div className="w-full max-w-md pt-4 md:pt-8">
         {/* Panel header - terminal style */}
-        <div className="mb-8">
+        <div className="mb-6 md:mb-8">
           <div className="font-mono text-xs text-static-ghost mb-4">
             [TERMINAL_AI.exe]
           </div>
           <GlitchEffect trigger={shouldGlitch} intensity="low" autoGlitch={true}>
-            <h1 className="text-3xl font-display font-bold text-static-white mb-2 tracking-tight">
+            <h1 className="text-2xl md:text-3xl font-display font-bold text-static-white mb-2 tracking-tight">
               Doppelgänger
             </h1>
           </GlitchEffect>
@@ -460,6 +496,7 @@ const RightPanel = ({ response, isGenerating, messages, glitchIntensity, current
           language={response?.language}
           isLoading={isGenerating}
           glitchIntensity={glitchIntensity}
+          streamingText={streamingText}
         />
         
         <div className="font-mono text-xs text-static-ghost text-center mt-6 animate-pulse-slow">
@@ -476,5 +513,7 @@ const RightPanel = ({ response, isGenerating, messages, glitchIntensity, current
     </div>
   );
 };
+
+RightPanel.displayName = 'RightPanel';
 
 export default MirrorInterface;

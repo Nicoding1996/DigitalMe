@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Header from './components/Header';
 import WelcomeScreen from './components/WelcomeScreen';
 import SourceConnector from './components/SourceConnector';
@@ -11,6 +11,7 @@ import ConnectionStatus from './components/ConnectionStatus';
 import RefinementNotification from './components/RefinementNotification';
 import DeltaReportModal from './components/DeltaReportModal';
 import DigitalHeadBackground from './components/DigitalHeadBackground';
+import SuccessNotification from './components/SuccessNotification';
 import { analyzeGitHub, analyzeBlog, analyzeTextSample, buildStyleProfile } from './services/StyleAnalyzer';
 import { generateMockSource, generateDefaultPreferences, migrateProfileForLivingProfile } from './models';
 import './App.css';
@@ -20,6 +21,7 @@ const SOURCES_KEY = 'digitalme_sources';
 const ANALYSIS_RESULTS_KEY = 'digitalme_analysis_results'; // Store raw analysis results
 const PREFERENCES_KEY = 'digitalme_preferences';
 const CONVERSATION_KEY = 'digitalme_conversation';
+const CMD_NUMBER_KEY = 'digitalme_cmd_number'; // Store current CMD number
 const MAX_CONVERSATION_HISTORY = 50;
 
 function App() {
@@ -36,6 +38,7 @@ function App() {
   const [storedAnalysisResults, setStoredAnalysisResults] = useState([]); // Store raw analysis results
   const [preferences, setPreferences] = useState(generateDefaultPreferences());
   const [conversationHistory, setConversationHistory] = useState([]);
+  const [cmdNumber, setCmdNumber] = useState(1);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSourcesOpen, setIsSourcesOpen] = useState(false);
   const [analysisError, setAnalysisError] = useState(null);
@@ -47,6 +50,12 @@ function App() {
   const [showDeltaReportModal, setShowDeltaReportModal] = useState(false);
   const [currentDeltaReport, setCurrentDeltaReport] = useState(null);
   const [refinementError, setRefinementError] = useState(null);
+  
+  // Success notification state (Requirement 4.3)
+  const [successNotification, setSuccessNotification] = useState(null);
+  
+  // Ref for MirrorInterface to enable keyboard shortcuts (Requirement 7.4)
+  const mirrorInterfaceRef = useRef(null);
 
   // Load profile, sources, analysis results, preferences, and conversation history from LocalStorage on mount
   useEffect(() => {
@@ -162,7 +171,54 @@ function App() {
         localStorage.removeItem(CONVERSATION_KEY);
       }
     }
+
+    // Restore CMD number from localStorage (Requirement 5.1)
+    const savedCmdNumber = localStorage.getItem(CMD_NUMBER_KEY);
+    if (savedCmdNumber) {
+      try {
+        const cmdNum = parseInt(savedCmdNumber, 10);
+        if (!isNaN(cmdNum) && cmdNum > 0) {
+          setCmdNumber(cmdNum);
+        } else {
+          console.warn('Invalid CMD number in localStorage, using default');
+          localStorage.removeItem(CMD_NUMBER_KEY);
+        }
+      } catch (error) {
+        console.error('Failed to load saved CMD number:', error);
+        localStorage.removeItem(CMD_NUMBER_KEY);
+      }
+    }
   }, []);
+
+  // Global keyboard shortcuts (Requirements: 7.1, 7.3, 7.4)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ctrl+K: Focus input field (Requirement 7.4)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        if (mirrorInterfaceRef.current && onboardingStep === 'complete') {
+          mirrorInterfaceRef.current.focusInput();
+        }
+      }
+      
+      // Escape: Close modals/panels (Requirement 7.3)
+      if (e.key === 'Escape') {
+        if (showDeltaReportModal) {
+          handleDeltaReportClose();
+        } else if (isSettingsOpen) {
+          handleSettingsClose();
+        } else if (isSourcesOpen) {
+          handleSourcesClose();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onboardingStep, isSettingsOpen, isSourcesOpen, showDeltaReportModal]);
 
   const handleGetStarted = () => {
     setOnboardingStep('connect');
@@ -283,16 +339,57 @@ function App() {
         }
       } catch (error) {
         console.error(`Failed to analyze ${source.type}:`, error);
+        
+        // Provide user-friendly error messages based on error type
+        let userFriendlyError = 'Analysis failed';
+        
+        if (error.message) {
+          const errorMsg = error.message.toLowerCase();
+          
+          if (errorMsg.includes('network') || errorMsg.includes('fetch') || errorMsg.includes('failed to fetch')) {
+            userFriendlyError = 'Network error - check your internet connection and try again';
+          } else if (errorMsg.includes('timeout')) {
+            userFriendlyError = 'Request timed out - the server took too long to respond';
+          } else if (errorMsg.includes('unauthorized') || errorMsg.includes('401')) {
+            userFriendlyError = 'Authentication failed - please reconnect your account';
+          } else if (errorMsg.includes('not found') || errorMsg.includes('404')) {
+            userFriendlyError = 'Resource not found - check the URL or username';
+          } else if (errorMsg.includes('rate limit')) {
+            userFriendlyError = 'Rate limit exceeded - please wait a few minutes and try again';
+          } else if (errorMsg.includes('invalid') || errorMsg.includes('validation')) {
+            userFriendlyError = error.message;
+          } else {
+            userFriendlyError = error.message;
+          }
+        }
+        
         failed.push({ 
           ...source, 
-          error: error.message || 'Network error occurred'
+          error: userFriendlyError
         });
       }
     }
 
     // Check if we have at least one successful analysis
     if (analysisResults.length === 0) {
-      setAnalysisError('All sources failed to analyze. Please check your inputs and try again.');
+      // Provide more specific error message based on failure types
+      let errorMessage = 'All sources failed to analyze.';
+      
+      const hasNetworkErrors = failed.some(f => f.error && f.error.toLowerCase().includes('network'));
+      const hasAuthErrors = failed.some(f => f.error && f.error.toLowerCase().includes('authentication'));
+      const hasNotFoundErrors = failed.some(f => f.error && f.error.toLowerCase().includes('not found'));
+      
+      if (hasNetworkErrors) {
+        errorMessage = 'Network connection failed. Please check your internet connection and try again.';
+      } else if (hasAuthErrors) {
+        errorMessage = 'Authentication failed. Please reconnect your accounts and try again.';
+      } else if (hasNotFoundErrors) {
+        errorMessage = 'Resources not found. Please verify your URLs and usernames are correct.';
+      } else {
+        errorMessage = 'All sources failed to analyze. Please check your inputs and try again.';
+      }
+      
+      setAnalysisError(errorMessage);
       setFailedSources(failed);
       setAnalysisProgress({
         currentStep: 0,
@@ -488,7 +585,7 @@ function App() {
           isComplete: true
         });
       } else {
-        setAnalysisError('Failed to build style profile. Please try again.');
+        setAnalysisError('Failed to build style profile. The analysis data may be incomplete or invalid.');
         setAnalysisProgress({
           currentStep: submittedSources.length,
           totalSteps: submittedSources.length + 1,
@@ -498,7 +595,23 @@ function App() {
       }
     } catch (error) {
       console.error('Failed to build profile:', error);
-      setAnalysisError('An unexpected error occurred while building your profile.');
+      
+      // Provide user-friendly error message
+      let errorMessage = 'An unexpected error occurred while building your profile.';
+      
+      if (error.message) {
+        const errorMsg = error.message.toLowerCase();
+        
+        if (errorMsg.includes('network') || errorMsg.includes('fetch')) {
+          errorMessage = 'Network error during profile building. Please check your connection and try again.';
+        } else if (errorMsg.includes('timeout')) {
+          errorMessage = 'Profile building timed out. The server may be busy - please try again.';
+        } else if (errorMsg.includes('invalid') || errorMsg.includes('parse')) {
+          errorMessage = 'Invalid data received. Please try analyzing your sources again.';
+        }
+      }
+      
+      setAnalysisError(errorMessage);
       setAnalysisProgress({
         currentStep: submittedSources.length,
         totalSteps: submittedSources.length + 1,
@@ -530,6 +643,18 @@ function App() {
   const handleClearHistory = () => {
     setConversationHistory([]);
     localStorage.removeItem(CONVERSATION_KEY);
+    // Reset CMD number when clearing history
+    setCmdNumber(1);
+    localStorage.setItem(CMD_NUMBER_KEY, '1');
+  };
+
+  /**
+   * Handle CMD number updates from MirrorInterface
+   * Requirement 5.1: Save CMD number to localStorage on change
+   */
+  const handleCmdNumberUpdate = (newCmdNumber) => {
+    setCmdNumber(newCmdNumber);
+    localStorage.setItem(CMD_NUMBER_KEY, newCmdNumber.toString());
   };
 
   /**
@@ -560,6 +685,9 @@ function App() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedProfile));
       
       console.log('Profile updated via Living Profile:', deltaReport);
+      
+      // Show brief success confirmation (Requirement 4.3)
+      setSuccessNotification('[PROFILE_SAVED]');
       
       // Show success notification with delta report (Requirements: 3.2, 3.5)
       setCurrentDeltaReport(deltaReport);
@@ -774,12 +902,15 @@ function App() {
         
         {onboardingStep === 'complete' && styleProfile && (
           <MirrorInterface 
+            ref={mirrorInterfaceRef}
             styleProfile={styleProfile}
             conversationHistory={conversationHistory}
             preferences={preferences}
+            cmdNumber={cmdNumber}
             onSubmit={handleSubmit}
             onConversationUpdate={handleConversationUpdate}
             onProfileUpdate={handleProfileUpdate}
+            onCmdNumberUpdate={handleCmdNumberUpdate}
           />
         )}
 
@@ -826,6 +957,15 @@ function App() {
           <DeltaReportModal
             deltaReport={currentDeltaReport}
             onClose={handleDeltaReportClose}
+          />
+        )}
+
+        {/* Success Notification (Requirement 4.3) */}
+        {successNotification && (
+          <SuccessNotification
+            message={successNotification}
+            duration={2000}
+            onClose={() => setSuccessNotification(null)}
           />
         )}
       </div>

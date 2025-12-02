@@ -59,7 +59,7 @@ const DownloadButton = ({ content, contentType = 'text', format = 'markdown' }) 
 
   return (
     <button 
-      className="px-6 py-2 bg-void-surface border border-static-whisper text-static-white font-mono text-xs hover:border-unsettling-cyan hover:text-unsettling-cyan transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+      className="px-6 py-3 min-h-[44px] bg-void-surface border border-static-whisper text-static-white font-mono text-xs hover:border-unsettling-cyan hover:text-unsettling-cyan active:bg-void-elevated transition-all disabled:opacity-30 disabled:cursor-not-allowed touch-manipulation"
       onClick={handleDownload}
       disabled={!content}
     >

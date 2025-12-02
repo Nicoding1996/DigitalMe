@@ -101,7 +101,7 @@ const WelcomeScreen = ({ onGetStarted }) => {
         <div className="flex flex-col items-center gap-4">
           <button 
             onClick={onGetStarted}
-            className="w-full max-w-md px-8 py-4 bg-void-surface border border-static-whisper text-static-white font-mono text-sm tracking-wider hover:border-unsettling-cyan hover:text-unsettling-cyan transition-all group"
+            className="w-full max-w-md px-8 py-4 min-h-[44px] bg-void-surface border border-static-whisper text-static-white font-mono text-sm tracking-wider hover:border-unsettling-cyan hover:text-unsettling-cyan active:bg-void-elevated transition-all touch-manipulation group"
           >
             <span className="flex items-center justify-center gap-3">
               <span>&gt;</span>

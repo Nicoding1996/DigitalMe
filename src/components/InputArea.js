@@ -2,20 +2,85 @@
  * InputArea Component
  * Black Mirror aesthetic - Command Terminal Interface
  */
-import { useState } from 'react';
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 
 const MAX_INPUT_LENGTH = 5000;
+const DRAFT_KEY = 'digitalme_draft';
+const AUTO_SAVE_INTERVAL = 2000; // 2 seconds (Requirement 5.2)
 
-const InputArea = ({ onSubmit, messageCount = 0, currentCmdNumber = 1, onNewCommand }) => {
-  const [input, setInput] = useState('');
+const InputArea = forwardRef(({ onSubmit, messageCount = 0, currentCmdNumber = 1, onNewCommand }, ref) => {
+  // Restore draft on app load (Requirement 5.2)
+  const [input, setInput] = useState(() => {
+    try {
+      const savedDraft = localStorage.getItem(DRAFT_KEY);
+      if (savedDraft) {
+        const draft = JSON.parse(savedDraft);
+        // Only restore if draft is recent (within last 24 hours)
+        const draftAge = Date.now() - draft.timestamp;
+        if (draftAge < 24 * 60 * 60 * 1000) {
+          return draft.content || '';
+        }
+      }
+    } catch (error) {
+      console.error('Failed to restore draft:', error);
+      localStorage.removeItem(DRAFT_KEY);
+    }
+    return '';
+  });
+  
   const [error, setError] = useState('');
   const [justSent, setJustSent] = useState(false);
+  const autoSaveTimerRef = useRef(null);
+  const textareaRef = useRef(null);
   
   // Persist new command state to localStorage
   const [isNewCommand, setIsNewCommand] = useState(() => {
     const saved = localStorage.getItem('digitalme_new_command_active');
     return saved === 'true';
   });
+
+  // Expose focus method to parent via ref (Requirement 7.4)
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+      }
+    }
+  }));
+
+  // Auto-save draft every 2 seconds (Requirement 5.2)
+  useEffect(() => {
+    // Clear any existing timer
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+    
+    // Only auto-save if there's content
+    if (input.trim()) {
+      autoSaveTimerRef.current = setTimeout(() => {
+        try {
+          const draft = {
+            content: input,
+            timestamp: Date.now(),
+            autoSaved: true
+          };
+          localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+        } catch (error) {
+          console.error('Failed to auto-save draft:', error);
+        }
+      }, AUTO_SAVE_INTERVAL);
+    } else {
+      // Clear draft if input is empty
+      localStorage.removeItem(DRAFT_KEY);
+    }
+    
+    // Cleanup timer on unmount
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, [input]);
 
   const handleInputChange = (e) => {
     const value = e.target.value;
@@ -45,6 +110,9 @@ const InputArea = ({ onSubmit, messageCount = 0, currentCmdNumber = 1, onNewComm
     setError('');
     onSubmit(trimmedInput, isNewCommand);
     setInput('');
+    
+    // Clear draft after successful message send (Requirement 5.2)
+    localStorage.removeItem(DRAFT_KEY);
     
     // Reset new command flag after submission
     if (isNewCommand) {
@@ -117,6 +185,7 @@ const InputArea = ({ onSubmit, messageCount = 0, currentCmdNumber = 1, onNewComm
         <div className="flex items-start gap-2 font-mono text-sm">
           <span className="text-unsettling-cyan select-none pt-1">&gt;</span>
           <textarea
+            ref={textareaRef}
             className="flex-1 bg-transparent text-static-white font-mono text-sm leading-relaxed resize-none outline-none placeholder:text-static-ghost"
             placeholder={placeholderText}
             value={input}
@@ -147,10 +216,10 @@ const InputArea = ({ onSubmit, messageCount = 0, currentCmdNumber = 1, onNewComm
             <button
               onClick={handleNewCommand}
               disabled={isNewCommand}
-              className={`px-3 py-1 border font-mono text-xs transition-all ${
+              className={`px-3 py-2 min-h-[44px] border font-mono text-xs transition-all touch-manipulation ${
                 isNewCommand
                   ? 'bg-void-elevated border-unsettling-cyan text-unsettling-cyan cursor-default'
-                  : 'bg-void-surface border-static-whisper text-static-white hover:border-unsettling-cyan hover:text-unsettling-cyan'
+                  : 'bg-void-surface border-static-whisper text-static-white hover:border-unsettling-cyan hover:text-unsettling-cyan active:bg-void-elevated'
               }`}
             >
               {isNewCommand ? '[NEW_CMD_ACTIVE]' : '[NEW_CMD]'}
@@ -159,7 +228,7 @@ const InputArea = ({ onSubmit, messageCount = 0, currentCmdNumber = 1, onNewComm
           <button 
             onClick={handleSubmit}
             disabled={!input.trim() || !!error}
-            className="px-4 py-1 bg-void-surface border border-static-whisper text-static-white hover:border-unsettling-cyan hover:text-unsettling-cyan disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            className="px-4 py-2 min-h-[44px] bg-void-surface border border-static-whisper text-static-white hover:border-unsettling-cyan hover:text-unsettling-cyan active:bg-void-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-all touch-manipulation"
           >
             EXECUTE
           </button>
@@ -167,6 +236,8 @@ const InputArea = ({ onSubmit, messageCount = 0, currentCmdNumber = 1, onNewComm
       </div>
     </div>
   );
-};
+});
+
+InputArea.displayName = 'InputArea';
 
 export default InputArea;

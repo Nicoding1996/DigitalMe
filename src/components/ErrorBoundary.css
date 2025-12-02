@@ -43,7 +43,16 @@
   font-size: 16px;
   color: var(--text-secondary);
   line-height: 1.6;
+  margin: 0 0 var(--space-md) 0;
+}
+
+.error-hint {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
   margin: 0 0 var(--space-xl) 0;
+  opacity: 0.8;
+  font-style: italic;
 }
 
 .error-actions {
@@ -62,6 +71,14 @@
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: var(--font-sans);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.button-icon {
+  font-size: 18px;
+  line-height: 1;
 }
 
 .error-button.primary {

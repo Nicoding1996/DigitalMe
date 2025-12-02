@@ -156,7 +156,7 @@ const SourceConnector = ({ onSourcesSubmit, onCancel }) => {
             {onCancel && (
               <button
                 onClick={onCancel}
-                className="px-4 py-2 font-mono text-xs text-static-muted hover:text-static-white border border-static-whisper hover:border-static-ghost transition-all"
+                className="px-4 py-2 min-h-[44px] font-mono text-xs text-static-muted hover:text-static-white border border-static-whisper hover:border-static-ghost active:bg-void-elevated transition-all touch-manipulation"
                 aria-label="Go back"
               >
                 ← BACK
@@ -175,10 +175,10 @@ const SourceConnector = ({ onSourcesSubmit, onCancel }) => {
         <div className="flex gap-2 mb-8">
           <button
             onClick={() => handleTabChange('text')}
-            className={`relative flex-1 px-6 py-4 font-mono text-xs tracking-wider transition-all ${
+            className={`relative flex-1 px-6 py-4 min-h-[44px] font-mono text-xs tracking-wider transition-all touch-manipulation ${
               activeTab === 'text'
                 ? 'bg-void-elevated text-unsettling-cyan border border-unsettling-cyan'
-                : 'bg-void-surface text-static-muted border border-static-whisper hover:border-static-ghost'
+                : 'bg-void-surface text-static-muted border border-static-whisper hover:border-static-ghost active:bg-void-elevated'
             }`}
           >
             {filledSources.text && (
@@ -190,10 +190,10 @@ const SourceConnector = ({ onSourcesSubmit, onCancel }) => {
           
           <button
             onClick={() => handleTabChange('gmail')}
-            className={`relative flex-1 px-6 py-4 font-mono text-xs tracking-wider transition-all ${
+            className={`relative flex-1 px-6 py-4 min-h-[44px] font-mono text-xs tracking-wider transition-all touch-manipulation ${
               activeTab === 'gmail'
                 ? 'bg-void-elevated text-unsettling-cyan border border-unsettling-cyan'
-                : 'bg-void-surface text-static-muted border border-static-whisper hover:border-static-ghost'
+                : 'bg-void-surface text-static-muted border border-static-whisper hover:border-static-ghost active:bg-void-elevated'
             }`}
           >
             {filledSources.gmail && (
@@ -205,10 +205,10 @@ const SourceConnector = ({ onSourcesSubmit, onCancel }) => {
           
           <button
             onClick={() => handleTabChange('blog')}
-            className={`relative flex-1 px-6 py-4 font-mono text-xs tracking-wider transition-all ${
+            className={`relative flex-1 px-6 py-4 min-h-[44px] font-mono text-xs tracking-wider transition-all touch-manipulation ${
               activeTab === 'blog'
                 ? 'bg-void-elevated text-unsettling-cyan border border-unsettling-cyan'
-                : 'bg-void-surface text-static-muted border border-static-whisper hover:border-static-ghost'
+                : 'bg-void-surface text-static-muted border border-static-whisper hover:border-static-ghost active:bg-void-elevated'
             }`}
           >
             {filledSources.blog && (
@@ -220,10 +220,10 @@ const SourceConnector = ({ onSourcesSubmit, onCancel }) => {
           
           <button
             onClick={() => handleTabChange('github')}
-            className={`relative flex-1 px-6 py-4 font-mono text-xs tracking-wider transition-all ${
+            className={`relative flex-1 px-6 py-4 min-h-[44px] font-mono text-xs tracking-wider transition-all touch-manipulation ${
               activeTab === 'github'
                 ? 'bg-void-elevated text-unsettling-cyan border border-unsettling-cyan'
-                : 'bg-void-surface text-static-muted border border-static-whisper hover:border-static-ghost'
+                : 'bg-void-surface text-static-muted border border-static-whisper hover:border-static-ghost active:bg-void-elevated'
             }`}
           >
             {filledSources.github && (
@@ -249,8 +249,24 @@ const SourceConnector = ({ onSourcesSubmit, onCancel }) => {
                 isConnected={gmailConnected}
               />
               {errors.gmail && (
-                <div className="text-glitch-red text-sm font-mono mt-4">
-                  {typeof errors.gmail === 'object' ? errors.gmail.message : errors.gmail}
+                <div className="mt-4 px-4 py-3 bg-void-surface border border-glitch-red">
+                  <div className="flex items-start gap-3">
+                    <span className="text-glitch-red text-lg">⚠</span>
+                    <div className="flex-1">
+                      <div className="text-glitch-red text-sm font-mono font-bold mb-1">
+                        [CONNECTION_FAILED]
+                      </div>
+                      <div className="text-static-ghost text-xs font-mono">
+                        {typeof errors.gmail === 'object' ? errors.gmail.message : errors.gmail}
+                      </div>
+                      <button
+                        onClick={() => setErrors({})}
+                        className="mt-3 px-3 py-2 min-h-[44px] text-xs font-mono border border-static-whisper text-static-white hover:border-unsettling-cyan hover:text-unsettling-cyan active:bg-void-elevated transition-all touch-manipulation"
+                      >
+                        Try Again
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -267,7 +283,19 @@ const SourceConnector = ({ onSourcesSubmit, onCancel }) => {
                 onChange={(e) => setGithubUsername(e.target.value)}
               />
               {errors.github && (
-                <div className="text-glitch-red text-sm font-mono">{errors.github}</div>
+                <div className="mt-2 px-4 py-3 bg-void-surface border border-glitch-red">
+                  <div className="flex items-start gap-3">
+                    <span className="text-glitch-red text-lg">⚠</span>
+                    <div className="flex-1">
+                      <div className="text-glitch-red text-sm font-mono font-bold mb-1">
+                        [VALIDATION_ERROR]
+                      </div>
+                      <div className="text-static-ghost text-xs font-mono">
+                        {errors.github}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               )}
               <div className="text-static-ghost text-xs italic mt-3">
                 We'll analyze your commit messages and README files to learn your technical writing style
@@ -286,7 +314,19 @@ const SourceConnector = ({ onSourcesSubmit, onCancel }) => {
                 rows={5}
               />
               {errors.blog && (
-                <div className="text-glitch-red text-sm font-mono">{errors.blog}</div>
+                <div className="mt-2 px-4 py-3 bg-void-surface border border-glitch-red">
+                  <div className="flex items-start gap-3">
+                    <span className="text-glitch-red text-lg">⚠</span>
+                    <div className="flex-1">
+                      <div className="text-glitch-red text-sm font-mono font-bold mb-1">
+                        [INVALID_URL]
+                      </div>
+                      <div className="text-static-ghost text-xs font-mono">
+                        {errors.blog}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               )}
               <div className="text-static-ghost text-xs italic mt-3">
                 We'll analyze your blog posts, articles, and public writing to learn your style
@@ -305,7 +345,19 @@ const SourceConnector = ({ onSourcesSubmit, onCancel }) => {
                 rows={6}
               />
               {errors.text && (
-                <div className="text-glitch-red text-sm font-mono">{errors.text}</div>
+                <div className="mt-2 px-4 py-3 bg-void-surface border border-glitch-red">
+                  <div className="flex items-start gap-3">
+                    <span className="text-glitch-red text-lg">⚠</span>
+                    <div className="flex-1">
+                      <div className="text-glitch-red text-sm font-mono font-bold mb-1">
+                        [INSUFFICIENT_DATA]
+                      </div>
+                      <div className="text-static-ghost text-xs font-mono">
+                        {errors.text}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               )}
               <div className="text-static-ghost text-xs font-mono mt-3">
                 WORD COUNT: {textSample.trim().split(/\s+/).filter(w => w).length} / 100 MINIMUM
@@ -330,9 +382,9 @@ const SourceConnector = ({ onSourcesSubmit, onCancel }) => {
           <button 
             onClick={validateAndSubmit}
             disabled={!hasAnySources}
-            className={`w-full px-8 py-3 font-mono text-sm tracking-wider transition-all ${
+            className={`w-full px-8 py-3 min-h-[44px] font-mono text-sm tracking-wider transition-all touch-manipulation ${
               hasAnySources
-                ? 'bg-void-surface border border-static-whisper text-static-white hover:border-unsettling-cyan hover:text-unsettling-cyan'
+                ? 'bg-void-surface border border-static-whisper text-static-white hover:border-unsettling-cyan hover:text-unsettling-cyan active:bg-void-elevated'
                 : 'bg-void-surface border border-static-whisper text-static-muted opacity-60 cursor-not-allowed'
             }`}
           >

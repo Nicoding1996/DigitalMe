@@ -69,7 +69,7 @@ const DeltaReportModal = ({ deltaReport, onClose }) => {
           </div>
           <button
             onClick={onClose}
-            className="font-mono text-xl text-static-muted hover:text-glitch-red transition-colors"
+            className="font-mono text-xl text-static-muted hover:text-glitch-red active:text-glitch-red transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation"
             aria-label="Close modal"
           >
             [X]
@@ -189,7 +189,7 @@ const DeltaReportModal = ({ deltaReport, onClose }) => {
         <div className="px-6 py-4 bg-void-elevated border-t border-static-whisper">
           <button
             onClick={onClose}
-            className="w-full px-6 py-3 bg-void-surface border border-unsettling-cyan text-unsettling-cyan font-mono text-xs hover:bg-unsettling-cyan hover:text-void-deep transition-all"
+            className="w-full px-6 py-3 min-h-[44px] bg-void-surface border border-unsettling-cyan text-unsettling-cyan font-mono text-xs hover:bg-unsettling-cyan hover:text-void-deep active:bg-unsettling-cyan active:text-void-deep transition-all touch-manipulation"
           >
             [DISMISS]
           </button>

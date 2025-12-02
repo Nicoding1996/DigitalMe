@@ -34,24 +34,24 @@ const ExportModal = ({ isOpen, onClose, content, contentType = 'text' }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-overlay-darker backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-overlay-darker backdrop-blur-sm z-50 flex items-center justify-center p-0 md:p-4"
       onClick={handleOverlayClick}
     >
-      <div className="w-full max-w-3xl max-h-[90vh] bg-void-deep border border-static-whisper flex flex-col">
+      <div className="w-full h-full md:h-auto md:max-w-3xl md:max-h-[90vh] bg-void-deep border-0 md:border border-static-whisper flex flex-col">
         {/* Terminal header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-void-elevated border-b border-static-whisper">
-          <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between px-4 md:px-6 py-4 bg-void-elevated border-b border-static-whisper">
+          <div className="flex items-center gap-3 md:gap-4">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-glitch-red" />
               <span className="w-2 h-2 rounded-full bg-system-warning" />
               <span className="w-2 h-2 rounded-full bg-system-active" />
             </div>
-            <span className="font-mono text-sm text-static-white">
+            <span className="font-mono text-xs md:text-sm text-static-white">
               [DATA_EXPORT.exe]
             </span>
           </div>
           <button 
-            className="font-mono text-xl text-static-muted hover:text-glitch-red transition-colors"
+            className="font-mono text-xl text-static-muted hover:text-glitch-red active:text-glitch-red transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation"
             onClick={onClose}
             aria-label="Close export modal"
           >
@@ -60,7 +60,7 @@ const ExportModal = ({ isOpen, onClose, content, contentType = 'text' }) => {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto scrollbar-minimal p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto scrollbar-minimal p-4 md:p-6 space-y-4 md:space-y-6">
           {/* Format selection */}
           <div>
             <div className="font-mono text-xs text-static-ghost mb-3">
@@ -68,20 +68,20 @@ const ExportModal = ({ isOpen, onClose, content, contentType = 'text' }) => {
             </div>
             <div className="flex gap-2">
               <button
-                className={`flex-1 px-4 py-2 font-mono text-xs border transition-all ${
+                className={`flex-1 px-4 py-3 min-h-[44px] font-mono text-xs border transition-all touch-manipulation ${
                   selectedFormat === 'markdown'
                     ? 'bg-void-elevated border-unsettling-cyan text-unsettling-cyan'
-                    : 'bg-void-surface border-static-whisper text-static-muted hover:border-static-ghost hover:text-static-white'
+                    : 'bg-void-surface border-static-whisper text-static-muted hover:border-static-ghost hover:text-static-white active:bg-void-elevated'
                 }`}
                 onClick={() => setSelectedFormat('markdown')}
               >
                 [MARKDOWN]
               </button>
               <button
-                className={`flex-1 px-4 py-2 font-mono text-xs border transition-all ${
+                className={`flex-1 px-4 py-3 min-h-[44px] font-mono text-xs border transition-all touch-manipulation ${
                   selectedFormat === 'plain'
                     ? 'bg-void-elevated border-unsettling-cyan text-unsettling-cyan'
-                    : 'bg-void-surface border-static-whisper text-static-muted hover:border-static-ghost hover:text-static-white'
+                    : 'bg-void-surface border-static-whisper text-static-muted hover:border-static-ghost hover:text-static-white active:bg-void-elevated'
                 }`}
                 onClick={() => setSelectedFormat('plain')}
               >
@@ -109,9 +109,9 @@ const ExportModal = ({ isOpen, onClose, content, contentType = 'text' }) => {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-2 px-6 py-4 bg-void-elevated border-t border-static-whisper">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-end gap-2 px-4 md:px-6 py-4 bg-void-elevated border-t border-static-whisper">
           <button 
-            className="px-6 py-2 bg-void-surface border border-static-whisper text-static-white font-mono text-xs hover:border-static-ghost transition-all"
+            className="px-6 py-3 min-h-[44px] bg-void-surface border border-static-whisper text-static-white font-mono text-xs hover:border-static-ghost active:bg-void-elevated transition-all touch-manipulation"
             onClick={onClose}
           >
             [CANCEL]

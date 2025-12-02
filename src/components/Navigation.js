@@ -8,7 +8,7 @@ const Navigation = ({ onSourcesClick, onSettingsClick }) => {
   return (
     <nav className="flex items-center gap-2">
       <button 
-        className="px-3 py-2 font-mono text-xs text-static-muted border border-static-whisper hover:border-unsettling-cyan hover:text-unsettling-cyan transition-all"
+        className="px-3 py-2 min-h-[44px] font-mono text-xs text-static-muted border border-static-whisper hover:border-unsettling-cyan hover:text-unsettling-cyan active:bg-void-elevated transition-all touch-manipulation"
         onClick={onSourcesClick}
         aria-label="Manage sources"
       >
@@ -16,7 +16,7 @@ const Navigation = ({ onSourcesClick, onSettingsClick }) => {
       </button>
       
       <button 
-        className="px-3 py-2 font-mono text-xs text-static-muted border border-static-whisper hover:border-unsettling-cyan hover:text-unsettling-cyan transition-all"
+        className="px-3 py-2 min-h-[44px] font-mono text-xs text-static-muted border border-static-whisper hover:border-unsettling-cyan hover:text-unsettling-cyan active:bg-void-elevated transition-all touch-manipulation"
         onClick={onSettingsClick}
         aria-label="Open config"
       >

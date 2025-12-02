@@ -49,9 +49,29 @@ app.use((req, res, next) => {
   next();
 });
 
-// Basic health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
+// Health check endpoint with service status
+app.get('/api/health', async (req, res) => {
+  try {
+    const health = {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      services: {
+        gemini: 'available',
+        gmail: config.isGmailEnabled() ? 'available' : 'unavailable'
+      }
+    };
+    
+    res.json(health);
+  } catch (error) {
+    res.status(503).json({
+      status: 'degraded',
+      timestamp: new Date().toISOString(),
+      services: {
+        gemini: 'unknown',
+        gmail: 'unknown'
+      }
+    });
+  }
 });
 
 // Gmail OAuth routes (if Gmail integration is enabled)

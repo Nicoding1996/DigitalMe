@@ -4,6 +4,7 @@
  */
 import React from 'react';
 import Navigation from './Navigation';
+import ConnectionStatus from './ConnectionStatus';
 
 const Header = ({ onSourcesClick, onSettingsClick }) => {
   return (
@@ -11,11 +12,8 @@ const Header = ({ onSourcesClick, onSettingsClick }) => {
       <div className="flex items-center justify-between h-full px-6 max-w-full">
         {/* System identifier */}
         <div className="flex items-center gap-6">
-          {/* Status indicator */}
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 bg-system-active rounded-full animate-pulse" />
-            <span className="font-mono text-xs text-static-ghost hidden sm:block">ONLINE</span>
-          </div>
+          {/* Connection Status */}
+          <ConnectionStatus />
           
           {/* System name */}
           <div className="flex items-center gap-3">

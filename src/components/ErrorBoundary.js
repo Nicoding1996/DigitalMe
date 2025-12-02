@@ -64,20 +64,49 @@ class ErrorBoundary extends Component {
 
   render() {
     if (this.state.hasError) {
+      // Determine user-friendly error message based on error type
+      let userMessage = 'The application encountered an unexpected error.';
+      let errorType = 'unknown';
+      
+      if (this.state.error) {
+        const errorMsg = this.state.error.toString().toLowerCase();
+        
+        if (errorMsg.includes('network') || errorMsg.includes('fetch') || errorMsg.includes('connection')) {
+          userMessage = 'Unable to connect to the server. Please check your internet connection.';
+          errorType = 'network';
+        } else if (errorMsg.includes('timeout')) {
+          userMessage = 'The request took too long to complete. Please try again.';
+          errorType = 'timeout';
+        } else if (errorMsg.includes('unauthorized') || errorMsg.includes('authentication')) {
+          userMessage = 'Authentication failed. Please try logging in again.';
+          errorType = 'auth';
+        } else if (errorMsg.includes('not found') || errorMsg.includes('404')) {
+          userMessage = 'The requested resource was not found.';
+          errorType = 'notfound';
+        }
+      }
+      
       return (
         <div className="error-boundary">
           <div className="error-boundary-content">
             <div className="error-icon">⚠</div>
             <h1 className="error-title">Something went wrong</h1>
-            <p className="error-message">
-              The application encountered an unexpected error. You can try to recover or reload the page.
+            <p className="error-message">{userMessage}</p>
+            <p className="error-hint">
+              {errorType === 'network' && 'Check your connection and try again.'}
+              {errorType === 'timeout' && 'The server may be busy. Wait a moment and retry.'}
+              {errorType === 'auth' && 'You may need to reconnect your accounts.'}
+              {errorType === 'notfound' && 'The page or resource may have been moved.'}
+              {errorType === 'unknown' && 'You can try to recover or reload the page.'}
             </p>
             
             <div className="error-actions">
               <button className="error-button primary" onClick={this.handleReset}>
+                <span className="button-icon">↻</span>
                 Try to Recover
               </button>
               <button className="error-button secondary" onClick={this.handleReload}>
+                <span className="button-icon">⟳</span>
                 Reload Page
               </button>
             </div>
