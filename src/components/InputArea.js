@@ -216,7 +216,7 @@ const InputArea = forwardRef(({ onSubmit, messageCount = 0, currentCmdNumber = 1
             <button
               onClick={handleNewCommand}
               disabled={isNewCommand}
-              className={`px-3 py-2 min-h-[44px] border font-mono text-xs transition-all touch-manipulation ${
+              className={`px-3 py-1 min-h-[32px] border font-mono text-xs transition-all touch-manipulation ${
                 isNewCommand
                   ? 'bg-void-elevated border-unsettling-cyan text-unsettling-cyan cursor-default'
                   : 'bg-void-surface border-static-whisper text-static-white hover:border-unsettling-cyan hover:text-unsettling-cyan active:bg-void-elevated'
@@ -228,7 +228,7 @@ const InputArea = forwardRef(({ onSubmit, messageCount = 0, currentCmdNumber = 1
           <button 
             onClick={handleSubmit}
             disabled={!input.trim() || !!error}
-            className="px-4 py-2 min-h-[44px] bg-void-surface border border-static-whisper text-static-white hover:border-unsettling-cyan hover:text-unsettling-cyan active:bg-void-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-all touch-manipulation"
+            className="px-4 py-1 min-h-[32px] bg-void-surface border border-static-whisper text-static-white hover:border-unsettling-cyan hover:text-unsettling-cyan active:bg-void-elevated disabled:opacity-30 disabled:cursor-not-allowed transition-all touch-manipulation"
           >
             EXECUTE
           </button>
