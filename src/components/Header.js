@@ -2,11 +2,22 @@
  * Header Component
  * Black Mirror aesthetic - System Control Panel
  */
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Navigation from './Navigation';
 import ConnectionStatus from './ConnectionStatus';
 
 const Header = ({ onSourcesClick, onSettingsClick }) => {
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update time every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
   return (
     <header className="fixed top-0 left-0 right-0 h-[60px] bg-mirror-black border-b border-static-whisper z-30">
       <div className="flex items-center justify-between h-full px-6 max-w-full">
@@ -26,9 +37,9 @@ const Header = ({ onSourcesClick, onSettingsClick }) => {
           </div>
         </div>
         
-        {/* System time */}
-        <div className="hidden lg:block font-mono text-xs text-static-ghost">
-          {new Date().toLocaleTimeString('en-US', { hour12: false })}
+        {/* System time - centered to align with divider */}
+        <div className="hidden md:block absolute left-1/2 -translate-x-1/2 font-mono text-xs text-static-ghost">
+          {currentTime.toLocaleTimeString('en-US', { hour12: false })}
         </div>
         
         {/* Navigation */}
