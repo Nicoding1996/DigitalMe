@@ -856,7 +856,6 @@ function App() {
   return (
     <ErrorBoundary>
       <DigitalHeadBackground />
-      <ConnectionStatus />
       <div className="app">
         {onboardingStep === 'complete' && styleProfile && (
           <Header 

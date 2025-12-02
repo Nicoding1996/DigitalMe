@@ -4,7 +4,6 @@
  */
 import React, { useState, useEffect } from 'react';
 import Navigation from './Navigation';
-import ConnectionStatus from './ConnectionStatus';
 
 const Header = ({ onSourcesClick, onSettingsClick }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -23,9 +22,6 @@ const Header = ({ onSourcesClick, onSettingsClick }) => {
       <div className="flex items-center justify-between h-full px-6 max-w-full">
         {/* System identifier */}
         <div className="flex items-center gap-6">
-          {/* Connection Status */}
-          <ConnectionStatus />
-          
           {/* System name */}
           <div className="flex items-center gap-3">
             <div className="font-mono text-sm font-bold text-unsettling-cyan tracking-wider">
