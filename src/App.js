@@ -13,7 +13,7 @@ import DeltaReportModal from './components/DeltaReportModal';
 import DigitalHeadBackground from './components/DigitalHeadBackground';
 import SuccessNotification from './components/SuccessNotification';
 import { analyzeGitHub, analyzeBlog, analyzeTextSample, buildStyleProfile } from './services/StyleAnalyzer';
-import { generateMockSource, generateDefaultPreferences, migrateProfileForLivingProfile } from './models';
+import { generateMockSource, generateGmailSource, generateDefaultPreferences, migrateProfileForLivingProfile } from './models';
 import './App.css';
 
 const STORAGE_KEY = 'digitalme_profile';
@@ -275,7 +275,15 @@ function App() {
             type: 'gmail',
             result: source.result
           });
-          sourcesData.push(generateMockSource('gmail', 'Gmail Account'));
+          
+          // Use generateGmailSource with actual stats from source.value
+          const gmailSource = generateGmailSource({
+            emailsAnalyzed: source.value.emailsAnalyzed,
+            emailWords: source.result.profile?.sampleCount?.emailWords || 0,
+            connectedAt: Date.now()
+          });
+          console.log('[Analysis] Created Gmail source:', gmailSource);
+          sourcesData.push(gmailSource);
         } else if (source.type === 'gmail') {
           console.error('[Analysis] Gmail source missing profile!', source);
           failed.push({ ...source, error: 'Gmail profile not received from backend' });

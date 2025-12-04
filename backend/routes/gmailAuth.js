@@ -176,7 +176,7 @@ router.get('/callback', gmailAuthLimiter, validateGmailCallback, async (req, res
             window.opener.postMessage({
               type: 'gmail-oauth-error',
               error: errorMessage
-            }, 'http://localhost:3000');
+            }, window.opener.origin || '*');
             return true;
           }
         } catch (e) {
@@ -313,7 +313,7 @@ router.get('/callback', gmailAuthLimiter, validateGmailCallback, async (req, res
             window.opener.postMessage({
               type: 'gmail-oauth-success',
               sessionId: sessionId
-            }, 'http://localhost:3000');
+            }, window.opener.origin || '*');
             return true;
           }
         } catch (e) {
