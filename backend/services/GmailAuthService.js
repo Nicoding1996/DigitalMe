@@ -75,24 +75,27 @@ class GmailAuthService {
     // Validate state token
     const stateData = this.stateTokens.get(state);
     
+    // If state not found, assume backend restarted - use default redirect URI
+    let redirectUri;
     if (!stateData) {
-      throw new Error('Invalid or expired state token');
-    }
-    
-    // Check if state token has expired (10 minutes)
-    const tokenAge = Date.now() - stateData.createdAt;
-    const TEN_MINUTES = 10 * 60 * 1000;
-    
-    if (tokenAge > TEN_MINUTES) {
+      console.log('[Gmail Auth Service] State token not found (backend may have restarted), using default redirect URI');
+      redirectUri = config.GOOGLE_REDIRECT_URI;
+    } else {
+      // Check if state token has expired (10 minutes)
+      const tokenAge = Date.now() - stateData.createdAt;
+      const TEN_MINUTES = 10 * 60 * 1000;
+      
+      if (tokenAge > TEN_MINUTES) {
+        this.stateTokens.delete(state);
+        throw new Error('State token has expired');
+      }
+      
+      // Get the redirect URI that was used for this OAuth flow
+      redirectUri = stateData.redirectUri;
+      
+      // Remove state token after validation (one-time use)
       this.stateTokens.delete(state);
-      throw new Error('State token has expired');
     }
-    
-    // Get the redirect URI that was used for this OAuth flow
-    const redirectUri = stateData.redirectUri;
-    
-    // Remove state token after validation (one-time use)
-    this.stateTokens.delete(state);
     
     try {
       // Exchange authorization code for tokens
