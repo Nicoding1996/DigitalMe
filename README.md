@@ -52,8 +52,8 @@ DigitalMe analyzes your writing from Gmail, GitHub, blogs, and text samples to c
 
 ```bash
 # Clone the repo
-git clone https://github.com/yourusername/digitalme.git
-cd digitalme
+git clone https://github.com/Nicoding1996/DigitalMe.git
+cd DigitalMe
 
 # Install frontend dependencies
 npm install
@@ -106,8 +106,8 @@ Eliminated repetitive explanations - Kiro always knew the context.
 ### 🪝 Agent Hooks
 - **"Analyze Code on Save"**: Triggers when JS/TS files are saved
 - Automatically analyzes coding patterns (naming, comments, design patterns)
-- Updates coding style model in real-time
-- Maintains consistency across the codebase
+- Helps Kiro maintain consistency across the codebase
+- Ensures new code matches established patterns
 
 ### 💬 Vibe Coding
 - UI polish and visual design iterations
