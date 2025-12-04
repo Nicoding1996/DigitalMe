@@ -5,7 +5,10 @@
  */
 import { useState, useEffect, useRef } from 'react';
 
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
+// Helper function to get backend URL dynamically
+const getBackendUrl = () => {
+  return process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
+};
 
 const GmailConnectButton = ({ 
   onConnectionStart, 
@@ -58,7 +61,7 @@ const GmailConnectButton = ({
    */
   const pollAnalysisStatus = async (sid) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/gmail/analysis-status/${sid}`);
+      const response = await fetch(`${getBackendUrl()}/api/gmail/analysis-status/${sid}`);
       
       if (!response.ok) {
         // Try to parse error response
@@ -184,13 +187,14 @@ const GmailConnectButton = ({
       }
 
       // Request OAuth URL from backend
-      const response = await fetch(`${API_BASE_URL}/api/auth/gmail/initiate`, {
+      const backendUrl = getBackendUrl();
+      const response = await fetch(`${backendUrl}/api/auth/gmail/initiate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          redirectUri: `${API_BASE_URL}/api/auth/gmail/callback`
+          redirectUri: `${backendUrl}/api/auth/gmail/callback`
         })
       });
 
@@ -228,7 +232,8 @@ const GmailConnectButton = ({
         });
         
         // Verify origin for security
-        if (event.origin !== window.location.origin && event.origin !== API_BASE_URL) {
+        const backendUrl = getBackendUrl();
+        if (event.origin !== window.location.origin && event.origin !== backendUrl) {
           console.log('[Gmail OAuth] Message rejected - invalid origin:', event.origin);
           return;
         }
@@ -276,7 +281,7 @@ const GmailConnectButton = ({
         }
       };
 
-      console.log('[Gmail OAuth] Registering message listener, expecting origin:', API_BASE_URL);
+      console.log('[Gmail OAuth] Registering message listener, expecting origin:', backendUrl);
       console.log('[Gmail OAuth] Session ID for this OAuth flow:', data.sessionId);
       window.addEventListener('message', handleMessage);
 
@@ -335,7 +340,7 @@ const GmailConnectButton = ({
         
         // Check if OAuth session has been authenticated
         try {
-          const statusResponse = await fetch(`${API_BASE_URL}/api/auth/gmail/session-status/${sessionId}`);
+          const statusResponse = await fetch(`${getBackendUrl()}/api/auth/gmail/session-status/${sessionId}`);
           
           // Session exists
           if (statusResponse.ok) {
@@ -439,7 +444,7 @@ const GmailConnectButton = ({
         return;
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/gmail/disconnect`, {
+      const response = await fetch(`${getBackendUrl()}/api/gmail/disconnect`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

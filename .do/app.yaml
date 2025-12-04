@@ -1,4 +1,4 @@
-name: digitalme
+name: digitalme-backend
 region: nyc
 
 services:
@@ -11,23 +11,27 @@ services:
     instance_count: 1
     instance_size_slug: basic-xxs
     http_port: 3001
-    routes:
-      - path: /api
+    run_command: node server.js
     envs:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: "3001"
-
-  - name: frontend
-    source_dir: /
-    github:
-      branch: main
-      deploy_on_push: true
-    build_command: npm run build
-    output_dir: build
-    environment_slug: node-js
-    instance_count: 1
-    instance_size_slug: basic-xxs
-    routes:
-      - path: /
+      - key: GEMINI_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: FRONTEND_URL
+        value: "https://digital-me-peach.vercel.app"
+      - key: GEMINI_MODEL
+        value: "gemini-2.0-flash-exp"
+      - key: GOOGLE_CLIENT_ID
+        scope: RUN_TIME
+        type: SECRET
+      - key: GOOGLE_CLIENT_SECRET
+        scope: RUN_TIME
+        type: SECRET
+      - key: GOOGLE_REDIRECT_URI
+        value: "https://digitalme-txu5f.ondigitalocean.app/api/auth/gmail/callback"
+      - key: TOKEN_ENCRYPTION_KEY
+        scope: RUN_TIME
+        type: SECRET
