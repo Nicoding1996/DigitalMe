@@ -233,8 +233,15 @@ const GmailConnectButton = ({
         
         // Verify origin for security
         const backendUrl = getBackendUrl();
-        if (event.origin !== window.location.origin && event.origin !== backendUrl) {
-          console.log('[Gmail OAuth] Message rejected - invalid origin:', event.origin);
+        const backendOrigin = new URL(backendUrl).origin;
+        
+        // Accept messages from frontend origin, backend origin, or wildcard (for popup)
+        const isValidOrigin = event.origin === window.location.origin || 
+                             event.origin === backendOrigin ||
+                             event.origin === 'null'; // Popup might have null origin
+        
+        if (!isValidOrigin) {
+          console.log('[Gmail OAuth] Message rejected - invalid origin:', event.origin, 'Expected:', window.location.origin, 'or', backendOrigin);
           return;
         }
 

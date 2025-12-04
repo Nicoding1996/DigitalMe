@@ -314,10 +314,17 @@ router.get('/callback', gmailAuthLimiter, validateGmailCallback, async (req, res
         try {
           if (window.opener && !window.opener.closed) {
             console.log('Sending postMessage to parent window');
+            // Send to specific origin (frontend URL) for security
             window.opener.postMessage({
               type: 'gmail-oauth-success',
               sessionId: sessionId
-            }, window.opener.origin || '*');
+            }, '${config.FRONTEND_URL}');
+            
+            // Also try wildcard as fallback for local development
+            window.opener.postMessage({
+              type: 'gmail-oauth-success',
+              sessionId: sessionId
+            }, '*');
             return true;
           }
         } catch (e) {
