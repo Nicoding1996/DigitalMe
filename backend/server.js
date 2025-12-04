@@ -102,6 +102,10 @@ function formatSignaturePhrases(phrases) {
   // Take top 5-7 phrases, but filter out incomplete or technical fragments
   const topPhrases = phrases
     .filter(p => {
+      // Validate phrase object has required properties
+      if (!p || !p.phrase || typeof p.phrase !== 'string') {
+        return false;
+      }
       // Filter out phrases that are clearly incomplete technical fragments
       const phrase = p.phrase.toLowerCase();
       return !phrase.endsWith(' and') && 
@@ -146,8 +150,14 @@ function formatIdiosyncrasies(idiosyncrasies) {
     return '';
   }
   
-  // Take top 5 idiosyncrasies
-  const topQuirks = idiosyncrasies.slice(0, 5);
+  // Take top 5 idiosyncrasies and validate they have required properties
+  const topQuirks = idiosyncrasies
+    .filter(q => q && q.text && q.explanation && typeof q.text === 'string' && typeof q.explanation === 'string')
+    .slice(0, 5);
+  
+  if (topQuirks.length === 0) {
+    return '';
+  }
   
   // Group by category for better organization
   const byCategory = {
@@ -178,13 +188,13 @@ function formatIdiosyncrasies(idiosyncrasies) {
   
   // Add specific instructions for common quirk types
   const hasCodeSwitching = topQuirks.some(q => 
-    q.explanation.toLowerCase().includes('code-switch') || 
-    q.explanation.toLowerCase().includes('mix') && q.explanation.toLowerCase().includes('language')
+    q.explanation && q.explanation.toLowerCase().includes('code-switch') || 
+    q.explanation && q.explanation.toLowerCase().includes('mix') && q.explanation.toLowerCase().includes('language')
   );
   
   const hasOnomatopoeia = topQuirks.some(q => 
-    q.explanation.toLowerCase().includes('onomatopoeia') ||
-    q.text.match(/huhu|hehe|haha|hmm|uhh|ahh/i)
+    (q.explanation && q.explanation.toLowerCase().includes('onomatopoeia')) ||
+    (q.text && q.text.match(/huhu|hehe|haha|hmm|uhh|ahh/i))
   );
   
   if (hasCodeSwitching) {
@@ -261,7 +271,7 @@ function formatThoughtPatterns(thoughtPatterns) {
   }
   
   // Convert transitionStyle into specific guidance
-  if (thoughtPatterns.transitionStyle) {
+  if (thoughtPatterns.transitionStyle && typeof thoughtPatterns.transitionStyle === 'string') {
     const style = thoughtPatterns.transitionStyle.toLowerCase();
     if (style === 'abrupt' || style === 'direct') {
       formatted += '- Transitions: Use short, direct transitions. Jump between ideas quickly. Avoid elaborate connectors.\n';
@@ -368,7 +378,7 @@ function buildMetaPrompt(userPrompt, styleProfile, conversationHistory = []) {
     // Log which advanced components are available
     const advancedComponents = {
       phrases: advanced.phrases?.length || 0,
-      idiosyncrasies: advanced.idiosyncrasies?.length || 0,
+      personalityMarkers: advanced.personalityMarkers?.length || 0,
       hasContextual: !!advanced.contextualPatterns && Object.keys(advanced.contextualPatterns).length > 0,
       hasThoughtPatterns: !!advanced.thoughtPatterns && Object.keys(advanced.thoughtPatterns).length > 0
     };
@@ -393,8 +403,8 @@ function buildMetaPrompt(userPrompt, styleProfile, conversationHistory = []) {
     ? formatSignaturePhrases(advanced.phrases)
     : '';
   
-  const idiosyncrasiesSection = hasAdvanced && advanced.idiosyncrasies?.length > 0
-    ? formatIdiosyncrasies(advanced.idiosyncrasies)
+  const idiosyncrasiesSection = hasAdvanced && advanced.personalityMarkers?.length > 0
+    ? formatIdiosyncrasies(advanced.personalityMarkers)
     : '';
   
   const contextualVocabSection = hasAdvanced && advanced.contextualPatterns
