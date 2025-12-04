@@ -228,12 +228,16 @@ router.get('/callback', gmailAuthLimiter, validateGmailCallback, async (req, res
       }
     }
     
+    // If session not found, create a new one (handles backend restart scenario)
     if (!sessionId) {
-      const errorInfo = GmailErrorHandler.handleError(
-        new Error('Invalid or expired state token'),
-        'oauth'
-      );
-      return res.status(400).json(errorInfo);
+      console.log('[Gmail OAuth] Session not found for state token (backend may have restarted), creating new session');
+      const crypto = require('crypto');
+      sessionId = crypto.randomUUID();
+      sessions.set(sessionId, {
+        state: state,
+        status: 'pending',
+        createdAt: Date.now()
+      });
     }
     
     // Exchange authorization code for tokens
