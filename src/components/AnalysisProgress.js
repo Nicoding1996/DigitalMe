@@ -17,6 +17,7 @@ const AnalysisProgress = ({
   advancedAnalysis = null // { enabled: boolean, status: { phrases, thoughtFlow, quirks, contextual } }
 }) => {
   const [dots, setDots] = useState('');
+  const [showLongWaitMessage, setShowLongWaitMessage] = useState(false);
 
   useEffect(() => {
     if (!isComplete && !error) {
@@ -24,6 +25,16 @@ const AnalysisProgress = ({
         setDots(prev => (prev.length >= 3 ? '' : prev + '.'));
       }, 500);
       return () => clearInterval(interval);
+    }
+  }, [isComplete, error]);
+
+  // Show long wait message after 15 seconds
+  useEffect(() => {
+    if (!isComplete && !error) {
+      const timer = setTimeout(() => {
+        setShowLongWaitMessage(true);
+      }, 15000);
+      return () => clearTimeout(timer);
     }
   }, [isComplete, error]);
 
@@ -226,6 +237,21 @@ const AnalysisProgress = ({
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Long Wait Message */}
+            {showLongWaitMessage && (
+              <div className="border border-system-warning bg-void-surface p-6 mb-8">
+                <div className="font-mono text-xs text-system-warning mb-3">
+                  [!] [LARGE_DATASET_DETECTED]
+                </div>
+                <div className="font-mono text-xs text-static-white mb-2 leading-relaxed">
+                  Deep analysis in progress. Large datasets require multiple AI passes and may take 1-2 minutes.
+                </div>
+                <div className="font-mono text-xs text-static-muted">
+                  &gt; Processing continues in background...
+                </div>
               </div>
             )}
 
