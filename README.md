@@ -189,7 +189,7 @@ MIT License - see [LICENSE](LICENSE) file for details
 
 ## 🙏 Acknowledgments
 
-Built with [Kiro IDE](https://kiro.ai) - AI-powered development environment that made this project possible through spec-driven development, steering documents, and agent hooks.
+Built with [Kiro IDE](https://kiro.dev) - AI-powered development environment that made this project possible through spec-driven development, steering documents, and agent hooks.
 
 ---
 
