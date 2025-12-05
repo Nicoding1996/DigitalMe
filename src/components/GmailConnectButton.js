@@ -358,70 +358,50 @@ const GmailConnectButton = ({
           return;
         }
         
-        // Check BOTH OAuth session status AND analysis session status
+        // Check analysis session status directly (session is created immediately after OAuth)
         try {
-          // First check if OAuth completed
-          const oauthStatusResponse = await fetch(`${getBackendUrl()}/api/auth/gmail/session-status/${sessionId}`);
+          // Check analysis status directly - no need to check OAuth status first
+          // since we create the analysis session immediately in the OAuth callback
+          const analysisStatusResponse = await fetch(`${getBackendUrl()}/api/gmail/analysis-status/${sessionId}`);
           
-          if (oauthStatusResponse.ok) {
-            const oauthData = await oauthStatusResponse.json();
+          if (analysisStatusResponse.ok) {
+            const analysisData = await analysisStatusResponse.json();
             
-            // If OAuth is authenticated, check analysis status
-            if (oauthData.status === 'authenticated') {
-              console.log('[Gmail OAuth] OAuth authenticated, checking analysis status...');
+            console.log('[Gmail OAuth] Analysis status:', analysisData.status);
+            
+            // If we have an analysis session, stop OAuth polling and start analysis polling
+            if (analysisData.status) {
+              clearInterval(pollForAuth);
+              window.removeEventListener('message', wrappedHandleMessage);
+              messageReceived = true;
               
-              // Now check analysis status
-              const analysisStatusResponse = await fetch(`${getBackendUrl()}/api/gmail/analysis-status/${sessionId}`);
+              // Try to close popup
+              try {
+                if (oauthWindowRef.current && !oauthWindowRef.current.closed) {
+                  oauthWindowRef.current.close();
+                }
+              } catch (e) {
+                // Ignore errors
+              }
               
-              if (analysisStatusResponse.ok) {
-                const analysisData = await analysisStatusResponse.json();
-                
-                console.log('[Gmail OAuth] Analysis status:', analysisData.status);
-                
-                // If we have an analysis session, stop OAuth polling and start analysis polling
-                if (analysisData.status) {
-                  clearInterval(pollForAuth);
-                  window.removeEventListener('message', wrappedHandleMessage);
-                  messageReceived = true;
-                  
-                  // Try to close popup
-                  try {
-                    if (oauthWindowRef.current && !oauthWindowRef.current.closed) {
-                      oauthWindowRef.current.close();
-                    }
-                  } catch (e) {
-                    // Ignore errors
-                  }
-                  
-                  // Start analysis tracking
-                  console.log('[Gmail OAuth] Starting analysis tracking for session:', sessionId);
-                  setSessionId(sessionId);
-                  localStorage.setItem('gmail_session_id', sessionId);
-                  setConnectionStatus(analysisData.status);
-                  
-                  if (analysisData.progress?.message) {
-                    setProgressMessage(analysisData.progress.message);
-                  }
-                  
-                  // Start polling for analysis progress
-                  startPolling(sessionId);
-                }
-              } else if (analysisStatusResponse.status === 404) {
-                // Analysis session not created yet, keep waiting
-                if (pollAttempts % 5 === 0) {
-                  console.log('[Gmail OAuth] Waiting for analysis to start... (attempt', pollAttempts, '/', maxPollAttempts, ')');
-                }
+              // Start analysis tracking
+              console.log('[Gmail OAuth] Starting analysis tracking for session:', sessionId);
+              setSessionId(sessionId);
+              localStorage.setItem('gmail_session_id', sessionId);
+              setConnectionStatus(analysisData.status);
+              
+              if (analysisData.progress?.message) {
+                setProgressMessage(analysisData.progress.message);
               }
-            } else {
-              // Still pending OAuth - user hasn't completed it yet
-              if (pollAttempts % 10 === 0 || pollAttempts === 1) {
-                console.log('[Gmail OAuth] Waiting for user to complete OAuth... (attempt', pollAttempts, '/', maxPollAttempts, ')');
-              }
+              
+              // Start polling for analysis progress
+              startPolling(sessionId);
             }
-          } else if (oauthStatusResponse.status === 404) {
-            // Session doesn't exist
-            if (pollAttempts % 10 === 0) {
-              console.log('[Gmail OAuth] OAuth session not found');
+          } else if (analysisStatusResponse.status === 404) {
+            // Analysis session not created yet, keep waiting
+            // This should rarely happen now that we create session immediately
+            if (pollAttempts % 5 === 0) {
+              console.log('[Gmail OAuth] Waiting for analysis session to be created... (attempt', pollAttempts, '/', maxPollAttempts, ')');
             }
           }
         } catch (err) {
