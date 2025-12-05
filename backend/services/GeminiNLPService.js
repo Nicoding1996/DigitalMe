@@ -19,7 +19,7 @@ class GeminiNLPService {
     this.model = this.genAI.getGenerativeModel({ model: config.GEMINI_MODEL });
     
     // Retry configuration
-    this.MAX_RETRIES = 2;
+    this.MAX_RETRIES = 3; // Increased to 3 for rate limit scenarios
     this.BASE_DELAY = 1000; // 1 second base delay for exponential backoff
     
     // Response cache with TTL (Requirements: 7.1, 7.2)
@@ -57,8 +57,17 @@ class GeminiNLPService {
           throw new Error(`Gemini API failed after ${this.MAX_RETRIES + 1} attempts: ${error.message}`);
         }
 
-        // Exponential backoff: 1s, 2s, 4s
-        const delay = this.BASE_DELAY * Math.pow(2, attempt);
+        // Extract retry delay from Google's error response if available
+        let delay = this.BASE_DELAY * Math.pow(2, attempt); // Default exponential backoff
+        
+        // Check if error message contains Google's recommended retry delay
+        const retryDelayMatch = error.message.match(/"retryDelay":"(\d+)s"/);
+        if (retryDelayMatch) {
+          const googleDelay = parseInt(retryDelayMatch[1]) * 1000; // Convert seconds to ms
+          delay = Math.max(delay, googleDelay); // Use the longer delay
+          console.log(`Google recommends waiting ${retryDelayMatch[1]}s, using ${delay}ms`);
+        }
+        
         console.log(`Retrying in ${delay}ms...`);
         await this._delay(delay);
       }
