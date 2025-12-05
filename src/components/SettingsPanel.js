@@ -523,6 +523,10 @@ const SettingsPanel = ({ isOpen, onClose, styleProfile, preferences, conversatio
                     // Clear all localStorage
                     localStorage.removeItem('digitalme_profile');
                     localStorage.removeItem('digitalme_sources');
+                    localStorage.removeItem('digitalme_analysis_results');
+                    localStorage.removeItem('digitalme_preferences');
+                    localStorage.removeItem('digitalme_conversation');
+                    localStorage.removeItem('digitalme_cmd_number');
                     localStorage.removeItem('gmail_session_id');
                     localStorage.removeItem('digitalme_messages');
                     localStorage.removeItem('digitalme_learning_enabled');
