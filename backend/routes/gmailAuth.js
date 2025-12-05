@@ -400,9 +400,14 @@ router.get('/callback', gmailAuthLimiter, validateGmailCallback, async (req, res
 </html>
     `);
     
-    // Trigger analysis asynchronously (don't wait for completion)
-    // The frontend will poll /api/gmail/analysis-status/:sessionId for progress
-    setImmediate(async () => {
+    // Create analysis session IMMEDIATELY so frontend can start polling
+    // This prevents race condition where frontend polls before session exists
+    console.log(`[Gmail OAuth] Creating analysis session: ${sessionId}`);
+    analysisSessionService.createSession(sessionId);
+    
+    // Small delay to ensure session is fully established before analysis starts
+    // This gives the frontend time to start polling
+    setTimeout(async () => {
       try {
         console.log(`Starting Gmail analysis for session ${sessionId}`);
         
@@ -427,7 +432,7 @@ router.get('/callback', gmailAuthLimiter, validateGmailCallback, async (req, res
         const errorInfo = GmailErrorHandler.handleError(error, 'analysis');
         analysisSessionService.updateError(sessionId, errorInfo.message);
       }
-    });
+    }, 100); // 100ms delay to ensure session is queryable
     
   } catch (error) {
     const errorInfo = GmailErrorHandler.handleError(error, 'oauth');
@@ -568,12 +573,15 @@ router.get('/analysis-status/:sessionId', gmailApiLimiter, validateSessionIdMidd
     const analysisSession = analysisSessionService.getSession(sessionId);
     
     if (!analysisSession) {
+      console.log(`[Gmail OAuth] Analysis status request failed: session ${sessionId} not found`);
       return res.status(404).json({
         code: 'session_not_found',
         message: 'Analysis session not found or expired',
         canRetry: false
       });
     }
+    
+    console.log(`[Gmail OAuth] Analysis status for ${sessionId}: ${analysisSession.status}`);
     
     // Return session status and progress with user-friendly error if present
     const response = {

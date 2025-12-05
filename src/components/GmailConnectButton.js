@@ -309,12 +309,17 @@ const GmailConnectButton = ({
       const sessionId = data.sessionId;
       setSessionId(sessionId);
       localStorage.setItem('gmail_session_id', sessionId);
+      
+      console.log('[Gmail OAuth] Session ID stored:', sessionId);
 
       // FALLBACK: Poll for analysis completion if postMessage fails
       // This handles cases where postMessage is blocked by browser security
+      // Start polling immediately to catch fast OAuth completions
       let pollAttempts = 0;
       const maxPollAttempts = 120; // Poll for up to 2 minutes (120 * 1 second)
       let messageReceived = false;
+      
+      console.log('[Gmail OAuth] Starting fallback polling for session:', sessionId);
       
       // Update handleMessage to set flag
       const originalHandleMessage = handleMessage;

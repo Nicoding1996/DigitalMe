@@ -41,8 +41,11 @@ class GmailAnalysisOrchestrator {
    */
   async executeAnalysis(sessionId, accessToken, existingProfile = null) {
     try {
-      // Create analysis session
-      analysisSessionService.createSession(sessionId);
+      // Get or create analysis session (session may already exist from OAuth callback)
+      let session = analysisSessionService.getSession(sessionId);
+      if (!session) {
+        analysisSessionService.createSession(sessionId);
+      }
       
       // Step 1: Retrieve emails from Gmail
       // Requirements: 2.5, 7.4
