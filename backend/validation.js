@@ -209,13 +209,13 @@ function validateAnalyzeAdvancedRequest(body) {
     };
   }
 
-  // Validate maximum text length (50000 characters for analysis)
-  if (body.text.length > 50000) {
+  // Validate maximum text length (100000 characters for analysis)
+  if (body.text.length > 100000) {
     return {
       valid: false,
       error: {
         error: 'validation_error',
-        message: 'Field "text" exceeds maximum length of 50000 characters'
+        message: 'Field "text" exceeds maximum length of 100000 characters'
       }
     };
   }
