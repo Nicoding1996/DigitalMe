@@ -94,9 +94,9 @@ router.post('/initiate', gmailAuthLimiter, validateGmailInitiate, (req, res) => 
     // Generate authorization URL with state token
     const { authUrl, state } = gmailAuthService.generateAuthUrl(redirectUri);
     
-    // Generate session ID
-    const crypto = require('crypto');
-    const sessionId = crypto.randomUUID();
+    // CRITICAL FIX: Use state token as session ID to prevent mismatch
+    // This ensures frontend and backend always use the same ID
+    const sessionId = state;
     
     // Store session with state token
     sessions.set(sessionId, {
@@ -104,6 +104,8 @@ router.post('/initiate', gmailAuthLimiter, validateGmailInitiate, (req, res) => 
       status: 'pending',
       createdAt: Date.now()
     });
+    
+    console.log(`[Gmail OAuth] Created session with ID: ${sessionId}`);
     
     res.json({
       authUrl: authUrl,
@@ -219,26 +221,23 @@ router.get('/callback', gmailAuthLimiter, validateGmailCallback, async (req, res
       `);
     }
     
-    // Find session by state token
-    let sessionId = null;
-    for (const [id, session] of sessions.entries()) {
-      if (session.state === state) {
-        sessionId = id;
-        break;
-      }
-    }
+    // CRITICAL FIX: Use state token as session ID
+    // This ensures we always use the same ID that frontend has
+    const sessionId = state;
     
-    // If session not found, create a new one (handles backend restart scenario)
-    if (!sessionId) {
+    // Get or create session
+    let session = sessions.get(sessionId);
+    if (!session) {
       console.log('[Gmail OAuth] Session not found for state token (backend may have restarted), creating new session');
-      const crypto = require('crypto');
-      sessionId = crypto.randomUUID();
       sessions.set(sessionId, {
         state: state,
         status: 'pending',
         createdAt: Date.now()
       });
+      session = sessions.get(sessionId);
     }
+    
+    console.log(`[Gmail OAuth] Using session ID: ${sessionId}`);
     
     // Exchange authorization code for tokens
     const { accessToken, refreshToken, expiresAt } = 
@@ -251,11 +250,12 @@ router.get('/callback', gmailAuthLimiter, validateGmailCallback, async (req, res
       : null;
     
     // Update session with tokens
-    const session = sessions.get(sessionId);
     session.accessToken = encryptedAccessToken;
     session.refreshToken = encryptedRefreshToken;
     session.expiresAt = expiresAt;
     session.status = 'authenticated';
+    
+    console.log(`[Gmail OAuth] Session authenticated: ${sessionId}`);
     
     // Serve HTML page that will redirect to main app
     // CRITICAL: Add sessionId to URL hash so frontend can read it even if postMessage fails
