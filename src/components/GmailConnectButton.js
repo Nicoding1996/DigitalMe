@@ -139,6 +139,17 @@ const GmailConnectButton = ({
     } catch (err) {
       console.error('Error polling analysis status:', err);
       
+      // Don't treat "session not found" as fatal - OAuth callback may not have fired yet
+      const isSessionNotFound = err?.code === 'session_not_found' || 
+                                err?.message?.includes('not found') ||
+                                err?.message?.includes('expired');
+      
+      if (isSessionNotFound) {
+        console.log('[Gmail OAuth] Session not found during polling - OAuth may still be in progress');
+        // Don't stop polling or show error - let the fallback polling continue
+        return;
+      }
+      
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
