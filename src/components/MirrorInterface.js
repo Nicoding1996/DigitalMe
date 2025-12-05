@@ -436,13 +436,20 @@ const RightPanel = ({ response, isGenerating, messages, glitchIntensity, current
   const [shouldGlitch, setShouldGlitch] = useState(false);
   const scrollContainerRef = useRef(null);
 
-  // Auto-scroll when response completes
+  // Smart auto-scroll when response completes - only if user is near bottom
   useEffect(() => {
     if (!isGenerating && response && scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({
-        top: scrollContainerRef.current.scrollHeight,
-        behavior: 'smooth'
-      });
+      const container = scrollContainerRef.current;
+      const scrollBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+      const isNearBottom = scrollBottom < 100;
+      
+      // Only auto-scroll if user is already near the bottom
+      if (isNearBottom) {
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
     }
   }, [isGenerating, response]);
 

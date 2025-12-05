@@ -5,11 +5,19 @@
 import { useEffect, useRef, useState } from 'react';
 
 const MessageHistory = ({ messages = [], role = 'user', expandedMessageIndex, onToggleExpand }) => {
-  const historyEndRef = useRef(null);
+  const containerRef = useRef(null);
 
   useEffect(() => {
-    if (historyEndRef.current) {
-      historyEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (!containerRef.current) return;
+    
+    // Check if user is already near the bottom of the MessageHistory container (within 100px)
+    const container = containerRef.current;
+    const scrollBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    const isNearBottom = scrollBottom < 100;
+    
+    // Only auto-scroll the MessageHistory container if user is already near the bottom
+    if (isNearBottom) {
+      container.scrollTop = container.scrollHeight;
     }
   }, [messages]);
 
@@ -45,7 +53,7 @@ const MessageHistory = ({ messages = [], role = 'user', expandedMessageIndex, on
       </div>
       
       {/* Log entries grouped by CMD */}
-      <div className="flex flex-col gap-0 max-h-[500px] overflow-y-auto scrollbar-minimal font-mono text-xs">
+      <div ref={containerRef} className="flex flex-col gap-0 max-h-[500px] overflow-y-auto scrollbar-minimal font-mono text-xs">
         {cmdNumbers.map((cmdNumber, cmdIndex) => (
           <div key={cmdNumber}>
             {/* CMD Transition Divider (show before all CMDs except the first) */}
@@ -74,7 +82,6 @@ const MessageHistory = ({ messages = [], role = 'user', expandedMessageIndex, on
             </div>
           </div>
         ))}
-        <div ref={historyEndRef} />
       </div>
     </div>
   );
