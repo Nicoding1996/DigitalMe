@@ -155,14 +155,14 @@ Eliminated repetitive explanations - Kiro always knew the context.
 ### User Documentation
 - [README](README.md) - Project overview and quick start
 - [Deployment Guide](DEPLOYMENT_GUIDE.md) - Production deployment instructions
-- [Backend Setup](backend/README.md) - Backend architecture and API docs
+- [Backend Setup](backend/README.md) - Backend architecture and setup
+- [API Reference](backend/API.md) - Complete API documentation
 - [Gmail Setup Guide](backend/GMAIL_SETUP_GUIDE.md) - OAuth configuration
 
 ### Development Process (Kiro Usage)
 This project was built iteratively with Kiro IDE. See our development journey:
 
 - **[Project Status](docs/PROJECT_STATUS.md)** - Complete feature overview and implementation status
-- **[Hackathon Submission](HACKATHON_SUBMISSION_POLISHED.md)** - How we used Kiro to build this project
 - **[Feature Implementations](docs/features/)** - Individual feature completion docs (Gmail, GitHub, Blog, Living Profile)
 - **[Design Iteration](docs/design/)** - UI/UX evolution and Black Mirror aesthetic development
 - **[Development Progress](docs/development/)** - Refactoring, improvements, and implementation milestones
