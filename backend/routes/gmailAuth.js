@@ -258,6 +258,7 @@ router.get('/callback', gmailAuthLimiter, validateGmailCallback, async (req, res
     session.status = 'authenticated';
     
     // Serve HTML page that will redirect to main app
+    // CRITICAL: Add sessionId to URL hash so frontend can read it even if postMessage fails
     res.send(`
 <!DOCTYPE html>
 <html lang="en">
@@ -308,6 +309,11 @@ router.get('/callback', gmailAuthLimiter, validateGmailCallback, async (req, res
   <script>
     (function() {
       const sessionId = '${sessionId}';
+      
+      // CRITICAL: Add sessionId to URL hash so frontend can read it
+      if (!window.location.hash.includes('sessionId')) {
+        window.location.hash = 'sessionId=' + sessionId;
+      }
       
       // Try to notify parent window via postMessage
       function notifyParent() {
