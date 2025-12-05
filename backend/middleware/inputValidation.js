@@ -108,10 +108,13 @@ function validateSessionId(sessionId) {
     return { valid: false, error: 'Session ID must be a non-empty string' };
   }
   
-  // Session IDs should be UUIDs (36 characters with hyphens)
+  // Session IDs can be either:
+  // 1. UUIDs (36 characters with hyphens) - legacy format
+  // 2. 64-character hex strings - OAuth state token format (current)
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const hexTokenRegex = /^[0-9a-f]{64}$/i;
   
-  if (!uuidRegex.test(sessionId)) {
+  if (!uuidRegex.test(sessionId) && !hexTokenRegex.test(sessionId)) {
     return { valid: false, error: 'Invalid session ID format' };
   }
   
