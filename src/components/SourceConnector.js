@@ -142,13 +142,13 @@ const SourceConnector = ({ onSourcesSubmit, onCancel }) => {
   const hasAnySources = filledCount > 0;
 
   return (
-    <div className="relative min-h-screen bg-mirror-black px-6 py-8 overflow-y-auto pb-24">
+    <div className="relative min-h-screen bg-mirror-black px-6 py-6 overflow-y-auto">
       {/* Scanline effect */}
       <div className="scanline" />
       
-      <div className="relative z-10 w-full max-w-3xl mx-auto fade-in mb-8">
+      <div className="relative z-10 w-full max-w-3xl mx-auto fade-in pb-8">
         {/* Header */}
-        <div className="mb-12">
+        <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-3xl font-display font-bold text-static-white tracking-tight">
               [ACQUIRE_SOURCE_DATA]
@@ -172,7 +172,7 @@ const SourceConnector = ({ onSourcesSubmit, onCancel }) => {
         </div>
 
         {/* Tabs with status indicators */}
-        <div className="flex gap-2 mb-8">
+        <div className="flex gap-2 mb-6">
           <button
             onClick={() => handleTabChange('text')}
             className={`relative flex-1 px-6 py-4 min-h-[44px] font-mono text-xs tracking-wider transition-all touch-manipulation ${
@@ -235,7 +235,7 @@ const SourceConnector = ({ onSourcesSubmit, onCancel }) => {
         </div>
 
         {/* Input Area */}
-        <div className="border border-static-whisper bg-void-surface p-8 mb-6 max-h-[400px] overflow-y-auto">
+        <div className="border border-static-whisper bg-void-surface p-6 mb-6 max-h-[50vh] overflow-y-auto">
           {activeTab === 'gmail' && (
             <div className="space-y-4">
               <label className="system-text block">GMAIL ACCOUNT</label>
