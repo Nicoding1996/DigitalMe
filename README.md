@@ -82,7 +82,7 @@ Open [http://localhost:3000](http://localhost:3000) to use the app.
 
 ## 🏗️ Built With Kiro
 
-This project was built entirely using [Kiro IDE](https://kiro.ai) and showcases multiple Kiro features:
+This project was built entirely using [Kiro IDE](https://kiro.dev) and showcases multiple Kiro features:
 
 ### 📋 Spec-Driven Development
 - **10 comprehensive specs** with requirements.md, design.md, and tasks.md
